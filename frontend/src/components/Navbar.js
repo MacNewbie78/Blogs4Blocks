@@ -152,6 +152,9 @@ export default function Navbar() {
                 </Link>
               ))}
               <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid="nav-mobile-about">About</Link>
+              {user && (
+                <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid="nav-mobile-profile">My Dashboard</Link>
+              )}
               <div className="border-t border-gray-100 mt-2 pt-2 flex flex-col gap-2">
                 <Button onClick={() => { navigate('/write'); setMobileOpen(false); }} className="bg-black text-white rounded-full font-bold" data-testid="nav-mobile-write-btn">
                   <PenLine className="w-4 h-4 mr-1.5" /> Write a Post
