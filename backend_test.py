@@ -378,6 +378,149 @@ class BlogsAPITester:
                 self.log(f"❌ Stats missing fields: {missing}")
         return success
 
+    def test_profile_colors(self):
+        """Test GET /api/profile/colors and PUT /api/profile/colors"""
+        if not self.token:
+            self.log("❌ No auth token for profile colors test")
+            return False
+        
+        # First get default colors
+        success, data = self.run_test(
+            "GET /api/profile/colors",
+            "GET",
+            "api/profile/colors",
+            200
+        )
+        
+        if not success:
+            return False
+            
+        if 'my_posts_color' in data and 'interacted_color' in data:
+            self.log(f"✅ Default colors: my_posts_color={data['my_posts_color']}, interacted_color={data['interacted_color']}")
+        else:
+            self.log(f"❌ Missing color fields in response: {data}")
+            return False
+            
+        # Now test updating colors
+        new_colors = {
+            "my_posts_color": "#FF0000",
+            "interacted_color": "#00FF00"
+        }
+        
+        success, data = self.run_test(
+            "PUT /api/profile/colors",
+            "PUT",
+            "api/profile/colors",
+            200,
+            new_colors
+        )
+        
+        if success and data:
+            if data.get('my_posts_color') == "#FF0000" and data.get('interacted_color') == "#00FF00":
+                self.log(f"✅ Colors updated successfully")
+                return True
+            else:
+                self.log(f"❌ Updated colors don't match: {data}")
+        return success
+
+    def test_profile_posts(self):
+        """Test GET /api/profile/posts"""
+        if not self.token:
+            self.log("❌ No auth token for profile posts test")
+            return False
+            
+        success, data = self.run_test(
+            "GET /api/profile/posts",
+            "GET",
+            "api/profile/posts",
+            200
+        )
+        
+        if success and isinstance(data, list):
+            self.log(f"✅ Retrieved {len(data)} user posts")
+            if len(data) > 0:
+                # Check if posts have required fields
+                post = data[0]
+                required_fields = ['id', 'title', 'author_id', 'created_at']
+                if all(field in post for field in required_fields):
+                    self.log(f"✅ User posts have required fields")
+                else:
+                    missing = [f for f in required_fields if f not in post]
+                    self.log(f"❌ User posts missing fields: {missing}")
+                    return False
+            return True
+        return success
+
+    def test_profile_interactions(self):
+        """Test GET /api/profile/interactions"""
+        if not self.token:
+            self.log("❌ No auth token for profile interactions test")
+            return False
+            
+        success, data = self.run_test(
+            "GET /api/profile/interactions",
+            "GET",
+            "api/profile/interactions",
+            200
+        )
+        
+        if success and isinstance(data, list):
+            self.log(f"✅ Retrieved {len(data)} interacted posts")
+            if len(data) > 0:
+                # Check if posts have liked/commented flags
+                post = data[0]
+                if 'liked' in post and 'commented' in post:
+                    self.log(f"✅ Interaction posts have liked/commented flags")
+                else:
+                    self.log(f"❌ Interaction posts missing liked/commented flags")
+                    return False
+            return True
+        return success
+
+    def test_comments_live_endpoint(self):
+        """Test GET /api/posts/{id}/comments/live - chat-style comments"""
+        if not self.created_post_id:
+            self.log("❌ No post ID for live comments test")
+            return False
+            
+        success, data = self.run_test(
+            f"GET /api/posts/{self.created_post_id}/comments/live",
+            "GET",
+            f"api/posts/{self.created_post_id}/comments/live",
+            200
+        )
+        
+        if success and isinstance(data, list):
+            self.log(f"✅ Retrieved {len(data)} live comments")
+            return True
+        return success
+
+    def test_demo_user_login(self):
+        """Test login with demo@b4b.com / password123"""
+        login_data = {
+            "email": "demo@b4b.com",
+            "password": "password123"
+        }
+        
+        success, data = self.run_test(
+            "POST /api/auth/login (demo user)",
+            "POST",
+            "api/auth/login",
+            200,
+            login_data
+        )
+        
+        if success and data:
+            if 'token' in data and 'user' in data:
+                # Store demo user token for profile tests
+                self.token = data['token']
+                self.user_id = data['user']['id']
+                self.log(f"✅ Demo user login successful: {data['user']['name']}")
+                return True
+            else:
+                self.log(f"❌ Demo login response missing token or user")
+        return success
+
 def main():
     """Run all backend API tests"""
     print("=" * 60)
