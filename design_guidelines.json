@@ -1,0 +1,145 @@
+{
+  "brand_identity": {
+    "name": "Blogs 4 Blocks",
+    "tone": "Cheerful, Inviting, Global, Exciting, Easy to Navigate",
+    "target_audience": "Marketing Professionals Worldwide",
+    "core_values": ["Open Forum", "Global Perspective", "Playful Professionalism"]
+  },
+  "typography": {
+    "headings": {
+      "family": "Outfit, sans-serif",
+      "weights": ["600", "700", "800"],
+      "usage": "Use for all section titles, hero text, and article headlines. 'Outfit' provides a geometric yet friendly character that fits the 'block' theme.",
+      "letter_spacing": "tight"
+    },
+    "body": {
+      "family": "DM Sans, sans-serif",
+      "weights": ["400", "500", "700"],
+      "usage": "Use for all paragraph text, UI labels, and metadata. readable and modern."
+    },
+    "scale": {
+      "hero": "text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tighter",
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-3xl md:text-4xl font-bold tracking-tight",
+      "h3": "text-2xl font-semibold",
+      "body_lg": "text-lg leading-relaxed",
+      "body_base": "text-base leading-relaxed"
+    }
+  },
+  "colors": {
+    "mode": "light",
+    "background": {
+      "primary": "#FFFFFF",
+      "secondary": "#F8FAFC",
+      "tertiary": "#F1F5F9"
+    },
+    "foreground": {
+      "primary": "#0F172A",
+      "secondary": "#475569",
+      "muted": "#94A3B8"
+    },
+    "accents": {
+      "description": "Vibrant rainbow palette used for categories, tags, buttons, and borders. Do NOT use these for large background areas unless heavily muted.",
+      "red": "#EF4444",
+      "orange": "#F97316",
+      "yellow": "#FACC15",
+      "green": "#22C55E",
+      "teal": "#14B8A6",
+      "blue": "#3B82F6",
+      "purple": "#A855F7",
+      "pink": "#EC4899",
+      "brown": "#A16207"
+    },
+    "ui_elements": {
+      "border": "#E2E8F0",
+      "input_bg": "#FFFFFF",
+      "hover_overlay": "rgba(0,0,0,0.02)"
+    }
+  },
+  "visual_enhancers": {
+    "shadows": {
+      "card": "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025)",
+      "floating": "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+      "block_effect": "4px 4px 0px 0px rgba(0,0,0,1)"
+    },
+    "border_radius": {
+      "standard": "rounded-xl",
+      "large": "rounded-2xl",
+      "pill": "rounded-full"
+    },
+    "textures": {
+      "grain": "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E\")"
+    }
+  },
+  "layout_strategies": {
+    "general": {
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "section_spacing": "py-16 md:py-24",
+      "grid_gap": "gap-6 md:gap-8"
+    },
+    "bento_grid": {
+      "description": "Use for category landing pages and feature highlights.",
+      "classes": "grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 auto-rows-[minmax(180px,auto)] gap-4"
+    },
+    "masonry": {
+      "description": "Use for blog post feeds to create visual interest.",
+      "implementation": "Use column-count CSS or simple grid with different row spans."
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-black text-white hover:bg-gray-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,0.1)] transition-all font-bold px-8 py-3 rounded-full",
+      "secondary": "bg-white text-black border-2 border-black hover:bg-gray-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all font-bold px-8 py-3 rounded-full",
+      "ghost": "bg-transparent text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-lg font-medium"
+    },
+    "cards": {
+      "blog_post": "group relative bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1",
+      "category": "relative overflow-hidden rounded-2xl p-6 flex flex-col justify-end aspect-square hover:scale-[1.02] transition-transform duration-300"
+    },
+    "inputs": {
+      "style": "bg-white border-2 border-gray-100 focus:border-black focus:ring-0 rounded-xl px-4 py-3 text-lg transition-colors placeholder:text-gray-400"
+    }
+  },
+  "image_assets": {
+    "collage_sources": [
+      {
+        "city": "New York",
+        "url": "https://images.unsplash.com/photo-1618549653919-6a13e72263b3?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "position": "Top Left"
+      },
+      {
+        "city": "Tokyo",
+        "url": "https://images.unsplash.com/photo-1736247715781-5313dd0756e8?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "position": "Top Right"
+      },
+      {
+        "city": "London",
+        "url": "https://images.unsplash.com/photo-1762732293106-31b878319789?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "position": "Bottom Left"
+      },
+      {
+        "city": "Paris",
+        "url": "https://images.unsplash.com/photo-1637329096986-62486d0c4380?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "position": "Bottom Right"
+      }
+    ],
+    "hero_collage_instruction": "Create a CSS grid or absolute positioned layout to overlay these images. Use masks or heavy blurs to ensure text readability if text is placed over them. Ideally, place the images as a border or a subtle background layer."
+  },
+  "universal_guidelines": [
+    "Do NOT use gradients for main backgrounds. Use solid colors or subtle patterns.",
+    "Do NOT use standard 'Bootstrap' column layouts. Embrace asymmetry.",
+    "Ensure all interactive elements have hover states that change color or position.",
+    "Use 'Outfit' font for all Headings (h1-h6). Use 'DM Sans' for body.",
+    "Do NOT center text by default. Use left align for better readability.",
+    "Add 'data-testid' to all interactive elements."
+  ],
+  "instructions_to_main_agent": "1. Install 'Outfit' and 'DM Sans' from Google Fonts immediately. \n2. Configure Tailwind theme to include the custom colors and fonts defined above. \n3. Build the 'Global City Collage' component first as it's the core visual identity. \n4. Implement the 'Bento Grid' for the categories section. \n5. Use the 'Block Effect' shadow (hard shadow without blur) for buttons and key cards to match the 'Blogs 4 Blocks' theme.",
+  "packages_to_install": [
+    "@fontsource/outfit",
+    "@fontsource/dm-sans",
+    "framer-motion",
+    "clsx",
+    "tailwind-merge",
+    "lucide-react"
+  ]
+}
