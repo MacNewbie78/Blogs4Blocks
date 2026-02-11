@@ -20,7 +20,7 @@ const CATEGORY_COLORS = {
 
 export default function PostPage() {
   const { id } = useParams();
-  const { API } = useApp();
+  const { API, token } = useApp();
   const [post, setPost] = useState(null);
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -42,7 +42,8 @@ export default function PostPage() {
   const handleLike = async () => {
     if (liked) return;
     try {
-      const res = await axios.post(`${API}/posts/${id}/like`);
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.post(`${API}/posts/${id}/like`, {}, { headers });
       setPost(prev => ({ ...prev, likes: res.data.likes }));
       setLiked(true);
       toast.success('Thanks for the love!');
