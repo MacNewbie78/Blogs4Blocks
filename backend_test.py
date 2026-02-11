@@ -369,6 +369,7 @@ class BlogsAPITester:
                 # Verify it shows contributors instead of total_users
                 if 'contributors' in data and 'total_users' not in data:
                     self.log(f"✅ Stats correctly shows 'contributors' instead of 'total_users'")
+                    return True
                 elif 'total_users' in data:
                     self.log(f"❌ Stats still shows 'total_users' field - should be 'contributors'")
                     return False
