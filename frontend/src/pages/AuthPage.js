@@ -19,10 +19,9 @@ export default function AuthPage() {
   const [regForm, setRegForm] = useState({ name: '', email: '', password: '', city: '', country: '' });
 
   // Redirect if already logged in
-  if (user) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (user) navigate('/');
+  }, [user, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
