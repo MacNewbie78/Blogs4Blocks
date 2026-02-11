@@ -222,15 +222,13 @@ export default function WritePage() {
 
             <div>
               <Label htmlFor="content">Content *</Label>
-              <Textarea
-                id="content"
-                placeholder="Share your marketing strategy, experience, data, and insights. Use **bold** for emphasis. Start paragraphs with - for bullet points."
-                value={formData.content}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                rows={16}
-                className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl resize-y font-body text-base leading-relaxed"
-                data-testid="write-content"
-              />
+              <div className="mt-1">
+                <RichTextEditor
+                  content={formData.content}
+                  onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
+                  placeholder="Share your marketing strategy, experience, data, and insights. Use the toolbar for formatting — headings, bold, lists, quotes, and more."
+                />
+              </div>
             </div>
 
             <div>
