@@ -536,10 +536,15 @@ def main():
         tester.test_post_detail,
         tester.test_user_registration,
         tester.test_user_login,
+        tester.test_demo_user_login,  # Login with demo user for profile tests
         tester.test_create_post,
         tester.test_like_post,
         tester.test_create_comment,
         tester.test_get_comments,
+        tester.test_comments_live_endpoint,
+        tester.test_profile_colors,
+        tester.test_profile_posts,
+        tester.test_profile_interactions,
         tester.test_guest_post_creation,
         tester.test_stats_endpoint
     ]
