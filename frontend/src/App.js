@@ -5,6 +5,7 @@ import { AppProvider } from './context/AppContext';
 import { Toaster } from './components/ui/sonner';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import InstallPrompt from './components/InstallPrompt';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import PostPage from './pages/PostPage';
