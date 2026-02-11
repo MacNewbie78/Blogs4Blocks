@@ -476,13 +476,73 @@ async def get_stats():
     total_posts = await db.posts.count_documents({})
     total_comments = await db.comments.count_documents({})
     total_users = await db.users.count_documents({})
+    # Count unique contributors (registered users + unique seed/guest author names)
+    unique_authors = await db.posts.distinct("author_name")
     countries = await db.posts.distinct("author_country")
     return {
         "total_posts": total_posts,
         "total_comments": total_comments,
         "total_users": total_users,
+        "contributors": len(unique_authors),
         "countries_represented": len(countries)
     }
+
+# ==================== PROFILE ROUTES ====================
+
+@api_router.get("/profile/posts")
+async def get_user_posts(user=Depends(require_user)):
+    posts = await db.posts.find({"author_id": user["id"]}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return posts
+
+@api_router.get("/profile/interactions")
+async def get_user_interactions(user=Depends(require_user)):
+    # Get posts the user liked
+    liked_docs = await db.user_likes.find({"user_id": user["id"]}, {"_id": 0}).to_list(500)
+    liked_post_ids = [d["post_id"] for d in liked_docs]
+    
+    # Get posts the user commented on
+    commented_docs = await db.comments.find({"author_name": user["name"], "is_guest": False}, {"_id": 0, "post_id": 1}).to_list(500)
+    commented_post_ids = list(set([d["post_id"] for d in commented_docs]))
+    
+    # Combine unique post IDs (exclude user's own posts)
+    all_ids = list(set(liked_post_ids + commented_post_ids))
+    
+    if not all_ids:
+        return []
+    
+    posts = await db.posts.find(
+        {"id": {"$in": all_ids}, "author_id": {"$ne": user["id"]}},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Mark interaction type on each post
+    for p in posts:
+        p["liked"] = p["id"] in liked_post_ids
+        p["commented"] = p["id"] in commented_post_ids
+    
+    return posts
+
+@api_router.get("/profile/colors")
+async def get_profile_colors(user=Depends(require_user)):
+    prefs = await db.user_prefs.find_one({"user_id": user["id"]}, {"_id": 0})
+    if not prefs:
+        return {"my_posts_color": "#3B82F6", "interacted_color": "#A855F7"}
+    return {"my_posts_color": prefs.get("my_posts_color", "#3B82F6"), "interacted_color": prefs.get("interacted_color", "#A855F7")}
+
+@api_router.put("/profile/colors")
+async def update_profile_colors(colors: ProfileColors, user=Depends(require_user)):
+    await db.user_prefs.update_one(
+        {"user_id": user["id"]},
+        {"$set": {"user_id": user["id"], "my_posts_color": colors.my_posts_color, "interacted_color": colors.interacted_color}},
+        upsert=True
+    )
+    return {"my_posts_color": colors.my_posts_color, "interacted_color": colors.interacted_color}
+
+@api_router.get("/posts/{post_id}/comments/live")
+async def get_comments_live(post_id: str):
+    """Get comments sorted oldest-first for chat-like view"""
+    comments = await db.comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", 1).to_list(500)
+    return comments
 
 # ==================== APP SETUP ====================
 
