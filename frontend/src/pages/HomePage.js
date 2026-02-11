@@ -143,7 +143,7 @@ export default function HomePage() {
             >
               {[
                 { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#3B82F6' },
-                { icon: <Users className="w-4 h-4" />, value: stats.total_users, label: 'Members', color: '#A855F7' },
+                { icon: <Users className="w-4 h-4" />, value: stats.contributors || 0, label: 'Contributors', color: '#A855F7' },
                 { icon: <Globe className="w-4 h-4" />, value: stats.countries_represented, label: 'Countries', color: '#22C55E' },
                 { icon: <Sparkles className="w-4 h-4" />, value: stats.total_comments, label: 'Discussions', color: '#F97316' },
               ].map((stat, i) => (
