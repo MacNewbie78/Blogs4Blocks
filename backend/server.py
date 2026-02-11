@@ -65,6 +65,10 @@ class CommentCreate(BaseModel):
     content: str
     guest_author: Optional[GuestAuthor] = None
 
+class ProfileColors(BaseModel):
+    my_posts_color: str = "#3B82F6"
+    interacted_color: str = "#A855F7"
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
