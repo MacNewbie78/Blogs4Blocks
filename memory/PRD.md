@@ -49,12 +49,13 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
 ## Prioritized Backlog
 ### P0 (Next)
 - Email notification system for registered users (new posts, comments on their posts)
-- User profile/dashboard page
+- Real-time WebSocket discussion threads (currently polling every 5s)
 
 ### P1
-- Rich text editor for post content (markdown support)
-- Pagination for posts listing
 - Image upload for blog posts
+- Pagination for posts listing
+- User following system (follow other contributors)
+- Post editing and deletion
 
 ### P2
 - Social sharing buttons (Twitter, LinkedIn)
