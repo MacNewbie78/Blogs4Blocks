@@ -352,7 +352,7 @@ class BlogsAPITester:
         return success
 
     def test_stats_endpoint(self):
-        """Test GET /api/stats"""
+        """Test GET /api/stats - should show contributors instead of total_users"""
         success, data = self.run_test(
             "GET /api/stats",
             "GET",
@@ -361,11 +361,17 @@ class BlogsAPITester:
         )
         
         if success and data:
-            required_stats = ['total_posts', 'total_comments', 'total_users', 'countries_represented']
+            required_stats = ['total_posts', 'total_comments', 'contributors', 'countries_represented']
             if all(stat in data for stat in required_stats):
                 self.log(f"✅ Stats endpoint working:")
                 for stat in required_stats:
                     self.log(f"   {stat}: {data[stat]}")
+                # Verify it shows contributors instead of total_users
+                if 'contributors' in data and 'total_users' not in data:
+                    self.log(f"✅ Stats correctly shows 'contributors' instead of 'total_users'")
+                elif 'total_users' in data:
+                    self.log(f"❌ Stats still shows 'total_users' field - should be 'contributors'")
+                    return False
                 return True
             else:
                 missing = [s for s in required_stats if s not in data]
