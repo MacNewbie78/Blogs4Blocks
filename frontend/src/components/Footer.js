@@ -73,8 +73,8 @@ export default function Footer() {
                   <div className="text-xs text-gray-500">Comments</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-heading font-bold text-b4b-purple">{stats.total_users}</div>
-                  <div className="text-xs text-gray-500">Members</div>
+                  <div className="text-2xl font-heading font-bold text-b4b-purple">{stats.contributors || 0}</div>
+                  <div className="text-xs text-gray-500">Contributors</div>
                 </div>
                 <div>
                   <div className="text-2xl font-heading font-bold text-b4b-orange">{stats.countries_represented}</div>
