@@ -183,7 +183,11 @@ export default function PostPage() {
 
         {/* Content */}
         <div className="blog-content text-base md:text-lg" data-testid="post-content">
-          {renderContent(post.content)}
+          {isHtmlContent(post.content) ? (
+            <div dangerouslySetInnerHTML={{ __html: post.content }} />
+          ) : (
+            renderContent(post.content)
+          )}
         </div>
 
         {/* Tags */}
