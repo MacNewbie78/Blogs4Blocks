@@ -246,7 +246,7 @@ export default function ProfilePage() {
       setInteractedColor(colorsRes.data.interacted_color);
     }).catch(e => console.error(e))
     .finally(() => setLoading(false));
-  }, [user, token, API, navigate]);
+  }, [user, token, API, navigate, authChecked]);
 
   const saveColors = async (myColor, intColor) => {
     try {
