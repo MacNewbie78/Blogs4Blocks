@@ -118,7 +118,7 @@ export default function AboutPage() {
               {[
                 { value: stats.total_posts, label: 'Posts Published', color: '#3B82F6' },
                 { value: stats.total_comments, label: 'Discussions', color: '#22C55E' },
-                { value: stats.total_users, label: 'Members', color: '#A855F7' },
+                { value: stats.contributors || 0, label: 'Contributors', color: '#A855F7' },
                 { value: stats.countries_represented, label: 'Countries', color: '#F97316' },
               ].map((stat, i) => (
                 <div key={i} className="p-6 rounded-2xl border border-gray-100" data-testid={`about-stat-${i}`}>
