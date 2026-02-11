@@ -1,0 +1,368 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axios from 'axios';
+import { useApp } from '../context/AppContext';
+import { Palette, PenLine, MessageCircle, Heart, Eye, MapPin, Clock, ArrowRight, ChevronDown, ChevronUp, Send, X } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Textarea } from '../components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { toast } from 'sonner';
+
+const COLOR_OPTIONS = [
+  { label: 'Blue', value: '#3B82F6' },
+  { label: 'Purple', value: '#A855F7' },
+  { label: 'Green', value: '#22C55E' },
+  { label: 'Teal', value: '#14B8A6' },
+  { label: 'Orange', value: '#F97316' },
+  { label: 'Red', value: '#EF4444' },
+  { label: 'Pink', value: '#EC4899' },
+  { label: 'Yellow', value: '#FACC15' },
+  { label: 'Indigo', value: '#6366F1' },
+  { label: 'Cyan', value: '#06B6D4' },
+  { label: 'Amber', value: '#D97706' },
+  { label: 'Rose', value: '#F43F5E' },
+];
+
+function ColorPicker({ label, value, onChange, testId }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium"
+        data-testid={testId}
+      >
+        <span className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: value }} />
+        <Palette className="w-3.5 h-3.5 text-gray-500" />
+        <span className="text-gray-600">{label}</span>
+        {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 p-3 z-50 w-56" data-testid={`${testId}-dropdown`}>
+          <div className="grid grid-cols-6 gap-2">
+            {COLOR_OPTIONS.map(c => (
+              <button
+                key={c.value}
+                onClick={() => { onChange(c.value); setOpen(false); }}
+                className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${value === c.value ? 'border-gray-900 scale-110' : 'border-gray-200'}`}
+                style={{ backgroundColor: c.value }}
+                title={c.label}
+                data-testid={`color-${c.label.toLowerCase()}`}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DiscussionThread({ post, onClose }) {
+  const { user, token, API } = useApp();
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchComments = useCallback(async () => {
+    try {
+      const res = await axios.get(`${API}/posts/${post.id}/comments/live`);
+      setComments(res.data);
+    } catch (e) {
+      console.error(e);
+    }
+  }, [API, post.id]);
+
+  useEffect(() => {
+    fetchComments();
+    const interval = setInterval(fetchComments, 5000);
+    return () => clearInterval(interval);
+  }, [fetchComments]);
+
+  const handleSend = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim() || !user) return;
+    setSubmitting(true);
+    try {
+      await axios.post(`${API}/posts/${post.id}/comments`, { content: newComment.trim() }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNewComment('');
+      fetchComments();
+    } catch (e) {
+      console.error(e);
+    }
+    setSubmitting(false);
+  };
+
+  return (
+    <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0 gap-0">
+      <DialogHeader className="p-5 pb-3 border-b border-gray-100">
+        <DialogTitle className="font-heading font-bold text-lg leading-snug pr-8">
+          {post.title}
+        </DialogTitle>
+        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+          <MapPin className="w-3 h-3" />
+          <span>{post.author_name} — {post.author_city}, {post.author_country}</span>
+        </div>
+      </DialogHeader>
+
+      {/* Chat-style comments */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px] bg-gray-50/50" data-testid="discussion-thread">
+        {comments.length === 0 && (
+          <div className="text-center py-8 text-gray-400 text-sm">
+            No discussion yet. Start the conversation!
+          </div>
+        )}
+        {comments.map(c => {
+          const isMe = user && c.author_name === user.name;
+          return (
+            <div key={c.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`} data-testid={`thread-msg-${c.id}`}>
+              <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isMe ? 'bg-black text-white rounded-br-md' : 'bg-white border border-gray-200 rounded-bl-md'}`}>
+                {!isMe && (
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-xs font-semibold" style={{ color: isMe ? '#A5B4FC' : '#3B82F6' }}>{c.author_name}</span>
+                    <span className="text-xs opacity-50">{c.author_city}</span>
+                  </div>
+                )}
+                <p className={`text-sm leading-relaxed ${isMe ? 'text-white' : 'text-gray-700'}`}>{c.content}</p>
+                <p className={`text-xs mt-1 ${isMe ? 'text-gray-400' : 'text-gray-400'}`}>
+                  {new Date(c.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Comment input */}
+      {user ? (
+        <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex gap-2" data-testid="thread-input-form">
+          <Input
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 rounded-full border-gray-200"
+            data-testid="thread-input"
+          />
+          <Button
+            type="submit"
+            disabled={submitting || !newComment.trim()}
+            className="rounded-full bg-black text-white hover:bg-gray-800"
+            size="icon"
+            data-testid="thread-send-btn"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
+      ) : (
+        <div className="p-4 border-t border-gray-100 text-center text-sm text-gray-500">
+          <Link to="/auth" className="text-b4b-blue font-semibold hover:underline">Sign in</Link> to join the discussion.
+        </div>
+      )}
+    </DialogContent>
+  );
+}
+
+function PostCard({ post, color, type }) {
+  return (
+    <div
+      className="group bg-white border rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+      style={{ borderColor: `${color}30` }}
+      data-testid={`profile-card-${post.id}`}
+    >
+      <div className="h-1.5 w-full" style={{ backgroundColor: color }} />
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-2">
+          <Badge
+            className="text-xs font-semibold px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: `${color}15`, color }}
+          >
+            {post.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          </Badge>
+          {type === 'interacted' && (
+            <div className="flex items-center gap-1.5">
+              {post.liked && <Heart className="w-3 h-3 text-red-400 fill-red-400" />}
+              {post.commented && <MessageCircle className="w-3 h-3 text-blue-400" />}
+            </div>
+          )}
+        </div>
+        <h3 className="font-heading font-bold text-base text-gray-900 mb-1.5 line-clamp-2 group-hover:text-opacity-80 transition-colors leading-snug">
+          {post.title}
+        </h3>
+        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{post.excerpt}</p>
+        <div className="flex items-center justify-between text-xs text-gray-400">
+          <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{post.author_city}</span>
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{post.likes || 0}</span>
+            <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{post.views || 0}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function ProfilePage() {
+  const { user, token, API } = useApp();
+  const navigate = useNavigate();
+  const [myPosts, setMyPosts] = useState([]);
+  const [interactedPosts, setInteractedPosts] = useState([]);
+  const [myPostsColor, setMyPostsColor] = useState('#3B82F6');
+  const [interactedColor, setInteractedColor] = useState('#A855F7');
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user || !token) {
+      navigate('/auth');
+      return;
+    }
+    const headers = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      axios.get(`${API}/profile/posts`, { headers }),
+      axios.get(`${API}/profile/interactions`, { headers }),
+      axios.get(`${API}/profile/colors`, { headers }),
+    ]).then(([postsRes, interactionsRes, colorsRes]) => {
+      setMyPosts(postsRes.data);
+      setInteractedPosts(interactionsRes.data);
+      setMyPostsColor(colorsRes.data.my_posts_color);
+      setInteractedColor(colorsRes.data.interacted_color);
+    }).catch(e => console.error(e))
+    .finally(() => setLoading(false));
+  }, [user, token, API, navigate]);
+
+  const saveColors = async (myColor, intColor) => {
+    try {
+      await axios.put(`${API}/profile/colors`, {
+        my_posts_color: myColor,
+        interacted_color: intColor,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Colors updated!');
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleMyPostsColorChange = (color) => {
+    setMyPostsColor(color);
+    saveColors(color, interactedColor);
+  };
+
+  const handleInteractedColorChange = (color) => {
+    setInteractedColor(color);
+    saveColors(myPostsColor, color);
+  };
+
+  if (!user) return null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-b4b-blue rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50/50" data-testid="profile-page">
+      {/* Profile header */}
+      <section className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-heading font-black" style={{ backgroundColor: myPostsColor }}>
+              {user.name[0].toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <h1 className="font-heading font-bold text-2xl md:text-3xl tracking-tight text-gray-900" data-testid="profile-name">
+                {user.name}
+              </h1>
+              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{user.city}, {user.country || ''}</span>
+                <span>{user.email}</span>
+              </div>
+            </div>
+            <Button
+              onClick={() => navigate('/write')}
+              className="bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.4)] hover:translate-y-[-1px] transition-all"
+              data-testid="profile-write-btn"
+            >
+              <PenLine className="w-4 h-4 mr-1.5" /> New Post
+            </Button>
+          </div>
+
+          {/* Color pickers */}
+          <div className="flex flex-wrap gap-3 mt-6" data-testid="color-pickers">
+            <ColorPicker label="My Posts" value={myPostsColor} onChange={handleMyPostsColorChange} testId="color-picker-my-posts" />
+            <ColorPicker label="Interacted Posts" value={interactedColor} onChange={handleInteractedColorChange} testId="color-picker-interacted" />
+          </div>
+        </div>
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+        {/* My Posts */}
+        <section data-testid="my-posts-section">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: myPostsColor }} />
+            <h2 className="font-heading font-bold text-xl text-gray-900">
+              My Posts ({myPosts.length})
+            </h2>
+          </div>
+          {myPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="my-posts-grid">
+              {myPosts.map(post => (
+                <Link to={`/post/${post.id}`} key={post.id} className="no-underline">
+                  <PostCard post={post} color={myPostsColor} type="mine" />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center" data-testid="my-posts-empty">
+              <PenLine className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 mb-4">You haven't written any posts yet.</p>
+              <Button onClick={() => navigate('/write')} className="bg-black text-white rounded-full font-bold" data-testid="my-posts-write-btn">
+                <PenLine className="w-4 h-4 mr-1.5" /> Write Your First Post
+              </Button>
+            </div>
+          )}
+        </section>
+
+        {/* Interacted Posts */}
+        <section data-testid="interacted-posts-section">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: interactedColor }} />
+            <h2 className="font-heading font-bold text-xl text-gray-900">
+              Posts I've Engaged With ({interactedPosts.length})
+            </h2>
+          </div>
+          <p className="text-sm text-gray-400 mb-6 ml-6">Click a card to open the discussion thread</p>
+
+          {interactedPosts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" data-testid="interacted-posts-grid">
+              {interactedPosts.map(post => (
+                <div key={post.id} className="cursor-pointer" onClick={() => setSelectedPost(post)}>
+                  <PostCard post={post} color={interactedColor} type="interacted" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center" data-testid="interacted-posts-empty">
+              <Heart className="w-8 h-8 text-gray-300 mx-auto mb-3" />
+              <p className="text-gray-500 mb-4">You haven't interacted with any posts yet.</p>
+              <Button variant="outline" onClick={() => navigate('/')} className="rounded-full font-bold" data-testid="interacted-browse-btn">
+                Browse Posts <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Discussion thread dialog */}
+      <Dialog open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
+        {selectedPost && <DiscussionThread post={selectedPost} onClose={() => setSelectedPost(null)} />}
+      </Dialog>
+    </div>
+  );
+}
