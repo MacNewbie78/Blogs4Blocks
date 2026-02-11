@@ -34,6 +34,7 @@ function App() {
           <Footer />
         </div>
         <Toaster position="bottom-right" richColors />
+        <InstallPrompt />
       </AppProvider>
     </BrowserRouter>
   );
