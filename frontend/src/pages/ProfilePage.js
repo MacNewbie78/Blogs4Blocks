@@ -214,8 +214,22 @@ export default function ProfilePage() {
   const [interactedColor, setInteractedColor] = useState('#A855F7');
   const [selectedPost, setSelectedPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  // Wait for auth to resolve before redirecting
+  useEffect(() => {
+    const storedToken = localStorage.getItem('b4b_token');
+    if (!storedToken) {
+      navigate('/auth');
+      return;
+    }
+    // Give context time to load user from token
+    const timer = setTimeout(() => setAuthChecked(true), 500);
+    return () => clearTimeout(timer);
+  }, [navigate]);
 
   useEffect(() => {
+    if (!authChecked) return;
     if (!user || !token) {
       navigate('/auth');
       return;
