@@ -108,6 +108,10 @@ export default function PostPage() {
     });
   };
 
+  const isHtmlContent = (content) => {
+    return content && (content.includes('<p>') || content.includes('<h') || content.includes('<ul>') || content.includes('<ol>') || content.includes('<blockquote>'));
+  };
+
   return (
     <div className="min-h-screen" data-testid="post-page">
       {/* Header bar */}
