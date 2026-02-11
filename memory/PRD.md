@@ -39,6 +39,13 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
   - 5-second auto-refresh for live-ish discussion updates
 - Navbar with rainbow logo, topics dropdown, mobile responsive, profile link
 - Footer with community stats, quick links, category links
+- **PWA (Progressive Web App)** support:
+  - manifest.json with app metadata and icons
+  - Service worker for offline caching (network-first strategy)
+  - Apple mobile web app meta tags
+  - Install-to-home-screen prompt banner
+  - Standalone display mode (no browser chrome)
+  - Custom app icons (192x192 and 512x512)
 - Fixed stats: now shows "Contributors" (unique authors) instead of "Members"
 - 12 seed blog posts from global authors
 
