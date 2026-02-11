@@ -11,6 +11,7 @@ import PostPage from './pages/PostPage';
 import WritePage from './pages/WritePage';
 import AuthPage from './pages/AuthPage';
 import AboutPage from './pages/AboutPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
   return (
