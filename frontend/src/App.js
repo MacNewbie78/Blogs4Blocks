@@ -27,6 +27,7 @@ function App() {
               <Route path="/write" element={<WritePage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Routes>
           </main>
           <Footer />
