@@ -106,6 +106,10 @@ export default function Navbar() {
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')} data-testid="nav-profile-btn">
+                    <User className="w-4 h-4 mr-2" />
+                    My Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => { logout(); navigate('/'); }} data-testid="nav-logout-btn">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
