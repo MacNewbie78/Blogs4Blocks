@@ -386,10 +386,17 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
     return created
 
 @api_router.post("/posts/{post_id}/like")
-async def like_post(post_id: str):
+async def like_post(post_id: str, user=Depends(get_current_user)):
     result = await db.posts.update_one({"id": post_id}, {"$inc": {"likes": 1}})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Post not found")
+    # Track the like if user is logged in
+    if user:
+        await db.user_likes.update_one(
+            {"user_id": user["id"], "post_id": post_id},
+            {"$set": {"user_id": user["id"], "post_id": post_id, "created_at": datetime.now(timezone.utc).isoformat()}},
+            upsert=True
+        )
     post = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
     return {"likes": post["likes"]}
 
