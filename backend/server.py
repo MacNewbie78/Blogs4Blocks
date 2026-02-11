@@ -475,14 +475,12 @@ async def seed_data():
 async def get_stats():
     total_posts = await db.posts.count_documents({})
     total_comments = await db.comments.count_documents({})
-    total_users = await db.users.count_documents({})
     # Count unique contributors (registered users + unique seed/guest author names)
     unique_authors = await db.posts.distinct("author_name")
     countries = await db.posts.distinct("author_country")
     return {
         "total_posts": total_posts,
         "total_comments": total_comments,
-        "total_users": total_users,
         "contributors": len(unique_authors),
         "countries_represented": len(countries)
     }
