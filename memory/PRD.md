@@ -27,17 +27,24 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
 - Full backend API with auth, posts, comments, categories, likes, stats, seed data
 - HomePage with hero (city collage + rainbow title), categories bento grid, latest posts
 - CategoryPage with subcategory filters, search, post grid
-- PostPage with full content rendering, likes, comments section
-- WritePage for both registered and guest post submission
+- PostPage with full content rendering (plain text + HTML), likes, comments section
+- WritePage with TipTap rich text editor (WordPress-like toolbar: H1-H3, bold, italic, underline, strikethrough, highlight, lists, blockquote, code, alignment, links, horizontal rules)
 - AuthPage with login/register tabs
 - AboutPage with mission, values, how-it-works, stats
-- Navbar with rainbow logo, topics dropdown, mobile responsive
+- **ProfilePage/Dashboard** with:
+  - User's own posts section (color-coded)
+  - Posts interacted with section (liked/commented, separately color-coded)
+  - Color picker for both sections (12 color options, saved to profile)
+  - Discussion thread dialog (chat-like view) when clicking interacted posts
+  - 5-second auto-refresh for live-ish discussion updates
+- Navbar with rainbow logo, topics dropdown, mobile responsive, profile link
 - Footer with community stats, quick links, category links
-- 12 seed blog posts from global authors (NYC, London, Mumbai, Tokyo, Stockholm, Dublin, São Paulo, Berlin, Mexico City, Seoul, Delhi, Dubai)
+- Fixed stats: now shows "Contributors" (unique authors) instead of "Members"
+- 12 seed blog posts from global authors
 
 ## Test Results
-- Backend: 100% (12/12 tests passed)
-- Frontend: 95% (all major flows working)
+- Backend: 100% (18/18 tests passed)
+- Frontend: 100% (all features working)
 
 ## Prioritized Backlog
 ### P0 (Next)
