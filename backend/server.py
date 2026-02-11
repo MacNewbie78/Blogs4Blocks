@@ -566,6 +566,8 @@ async def startup():
     await db.posts.create_index("author_id")
     await db.comments.create_index("post_id")
     await db.users.create_index("email", unique=True)
+    await db.user_likes.create_index([("user_id", 1), ("post_id", 1)], unique=True)
+    await db.user_prefs.create_index("user_id", unique=True)
     # Auto-seed on startup
     existing = await db.posts.count_documents({})
     if existing == 0:
