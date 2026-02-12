@@ -26,6 +26,10 @@ const CATEGORY_ICONS = {
   'consumer-behavior': '🧠',
   'branding': '🏷️',
   'marketing-tools': '🛠️',
+  'digital-marketing': '💻',
+  'marketing-and-ai': '🤖',
+  'keywords': '🔑',
+  'careers': '💼',
 };
 
 export default function HomePage() {
