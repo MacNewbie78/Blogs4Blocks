@@ -358,13 +358,21 @@ async def suggest_category(suggestion: CategorySuggest, user=Depends(get_current
     slug = suggestion.name.lower().strip().replace(' ', '-').replace('&', 'and')
     slug = ''.join(c for c in slug if c.isalnum() or c == '-')
     
-    # Check for duplicates
+    # Check for duplicates (exact slug match or similar name)
     existing = await db.categories.find_one({"slug": slug}, {"_id": 0})
     if existing:
         if existing.get("status") == "approved":
             raise HTTPException(status_code=400, detail=f"Category '{existing['name']}' already exists.")
         else:
             raise HTTPException(status_code=400, detail=f"Category '{existing['name']}' has already been suggested and is pending review.")
+    
+    # Also check for similar names (case insensitive)
+    existing_similar = await db.categories.find_one({"name": {"$regex": f"^{suggestion.name.strip()}$", "$options": "i"}}, {"_id": 0})
+    if existing_similar:
+        if existing_similar.get("status") == "approved":
+            raise HTTPException(status_code=400, detail=f"Category '{existing_similar['name']}' already exists.")
+        else:
+            raise HTTPException(status_code=400, detail=f"Category '{existing_similar['name']}' has already been suggested and is pending review.")
     
     # Pick a color from the palette
     cat_count = await db.categories.count_documents({})
