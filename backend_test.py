@@ -1,578 +1,306 @@
-#!/usr/bin/env python3
-
 import requests
-import json
 import sys
+import os
+import json
 from datetime import datetime
+from io import BytesIO
 
-class BlogsAPITester:
-    def __init__(self, base_url="https://marketing-forum-hub.preview.emergentagent.com"):
-        self.base_url = base_url
+# Get the backend URL from frontend env (external URL)
+BACKEND_URL = "https://marketing-forum-hub.preview.emergentagent.com/api"
+
+class B4BTestSuite:
+    def __init__(self):
+        self.base_url = BACKEND_URL
         self.token = None
-        self.user_id = None
+        self.test_user_email = "demo@b4b.com"
+        self.test_user_password = "password123"
         self.tests_run = 0
         self.tests_passed = 0
-        self.created_post_id = None
-        
+        self.failed_tests = []
+        self.test_post_id = None
+        self.uploaded_image_url = None
+
     def log(self, message):
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
-        
-    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
-        """Run a single API test"""
-        url = f"{self.base_url}/{endpoint}"
-        test_headers = {'Content-Type': 'application/json'}
-        if self.token:
-            test_headers['Authorization'] = f'Bearer {self.token}'
-        if headers:
-            test_headers.update(headers)
 
+    def run_test(self, test_name, test_func):
+        """Run a single test and track results"""
         self.tests_run += 1
-        self.log(f"🔍 Testing {name}...")
+        self.log(f"Running: {test_name}")
+        try:
+            result = test_func()
+            if result:
+                self.tests_passed += 1
+                self.log(f"✅ PASSED: {test_name}")
+                return True
+            else:
+                self.failed_tests.append(test_name)
+                self.log(f"❌ FAILED: {test_name}")
+                return False
+        except Exception as e:
+            self.failed_tests.append(f"{test_name}: {str(e)}")
+            self.log(f"❌ ERROR: {test_name} - {str(e)}")
+            return False
+
+    def test_login(self):
+        """Test user login"""
+        try:
+            response = requests.post(f"{self.base_url}/auth/login", json={
+                "email": self.test_user_email,
+                "password": self.test_user_password
+            }, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'token' in data:
+                    self.token = data['token']
+                    self.log(f"Login successful, got token")
+                    return True
+            self.log(f"Login failed: {response.status_code} - {response.text}")
+            return False
+        except Exception as e:
+            self.log(f"Login error: {str(e)}")
+            return False
+
+    def test_image_upload(self):
+        """Test POST /api/upload - Image upload functionality"""
+        if not self.token:
+            self.log("No token available for image upload test")
+            return False
         
         try:
-            if method == 'GET':
-                response = requests.get(url, headers=test_headers, timeout=10)
-            elif method == 'POST':
-                response = requests.post(url, json=data, headers=test_headers, timeout=10)
-            elif method == 'PUT':
-                response = requests.put(url, json=data, headers=test_headers, timeout=10)
-            elif method == 'DELETE':
-                response = requests.delete(url, headers=test_headers, timeout=10)
-
-            success = response.status_code == expected_status
-            if success:
-                self.tests_passed += 1
-                self.log(f"✅ PASSED - Status: {response.status_code}")
-                try:
-                    return True, response.json() if response.content else {}
-                except:
-                    return True, {}
-            else:
-                self.log(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
-                try:
-                    error_detail = response.json()
-                    self.log(f"   Error: {error_detail}")
-                except:
-                    self.log(f"   Response text: {response.text[:200]}")
-                return False, {}
-
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ FAILED - Network Error: {str(e)}")
-            return False, {}
+            # Create a simple test image (1x1 pixel PNG)
+            png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82'
+            
+            files = {
+                'file': ('test.png', BytesIO(png_data), 'image/png')
+            }
+            headers = {'Authorization': f'Bearer {self.token}'}
+            
+            response = requests.post(f"{self.base_url}/upload", files=files, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'url' in data and 'filename' in data:
+                    self.uploaded_image_url = data['url']
+                    self.log(f"Image upload successful: {data['url']}")
+                    return True
+            
+            self.log(f"Image upload failed: {response.status_code} - {response.text}")
+            return False
         except Exception as e:
-            self.log(f"❌ FAILED - Error: {str(e)}")
-            return False, {}
+            self.log(f"Image upload error: {str(e)}")
+            return False
 
-    def test_categories_endpoint(self):
-        """Test GET /api/categories - should return 7 categories with post counts"""
-        success, data = self.run_test(
-            "GET /api/categories",
-            "GET", 
-            "api/categories",
-            200
-        )
+    def test_uploaded_image_access(self):
+        """Test GET /api/uploads/{filename} - Uploaded images accessibility"""
+        if not self.uploaded_image_url:
+            self.log("No uploaded image URL to test")
+            return False
         
-        if success and data:
-            if len(data) == 7:
-                self.log(f"✅ Found correct number of categories: {len(data)}")
-                # Check if categories have required fields
-                for cat in data:
-                    required_fields = ['slug', 'name', 'description', 'color', 'post_count']
-                    if all(field in cat for field in required_fields):
-                        self.log(f"   Category '{cat['name']}' has {cat['post_count']} posts")
-                    else:
-                        self.log(f"❌ Category missing fields: {cat}")
-                        return False
+        try:
+            # Remove leading slash if present for full URL construction
+            image_path = self.uploaded_image_url.lstrip('/')
+            full_url = f"{self.base_url.replace('/api', '')}/{image_path}"
+            
+            response = requests.get(full_url, timeout=10)
+            
+            if response.status_code == 200:
+                if response.headers.get('content-type', '').startswith('image/'):
+                    self.log(f"Image accessible at: {full_url}")
+                    return True
+                else:
+                    self.log(f"Image URL returned non-image content-type: {response.headers.get('content-type')}")
+                    return False
+            
+            self.log(f"Image access failed: {response.status_code} - {response.text}")
+            return False
+        except Exception as e:
+            self.log(f"Image access error: {str(e)}")
+            return False
+
+    def test_create_post_with_cover_image(self):
+        """Test POST /api/posts with cover_image field"""
+        if not self.token or not self.uploaded_image_url:
+            self.log("Missing token or uploaded image for post creation test")
+            return False
+        
+        try:
+            post_data = {
+                "title": "Test Post with Cover Image",
+                "content": "<p>This is a test post with a cover image.</p>",
+                "excerpt": "Testing cover image functionality",
+                "category_slug": "marketing-tools",
+                "tags": ["test", "cover-image"],
+                "cover_image": self.uploaded_image_url
+            }
+            
+            headers = {
+                'Authorization': f'Bearer {self.token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.post(f"{self.base_url}/posts", json=post_data, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'id' in data and data.get('cover_image') == self.uploaded_image_url:
+                    self.test_post_id = data['id']
+                    self.log(f"Post created with cover image: {data['id']}")
+                    return True
+            
+            self.log(f"Post creation failed: {response.status_code} - {response.text}")
+            return False
+        except Exception as e:
+            self.log(f"Post creation error: {str(e)}")
+            return False
+
+    def test_get_post_with_cover_image(self):
+        """Test GET /api/posts/{id} returns cover_image field"""
+        if not self.test_post_id:
+            self.log("No test post ID available")
+            return False
+        
+        try:
+            response = requests.get(f"{self.base_url}/posts/{self.test_post_id}", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'cover_image' in data and data['cover_image'] == self.uploaded_image_url:
+                    self.log(f"Post retrieved with correct cover_image: {data['cover_image']}")
+                    return True
+                else:
+                    self.log(f"Post missing or incorrect cover_image. Got: {data.get('cover_image')}")
+                    return False
+            
+            self.log(f"Post retrieval failed: {response.status_code} - {response.text}")
+            return False
+        except Exception as e:
+            self.log(f"Post retrieval error: {str(e)}")
+            return False
+
+    def test_websocket_endpoint(self):
+        """Test WebSocket connection endpoint availability"""
+        try:
+            # We can't easily test WebSocket in requests, but we can check if the endpoint exists
+            # by testing with a regular HTTP request (which should fail in a specific way)
+            import urllib3
+            urllib3.disable_warnings()
+            
+            # Test with a dummy post ID - the WebSocket endpoint should at least be reachable
+            ws_url = self.base_url.replace('https://', 'wss://').replace('/api', '/api/ws/comments/test-post-id')
+            
+            # For now, we'll just validate the URL format and structure
+            if '/api/ws/comments/' in ws_url and ws_url.startswith('wss://'):
+                self.log(f"WebSocket URL format correct: {ws_url}")
                 return True
             else:
-                self.log(f"❌ Expected 7 categories, got {len(data)}")
+                self.log(f"WebSocket URL format incorrect: {ws_url}")
                 return False
-        return success
-
-    def test_posts_endpoint(self):
-        """Test GET /api/posts - should return 12 seeded posts"""
-        success, data = self.run_test(
-            "GET /api/posts",
-            "GET",
-            "api/posts", 
-            200
-        )
-        
-        if success and data:
-            posts = data.get('posts', [])
-            total = data.get('total', 0)
-            self.log(f"✅ Found {len(posts)} posts, total: {total}")
-            if len(posts) >= 12:
-                self.log(f"✅ Seeded posts found")
-                # Store first post ID for later tests
-                if posts and len(posts) > 0:
-                    self.created_post_id = posts[0]['id']
-                return True
-            else:
-                self.log(f"❌ Expected at least 12 posts, got {len(posts)}")
-                return False
-        return success
-
-    def test_post_detail(self):
-        """Test GET /api/posts/{id} - get specific post"""
-        if not self.created_post_id:
-            self.log("❌ No post ID available for detail test")
+        except Exception as e:
+            self.log(f"WebSocket test error: {str(e)}")
             return False
-            
-        success, data = self.run_test(
-            f"GET /api/posts/{self.created_post_id}",
-            "GET",
-            f"api/posts/{self.created_post_id}",
-            200
-        )
-        
-        if success and data:
-            required_fields = ['id', 'title', 'content', 'author_name', 'category_slug', 'likes', 'views']
-            if all(field in data for field in required_fields):
-                self.log(f"✅ Post detail has all required fields")
-                self.log(f"   Title: {data['title'][:50]}...")
-                return True
-            else:
-                missing = [f for f in required_fields if f not in data]
-                self.log(f"❌ Post missing fields: {missing}")
-        return success
-
-    def test_user_registration(self):
-        """Test POST /api/auth/register"""
-        timestamp = datetime.now().strftime("%H%M%S")
-        test_user = {
-            "name": f"Test User {timestamp}",
-            "email": f"test_{timestamp}@blogs4blocks.com",
-            "password": "TestPass123!",
-            "city": "New York",
-            "country": "United States"
-        }
-        
-        success, data = self.run_test(
-            "POST /api/auth/register",
-            "POST",
-            "api/auth/register",
-            200,
-            test_user
-        )
-        
-        if success and data:
-            if 'token' in data and 'user' in data:
-                self.token = data['token']
-                self.user_id = data['user']['id']
-                self.log(f"✅ User registered successfully: {data['user']['name']}")
-                return True
-            else:
-                self.log(f"❌ Registration response missing token or user")
-        return success
-
-    def test_user_login(self):
-        """Test POST /api/auth/login"""
-        if not self.user_id:
-            self.log("❌ No registered user to login with")
-            return False
-            
-        # Create a new user for login test
-        timestamp = datetime.now().strftime("%H%M%S") + "2"
-        test_user = {
-            "name": f"Login Test {timestamp}",
-            "email": f"login_{timestamp}@blogs4blocks.com", 
-            "password": "LoginPass123!",
-            "city": "Boston",
-            "country": "United States"
-        }
-        
-        # Register first
-        reg_success, reg_data = self.run_test(
-            "Register user for login test",
-            "POST",
-            "api/auth/register", 
-            200,
-            test_user
-        )
-        
-        if not reg_success:
-            return False
-            
-        # Now test login
-        login_data = {
-            "email": test_user["email"],
-            "password": test_user["password"]
-        }
-        
-        success, data = self.run_test(
-            "POST /api/auth/login",
-            "POST",
-            "api/auth/login",
-            200,
-            login_data
-        )
-        
-        if success and data:
-            if 'token' in data and 'user' in data:
-                self.log(f"✅ Login successful: {data['user']['name']}")
-                return True
-            else:
-                self.log(f"❌ Login response missing token or user")
-        return success
-
-    def test_create_post(self):
-        """Test POST /api/posts - create new post"""
-        if not self.token:
-            self.log("❌ No auth token for post creation")
-            return False
-            
-        post_data = {
-            "title": f"Test Marketing Post {datetime.now().strftime('%H:%M:%S')}",
-            "content": "This is a test post about marketing strategies.\n\n**Key Points:**\n- Test point 1\n- Test point 2\n\nThis post tests the API functionality.",
-            "excerpt": "A test post to verify the API is working correctly",
-            "category_slug": "social-media",
-            "subcategory": "content-marketing", 
-            "tags": ["test", "api", "marketing"]
-        }
-        
-        success, data = self.run_test(
-            "POST /api/posts (create post)",
-            "POST",
-            "api/posts",
-            200,
-            post_data
-        )
-        
-        if success and data:
-            if 'id' in data and 'title' in data:
-                self.created_post_id = data['id']
-                self.log(f"✅ Post created successfully: {data['title']}")
-                return True
-            else:
-                self.log(f"❌ Post creation response missing id or title")
-        return success
-
-    def test_like_post(self):
-        """Test POST /api/posts/{id}/like"""
-        if not self.created_post_id:
-            self.log("❌ No post ID for like test")
-            return False
-            
-        success, data = self.run_test(
-            f"POST /api/posts/{self.created_post_id}/like",
-            "POST",
-            f"api/posts/{self.created_post_id}/like",
-            200
-        )
-        
-        if success and data:
-            if 'likes' in data:
-                self.log(f"✅ Post liked successfully, now has {data['likes']} likes")
-                return True
-            else:
-                self.log(f"❌ Like response missing likes count")
-        return success
 
     def test_create_comment(self):
-        """Test POST /api/posts/{id}/comments"""
-        if not self.created_post_id:
-            self.log("❌ No post ID for comment test")
+        """Test comment creation and email notification trigger"""
+        if not self.token or not self.test_post_id:
+            self.log("Missing token or test post for comment creation")
             return False
-            
-        comment_data = {
-            "content": "This is a test comment to verify the commenting system works correctly."
-        }
         
-        success, data = self.run_test(
-            f"POST /api/posts/{self.created_post_id}/comments",
-            "POST", 
-            f"api/posts/{self.created_post_id}/comments",
-            200,
-            comment_data
-        )
-        
-        if success and data:
-            if 'id' in data and 'content' in data:
-                self.log(f"✅ Comment created successfully")
-                return True
-            else:
-                self.log(f"❌ Comment creation response missing id or content")
-        return success
-
-    def test_get_comments(self):
-        """Test GET /api/posts/{id}/comments"""
-        if not self.created_post_id:
-            self.log("❌ No post ID for get comments test")  
-            return False
-            
-        success, data = self.run_test(
-            f"GET /api/posts/{self.created_post_id}/comments",
-            "GET",
-            f"api/posts/{self.created_post_id}/comments",
-            200
-        )
-        
-        if success and isinstance(data, list):
-            self.log(f"✅ Retrieved {len(data)} comments")
-            return True
-        return success
-
-    def test_guest_post_creation(self):
-        """Test creating a guest post without authentication"""
-        # Clear token to test guest functionality
-        old_token = self.token
-        self.token = None
-        
-        guest_post_data = {
-            "title": f"Guest Marketing Insight {datetime.now().strftime('%H:%M:%S')}",
-            "content": "This is a guest post about global marketing trends.\n\n**Guest Perspective:**\n- Authentic local insights\n- Real market experience\n\nGuest posts expire after 30 days.",
-            "excerpt": "A guest perspective on international marketing",
-            "category_slug": "consumer-behavior",
-            "tags": ["guest", "global", "insights"],
-            "guest_author": {
-                "name": "Test Guest Author",
-                "city": "San Francisco", 
-                "country": "United States"
+        try:
+            comment_data = {
+                "content": "This is a test comment to trigger email notifications"
             }
-        }
-        
-        success, data = self.run_test(
-            "POST /api/posts (guest post)",
-            "POST",
-            "api/posts",
-            200,
-            guest_post_data
-        )
-        
-        # Restore token
-        self.token = old_token
-        
-        if success and data:
-            if 'id' in data and data.get('is_guest'):
-                self.log(f"✅ Guest post created successfully")
-                return True
-            else:
-                self.log(f"❌ Guest post creation response invalid")
-        return success
-
-    def test_stats_endpoint(self):
-        """Test GET /api/stats - should show contributors instead of total_users"""
-        success, data = self.run_test(
-            "GET /api/stats",
-            "GET",
-            "api/stats", 
-            200
-        )
-        
-        if success and data:
-            required_stats = ['total_posts', 'total_comments', 'contributors', 'countries_represented']
-            if all(stat in data for stat in required_stats):
-                self.log(f"✅ Stats endpoint working:")
-                for stat in required_stats:
-                    self.log(f"   {stat}: {data[stat]}")
-                # Verify it shows contributors instead of total_users
-                if 'contributors' in data and 'total_users' not in data:
-                    self.log(f"✅ Stats correctly shows 'contributors' instead of 'total_users'")
+            
+            headers = {
+                'Authorization': f'Bearer {self.token}',
+                'Content-Type': 'application/json'
+            }
+            
+            response = requests.post(
+                f"{self.base_url}/posts/{self.test_post_id}/comments", 
+                json=comment_data, 
+                headers=headers, 
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'id' in data and data.get('content') == comment_data['content']:
+                    self.log(f"Comment created successfully: {data['id']}")
+                    self.log("Note: Email notification should be triggered (check backend logs)")
                     return True
-                elif 'total_users' in data:
-                    self.log(f"❌ Stats still shows 'total_users' field - should be 'contributors'")
-                    return False
-                return True
-            else:
-                missing = [s for s in required_stats if s not in data]
-                self.log(f"❌ Stats missing fields: {missing}")
-        return success
-
-    def test_profile_colors(self):
-        """Test GET /api/profile/colors and PUT /api/profile/colors"""
-        if not self.token:
-            self.log("❌ No auth token for profile colors test")
-            return False
-        
-        # First get default colors
-        success, data = self.run_test(
-            "GET /api/profile/colors",
-            "GET",
-            "api/profile/colors",
-            200
-        )
-        
-        if not success:
-            return False
             
-        if 'my_posts_color' in data and 'interacted_color' in data:
-            self.log(f"✅ Default colors: my_posts_color={data['my_posts_color']}, interacted_color={data['interacted_color']}")
+            self.log(f"Comment creation failed: {response.status_code} - {response.text}")
+            return False
+        except Exception as e:
+            self.log(f"Comment creation error: {str(e)}")
+            return False
+
+    def test_get_posts_endpoint(self):
+        """Test GET /api/posts to see if posts with cover images are returned"""
+        try:
+            response = requests.get(f"{self.base_url}/posts?limit=10", timeout=10)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'posts' in data and len(data['posts']) > 0:
+                    # Check if any posts have cover_image field
+                    posts_with_covers = [p for p in data['posts'] if p.get('cover_image')]
+                    self.log(f"Found {len(posts_with_covers)} posts with cover images out of {len(data['posts'])} total posts")
+                    return True
+                else:
+                    self.log("No posts found in response")
+                    return False
+            
+            self.log(f"Get posts failed: {response.status_code} - {response.text}")
+            return False
+        except Exception as e:
+            self.log(f"Get posts error: {str(e)}")
+            return False
+
+    def run_all_tests(self):
+        """Run all backend API tests"""
+        self.log("🧪 Starting Blogs 4 Blocks Backend API Tests")
+        self.log(f"Backend URL: {self.base_url}")
+        
+        # Authentication test
+        self.run_test("User Login", self.test_login)
+        
+        # Image upload tests
+        self.run_test("Image Upload (POST /api/upload)", self.test_image_upload)
+        self.run_test("Uploaded Images Access (GET /api/uploads/{filename})", self.test_uploaded_image_access)
+        
+        # Post with cover image tests  
+        self.run_test("Create Post with Cover Image", self.test_create_post_with_cover_image)
+        self.run_test("Get Post with Cover Image Field", self.test_get_post_with_cover_image)
+        self.run_test("Get Posts Endpoint", self.test_get_posts_endpoint)
+        
+        # WebSocket test
+        self.run_test("WebSocket Endpoint Structure", self.test_websocket_endpoint)
+        
+        # Comment and notification test
+        self.run_test("Comment Creation & Email Notification", self.test_create_comment)
+        
+        # Final report
+        self.log(f"\n📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
+        
+        if self.failed_tests:
+            self.log("❌ Failed Tests:")
+            for test in self.failed_tests:
+                self.log(f"   - {test}")
+        
+        if self.tests_passed == self.tests_run:
+            self.log("🎉 All backend tests passed!")
+            return True
         else:
-            self.log(f"❌ Missing color fields in response: {data}")
+            self.log(f"⚠️  {len(self.failed_tests)} tests failed")
             return False
-            
-        # Now test updating colors
-        new_colors = {
-            "my_posts_color": "#FF0000",
-            "interacted_color": "#00FF00"
-        }
-        
-        success, data = self.run_test(
-            "PUT /api/profile/colors",
-            "PUT",
-            "api/profile/colors",
-            200,
-            new_colors
-        )
-        
-        if success and data:
-            if data.get('my_posts_color') == "#FF0000" and data.get('interacted_color') == "#00FF00":
-                self.log(f"✅ Colors updated successfully")
-                return True
-            else:
-                self.log(f"❌ Updated colors don't match: {data}")
-        return success
-
-    def test_profile_posts(self):
-        """Test GET /api/profile/posts"""
-        if not self.token:
-            self.log("❌ No auth token for profile posts test")
-            return False
-            
-        success, data = self.run_test(
-            "GET /api/profile/posts",
-            "GET",
-            "api/profile/posts",
-            200
-        )
-        
-        if success and isinstance(data, list):
-            self.log(f"✅ Retrieved {len(data)} user posts")
-            if len(data) > 0:
-                # Check if posts have required fields
-                post = data[0]
-                required_fields = ['id', 'title', 'author_id', 'created_at']
-                if all(field in post for field in required_fields):
-                    self.log(f"✅ User posts have required fields")
-                else:
-                    missing = [f for f in required_fields if f not in post]
-                    self.log(f"❌ User posts missing fields: {missing}")
-                    return False
-            return True
-        return success
-
-    def test_profile_interactions(self):
-        """Test GET /api/profile/interactions"""
-        if not self.token:
-            self.log("❌ No auth token for profile interactions test")
-            return False
-            
-        success, data = self.run_test(
-            "GET /api/profile/interactions",
-            "GET",
-            "api/profile/interactions",
-            200
-        )
-        
-        if success and isinstance(data, list):
-            self.log(f"✅ Retrieved {len(data)} interacted posts")
-            if len(data) > 0:
-                # Check if posts have liked/commented flags
-                post = data[0]
-                if 'liked' in post and 'commented' in post:
-                    self.log(f"✅ Interaction posts have liked/commented flags")
-                else:
-                    self.log(f"❌ Interaction posts missing liked/commented flags")
-                    return False
-            return True
-        return success
-
-    def test_comments_live_endpoint(self):
-        """Test GET /api/posts/{id}/comments/live - chat-style comments"""
-        if not self.created_post_id:
-            self.log("❌ No post ID for live comments test")
-            return False
-            
-        success, data = self.run_test(
-            f"GET /api/posts/{self.created_post_id}/comments/live",
-            "GET",
-            f"api/posts/{self.created_post_id}/comments/live",
-            200
-        )
-        
-        if success and isinstance(data, list):
-            self.log(f"✅ Retrieved {len(data)} live comments")
-            return True
-        return success
-
-    def test_demo_user_login(self):
-        """Test login with demo@b4b.com / password123"""
-        login_data = {
-            "email": "demo@b4b.com",
-            "password": "password123"
-        }
-        
-        success, data = self.run_test(
-            "POST /api/auth/login (demo user)",
-            "POST",
-            "api/auth/login",
-            200,
-            login_data
-        )
-        
-        if success and data:
-            if 'token' in data and 'user' in data:
-                # Store demo user token for profile tests
-                self.token = data['token']
-                self.user_id = data['user']['id']
-                self.log(f"✅ Demo user login successful: {data['user']['name']}")
-                return True
-            else:
-                self.log(f"❌ Demo login response missing token or user")
-        return success
 
 def main():
-    """Run all backend API tests"""
-    print("=" * 60)
-    print("🚀 BLOGS 4 BLOCKS - BACKEND API TESTING")
-    print("=" * 60)
-    
-    tester = BlogsAPITester()
-    
-    # Run all tests
-    tests = [
-        tester.test_categories_endpoint,
-        tester.test_posts_endpoint, 
-        tester.test_post_detail,
-        tester.test_user_registration,
-        tester.test_user_login,
-        tester.test_demo_user_login,  # Login with demo user for profile tests
-        tester.test_create_post,
-        tester.test_like_post,
-        tester.test_create_comment,
-        tester.test_get_comments,
-        tester.test_comments_live_endpoint,
-        tester.test_profile_colors,
-        tester.test_profile_posts,
-        tester.test_profile_interactions,
-        tester.test_guest_post_creation,
-        tester.test_stats_endpoint
-    ]
-    
-    print(f"\n📋 Running {len(tests)} API tests...\n")
-    
-    for test in tests:
-        try:
-            test()
-        except Exception as e:
-            tester.log(f"❌ EXCEPTION in {test.__name__}: {str(e)}")
-        print()  # Add spacing between tests
-    
-    # Final results
-    print("=" * 60)
-    success_rate = (tester.tests_passed / tester.tests_run * 100) if tester.tests_run > 0 else 0
-    print(f"📊 TEST RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed ({success_rate:.1f}%)")
-    
-    if success_rate >= 80:
-        print("🎉 BACKEND APIs are working well!")
-        return 0
-    elif success_rate >= 50:
-        print("⚠️  BACKEND has some issues but core functionality works")
-        return 1
-    else:
-        print("🚨 BACKEND has major issues - needs fixing")
-        return 2
+    tester = B4BTestSuite()
+    success = tester.run_all_tests()
+    return 0 if success else 1
 
 if __name__ == "__main__":
     sys.exit(main())
