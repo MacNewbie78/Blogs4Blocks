@@ -332,24 +332,85 @@ async def get_me(user=Depends(require_user)):
 
 @api_router.get("/categories")
 async def get_categories():
-    cats = []
-    for cat in CATEGORIES:
-        count = await db.posts.count_documents({"category_slug": cat["slug"]})
-        cats.append({**cat, "post_count": count})
+    cats = await db.categories.find({"status": "approved"}, {"_id": 0}).sort("name", 1).to_list(100)
+    for cat in cats:
+        cat["post_count"] = await db.posts.count_documents({"category_slug": cat["slug"]})
     return cats
 
 @api_router.get("/categories/{slug}")
 async def get_category(slug: str):
-    cat = next((c for c in CATEGORIES if c["slug"] == slug), None)
+    cat = await db.categories.find_one({"slug": slug, "status": "approved"}, {"_id": 0})
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
-    subs = [s for s in SUBCATEGORIES if s["parent"] == slug]
+    subs = await db.subcategories.find({"parent": slug}, {"_id": 0}).to_list(50)
     count = await db.posts.count_documents({"category_slug": slug})
     return {**cat, "subcategories": subs, "post_count": count}
 
 @api_router.get("/subcategories")
 async def get_subcategories():
-    return SUBCATEGORIES
+    subs = await db.subcategories.find({}, {"_id": 0}).to_list(200)
+    return subs
+
+@api_router.post("/categories/suggest")
+async def suggest_category(suggestion: CategorySuggest, user=Depends(get_current_user)):
+    """Allow users to suggest a new category. It goes to 'pending' status for moderation."""
+    # Generate slug
+    slug = suggestion.name.lower().strip().replace(' ', '-').replace('&', 'and')
+    slug = ''.join(c for c in slug if c.isalnum() or c == '-')
+    
+    # Check for duplicates
+    existing = await db.categories.find_one({"slug": slug}, {"_id": 0})
+    if existing:
+        if existing.get("status") == "approved":
+            raise HTTPException(status_code=400, detail=f"Category '{existing['name']}' already exists.")
+        else:
+            raise HTTPException(status_code=400, detail=f"Category '{existing['name']}' has already been suggested and is pending review.")
+    
+    # Pick a color from the palette
+    cat_count = await db.categories.count_documents({})
+    color = CATEGORY_COLORS[cat_count % len(CATEGORY_COLORS)]
+    
+    author_info = {}
+    if user:
+        author_info = {"suggested_by": user["name"], "suggested_by_id": user["id"]}
+    elif suggestion:
+        author_info = {"suggested_by": "Guest", "suggested_by_id": None}
+    
+    cat_doc = {
+        "slug": slug,
+        "name": suggestion.name.strip(),
+        "description": suggestion.description.strip(),
+        "color": color,
+        "icon": "tag",
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        **author_info
+    }
+    await db.categories.insert_one(cat_doc)
+    return {"slug": slug, "name": suggestion.name, "status": "pending", "message": "Your topic suggestion has been submitted for review. It will appear once approved."}
+
+@api_router.get("/categories/pending/list")
+async def get_pending_categories():
+    """Get pending categories (for moderation view)"""
+    cats = await db.categories.find({"status": "pending"}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return cats
+
+@api_router.put("/categories/{slug}/approve")
+async def approve_category(slug: str):
+    """Approve a pending category"""
+    result = await db.categories.update_one({"slug": slug, "status": "pending"}, {"$set": {"status": "approved"}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Pending category not found")
+    cat = await db.categories.find_one({"slug": slug}, {"_id": 0})
+    return cat
+
+@api_router.delete("/categories/{slug}/reject")
+async def reject_category(slug: str):
+    """Reject and remove a pending category"""
+    result = await db.categories.delete_one({"slug": slug, "status": "pending"})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Pending category not found")
+    return {"message": "Category suggestion rejected and removed"}
 
 # ==================== POST ROUTES ====================
 
