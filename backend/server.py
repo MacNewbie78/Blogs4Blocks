@@ -118,6 +118,12 @@ async def require_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Authentication required")
     return user
 
+async def require_admin(authorization: Optional[str] = Header(None)):
+    user = await require_user(authorization)
+    if not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
 # ==================== CATEGORIES SEED DATA ====================
 
 # These get seeded into MongoDB on startup. Once in DB, they're fully dynamic.
