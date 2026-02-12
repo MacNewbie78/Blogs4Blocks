@@ -118,19 +118,24 @@ async def require_user(authorization: Optional[str] = Header(None)):
         raise HTTPException(status_code=401, detail="Authentication required")
     return user
 
-# ==================== CATEGORIES DATA ====================
+# ==================== CATEGORIES SEED DATA ====================
 
-CATEGORIES = [
-    {"slug": "social-media", "name": "Social Media Marketing", "description": "Strategies for Facebook, Instagram, TikTok, LinkedIn and beyond. What platforms drive real engagement?", "color": "#3B82F6", "icon": "share-2"},
-    {"slug": "seo-sem", "name": "SEO / SEM", "description": "Search engine optimization and marketing tactics. Organic vs paid — what actually moves the needle?", "color": "#22C55E", "icon": "search"},
-    {"slug": "influencer-marketing", "name": "Influencer Marketing", "description": "Micro vs macro influencers, ROI tracking, and partnership strategies from around the globe.", "color": "#A855F7", "icon": "users"},
-    {"slug": "integrated-marketing", "name": "Integrated Marketing", "description": "Omnichannel campaigns that connect digital and traditional. How do you make it all work together?", "color": "#F97316", "icon": "layers"},
-    {"slug": "consumer-behavior", "name": "Consumer Behavior", "description": "Understanding what makes people buy. Psychology, data, and cultural differences across markets.", "color": "#EF4444", "icon": "brain"},
-    {"slug": "branding", "name": "Branding", "description": "Building memorable brands that resonate. Identity, positioning, and storytelling that sticks.", "color": "#FACC15", "icon": "award"},
-    {"slug": "marketing-tools", "name": "Marketing Tools", "description": "The best tools, platforms, and tech stacks marketers are using worldwide. Reviews and recommendations.", "color": "#14B8A6", "icon": "wrench"},
+# These get seeded into MongoDB on startup. Once in DB, they're fully dynamic.
+SEED_CATEGORIES = [
+    {"slug": "social-media", "name": "Social Media Marketing", "description": "Strategies for Facebook, Instagram, TikTok, LinkedIn and beyond. What platforms drive real engagement?", "color": "#3B82F6", "icon": "share-2", "status": "approved"},
+    {"slug": "seo-sem", "name": "SEO / SEM", "description": "Search engine optimization and marketing tactics. Organic vs paid — what actually moves the needle?", "color": "#22C55E", "icon": "search", "status": "approved"},
+    {"slug": "influencer-marketing", "name": "Influencer Marketing", "description": "Micro vs macro influencers, ROI tracking, and partnership strategies from around the globe.", "color": "#A855F7", "icon": "users", "status": "approved"},
+    {"slug": "integrated-marketing", "name": "Integrated Marketing", "description": "Omnichannel campaigns that connect digital and traditional. How do you make it all work together?", "color": "#F97316", "icon": "layers", "status": "approved"},
+    {"slug": "consumer-behavior", "name": "Consumer Behavior", "description": "Understanding what makes people buy. Psychology, data, and cultural differences across markets.", "color": "#EF4444", "icon": "brain", "status": "approved"},
+    {"slug": "branding", "name": "Branding", "description": "Building memorable brands that resonate. Identity, positioning, and storytelling that sticks.", "color": "#FACC15", "icon": "award", "status": "approved"},
+    {"slug": "marketing-tools", "name": "Marketing Tools", "description": "The best tools, platforms, and tech stacks marketers are using worldwide. Reviews and recommendations.", "color": "#14B8A6", "icon": "wrench", "status": "approved"},
+    {"slug": "digital-marketing", "name": "Digital Marketing", "description": "The full spectrum of online marketing — from display ads to landing pages, funnels, and conversion optimization.", "color": "#6366F1", "icon": "monitor", "status": "approved"},
+    {"slug": "marketing-and-ai", "name": "Marketing & AI", "description": "How artificial intelligence is reshaping marketing — from predictive analytics to AI-generated content and automation.", "color": "#EC4899", "icon": "cpu", "status": "approved"},
+    {"slug": "keywords", "name": "Keywords & Search Strategy", "description": "Keyword research, long-tail strategy, search intent, and the evolving landscape of how people find things online.", "color": "#06B6D4", "icon": "key", "status": "approved"},
+    {"slug": "careers", "name": "Marketing Careers", "description": "Career paths, job hunting, skill development, portfolio building, and navigating the marketing job market worldwide.", "color": "#D97706", "icon": "briefcase", "status": "approved"},
 ]
 
-SUBCATEGORIES = [
+SEED_SUBCATEGORIES = [
     {"slug": "4ps-of-marketing", "name": "The 4 P's of Marketing", "parent": "integrated-marketing"},
     {"slug": "wheel-and-spoke", "name": "Wheel & Spoke Method", "parent": "integrated-marketing"},
     {"slug": "swot-analysis", "name": "SWOT Analysis", "parent": "marketing-tools"},
@@ -141,7 +146,18 @@ SUBCATEGORIES = [
     {"slug": "seo-fundamentals", "name": "SEO Fundamentals", "parent": "seo-sem"},
     {"slug": "paid-advertising", "name": "Paid Advertising", "parent": "seo-sem"},
     {"slug": "market-research", "name": "Market Research", "parent": "consumer-behavior"},
+    {"slug": "chatgpt-marketing", "name": "ChatGPT for Marketing", "parent": "marketing-and-ai"},
+    {"slug": "predictive-analytics", "name": "Predictive Analytics", "parent": "marketing-and-ai"},
+    {"slug": "ppc-strategy", "name": "PPC Strategy", "parent": "digital-marketing"},
+    {"slug": "conversion-optimization", "name": "Conversion Optimization", "parent": "digital-marketing"},
+    {"slug": "keyword-research", "name": "Keyword Research", "parent": "keywords"},
+    {"slug": "search-intent", "name": "Search Intent", "parent": "keywords"},
+    {"slug": "portfolio-building", "name": "Portfolio Building", "parent": "careers"},
+    {"slug": "freelancing", "name": "Freelancing & Consulting", "parent": "careers"},
 ]
+
+# Color palette for user-suggested categories
+CATEGORY_COLORS = ["#3B82F6", "#22C55E", "#A855F7", "#F97316", "#EF4444", "#FACC15", "#14B8A6", "#6366F1", "#EC4899", "#06B6D4", "#D97706", "#F43F5E", "#8B5CF6", "#10B981", "#F59E0B"]
 
 # ==================== SEED DATA ====================
 
