@@ -1,306 +1,349 @@
 import requests
 import sys
-import os
-import json
 from datetime import datetime
-from io import BytesIO
+import json
 
-# Get the backend URL from frontend env (external URL)
-BACKEND_URL = "https://marketing-forum-hub.preview.emergentagent.com/api"
-
-class B4BTestSuite:
-    def __init__(self):
-        self.base_url = BACKEND_URL
+class CategorySystemTester:
+    def __init__(self, base_url="https://marketing-forum-hub.preview.emergentagent.com"):
+        self.base_url = base_url
         self.token = None
-        self.test_user_email = "demo@b4b.com"
-        self.test_user_password = "password123"
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
-        self.test_post_id = None
-        self.uploaded_image_url = None
 
-    def log(self, message):
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] {message}")
+    def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
+        """Run a single API test"""
+        url = f"{self.base_url}/api/{endpoint}"
+        test_headers = {'Content-Type': 'application/json'}
+        if self.token:
+            test_headers['Authorization'] = f'Bearer {self.token}'
+        if headers:
+            test_headers.update(headers)
 
-    def run_test(self, test_name, test_func):
-        """Run a single test and track results"""
         self.tests_run += 1
-        self.log(f"Running: {test_name}")
+        print(f"\n🔍 Testing {name}...")
+        print(f"   URL: {url}")
+        
         try:
-            result = test_func()
-            if result:
+            if method == 'GET':
+                response = requests.get(url, headers=test_headers)
+            elif method == 'POST':
+                response = requests.post(url, json=data, headers=test_headers)
+            elif method == 'PUT':
+                response = requests.put(url, json=data, headers=test_headers)
+            elif method == 'DELETE':
+                response = requests.delete(url, headers=test_headers)
+
+            success = response.status_code == expected_status
+            if success:
                 self.tests_passed += 1
-                self.log(f"✅ PASSED: {test_name}")
-                return True
+                print(f"✅ Passed - Status: {response.status_code}")
+                try:
+                    result = response.json() if response.text else {}
+                    if isinstance(result, list) and len(result) > 0:
+                        print(f"   Response count: {len(result)}")
+                    elif isinstance(result, dict) and 'message' in result:
+                        print(f"   Message: {result['message']}")
+                    return True, result
+                except:
+                    return True, {}
             else:
-                self.failed_tests.append(test_name)
-                self.log(f"❌ FAILED: {test_name}")
-                return False
+                print(f"❌ Failed - Expected {expected_status}, got {response.status_code}")
+                print(f"   Response: {response.text[:200]}...")
+                self.failed_tests.append(f"{name}: Expected {expected_status}, got {response.status_code}")
+                return False, {}
+
         except Exception as e:
-            self.failed_tests.append(f"{test_name}: {str(e)}")
-            self.log(f"❌ ERROR: {test_name} - {str(e)}")
-            return False
+            print(f"❌ Failed - Error: {str(e)}")
+            self.failed_tests.append(f"{name}: {str(e)}")
+            return False, {}
 
     def test_login(self):
-        """Test user login"""
-        try:
-            response = requests.post(f"{self.base_url}/auth/login", json={
-                "email": self.test_user_email,
-                "password": self.test_user_password
-            }, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'token' in data:
-                    self.token = data['token']
-                    self.log(f"Login successful, got token")
-                    return True
-            self.log(f"Login failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Login error: {str(e)}")
-            return False
+        """Test login and get token"""
+        success, response = self.run_test(
+            "User Login",
+            "POST",
+            "auth/login",
+            200,
+            data={"email": "demo@b4b.com", "password": "password123"}
+        )
+        if success and 'token' in response:
+            self.token = response['token']
+            print(f"   Logged in as: {response['user']['name']}")
+            return True
+        return False
 
-    def test_image_upload(self):
-        """Test POST /api/upload - Image upload functionality"""
-        if not self.token:
-            self.log("No token available for image upload test")
-            return False
+    def test_get_all_categories(self):
+        """Test GET /api/categories - should return 11 approved categories"""
+        success, response = self.run_test(
+            "GET All Categories",
+            "GET",
+            "categories",
+            200
+        )
         
-        try:
-            # Create a simple test image (1x1 pixel PNG)
-            png_data = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xdb\x00\x00\x00\x00IEND\xaeB`\x82'
+        if success:
+            categories = response if isinstance(response, list) else []
+            expected_count = 11
+            actual_count = len(categories)
             
-            files = {
-                'file': ('test.png', BytesIO(png_data), 'image/png')
-            }
-            headers = {'Authorization': f'Bearer {self.token}'}
-            
-            response = requests.post(f"{self.base_url}/upload", files=files, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'url' in data and 'filename' in data:
-                    self.uploaded_image_url = data['url']
-                    self.log(f"Image upload successful: {data['url']}")
-                    return True
-            
-            self.log(f"Image upload failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Image upload error: {str(e)}")
-            return False
-
-    def test_uploaded_image_access(self):
-        """Test GET /api/uploads/{filename} - Uploaded images accessibility"""
-        if not self.uploaded_image_url:
-            self.log("No uploaded image URL to test")
-            return False
-        
-        try:
-            # Remove leading slash if present for full URL construction
-            image_path = self.uploaded_image_url.lstrip('/')
-            full_url = f"{self.base_url.replace('/api', '')}/{image_path}"
-            
-            response = requests.get(full_url, timeout=10)
-            
-            if response.status_code == 200:
-                if response.headers.get('content-type', '').startswith('image/'):
-                    self.log(f"Image accessible at: {full_url}")
-                    return True
-                else:
-                    self.log(f"Image URL returned non-image content-type: {response.headers.get('content-type')}")
-                    return False
-            
-            self.log(f"Image access failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Image access error: {str(e)}")
-            return False
-
-    def test_create_post_with_cover_image(self):
-        """Test POST /api/posts with cover_image field"""
-        if not self.token or not self.uploaded_image_url:
-            self.log("Missing token or uploaded image for post creation test")
-            return False
-        
-        try:
-            post_data = {
-                "title": "Test Post with Cover Image",
-                "content": "<p>This is a test post with a cover image.</p>",
-                "excerpt": "Testing cover image functionality",
-                "category_slug": "marketing-tools",
-                "tags": ["test", "cover-image"],
-                "cover_image": self.uploaded_image_url
-            }
-            
-            headers = {
-                'Authorization': f'Bearer {self.token}',
-                'Content-Type': 'application/json'
-            }
-            
-            response = requests.post(f"{self.base_url}/posts", json=post_data, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'id' in data and data.get('cover_image') == self.uploaded_image_url:
-                    self.test_post_id = data['id']
-                    self.log(f"Post created with cover image: {data['id']}")
-                    return True
-            
-            self.log(f"Post creation failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Post creation error: {str(e)}")
-            return False
-
-    def test_get_post_with_cover_image(self):
-        """Test GET /api/posts/{id} returns cover_image field"""
-        if not self.test_post_id:
-            self.log("No test post ID available")
-            return False
-        
-        try:
-            response = requests.get(f"{self.base_url}/posts/{self.test_post_id}", timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'cover_image' in data and data['cover_image'] == self.uploaded_image_url:
-                    self.log(f"Post retrieved with correct cover_image: {data['cover_image']}")
-                    return True
-                else:
-                    self.log(f"Post missing or incorrect cover_image. Got: {data.get('cover_image')}")
-                    return False
-            
-            self.log(f"Post retrieval failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Post retrieval error: {str(e)}")
-            return False
-
-    def test_websocket_endpoint(self):
-        """Test WebSocket connection endpoint availability"""
-        try:
-            # We can't easily test WebSocket in requests, but we can check if the endpoint exists
-            # by testing with a regular HTTP request (which should fail in a specific way)
-            import urllib3
-            urllib3.disable_warnings()
-            
-            # Test with a dummy post ID - the WebSocket endpoint should at least be reachable
-            ws_url = self.base_url.replace('https://', 'wss://').replace('/api', '/api/ws/comments/test-post-id')
-            
-            # For now, we'll just validate the URL format and structure
-            if '/api/ws/comments/' in ws_url and ws_url.startswith('wss://'):
-                self.log(f"WebSocket URL format correct: {ws_url}")
-                return True
+            if actual_count == expected_count:
+                print(f"   ✅ Found {actual_count} categories (expected {expected_count})")
+                
+                # Check for new categories
+                new_categories = ['digital-marketing', 'marketing-and-ai', 'keywords', 'careers']
+                found_new = []
+                for cat in categories:
+                    if cat.get('slug') in new_categories:
+                        found_new.append(cat.get('slug'))
+                        print(f"   ✅ Found new category: {cat.get('name')} ({cat.get('slug')})")
+                
+                missing = set(new_categories) - set(found_new)
+                if missing:
+                    print(f"   ❌ Missing new categories: {missing}")
+                    self.failed_tests.append(f"Missing categories: {missing}")
+                
+                return len(found_new) == len(new_categories)
             else:
-                self.log(f"WebSocket URL format incorrect: {ws_url}")
+                print(f"   ❌ Expected {expected_count} categories, got {actual_count}")
+                self.failed_tests.append(f"Expected {expected_count} categories, got {actual_count}")
                 return False
-        except Exception as e:
-            self.log(f"WebSocket test error: {str(e)}")
-            return False
-
-    def test_create_comment(self):
-        """Test comment creation and email notification trigger"""
-        if not self.token or not self.test_post_id:
-            self.log("Missing token or test post for comment creation")
-            return False
         
-        try:
-            comment_data = {
-                "content": "This is a test comment to trigger email notifications"
-            }
+        return success
+
+    def test_get_category_with_subcategories(self):
+        """Test GET /api/categories/marketing-forum-hub - should return category with subcategories"""
+        success, response = self.run_test(
+            "GET Category with Subcategories",
+            "GET",
+            "categories/marketing-and-ai",
+            200
+        )
+        
+        if success:
+            if 'subcategories' in response:
+                print(f"   ✅ Category has subcategories: {len(response['subcategories'])}")
+            else:
+                print("   ⚠️ No subcategories found")
             
-            headers = {
-                'Authorization': f'Bearer {self.token}',
-                'Content-Type': 'application/json'
+            if response.get('status') == 'approved':
+                print("   ✅ Category status is approved")
+            else:
+                print(f"   ❌ Category status is {response.get('status')}")
+        
+        return success
+
+    def test_suggest_category(self):
+        """Test POST /api/categories/suggest - create a pending category"""
+        test_name = f"Test Category {datetime.now().strftime('%H%M%S')}"
+        success, response = self.run_test(
+            "Suggest New Category",
+            "POST",
+            "categories/suggest",
+            200,
+            data={
+                "name": test_name,
+                "description": f"Test category suggested at {datetime.now()}"
             }
+        )
+        
+        if success and 'slug' in response:
+            self.suggested_slug = response['slug']
+            print(f"   ✅ Suggested category slug: {self.suggested_slug}")
+            return True
+        
+        return success
+
+    def test_get_pending_categories(self):
+        """Test GET /api/categories/pending/list - should return pending categories"""
+        success, response = self.run_test(
+            "GET Pending Categories",
+            "GET",
+            "categories/pending/list",
+            200
+        )
+        
+        if success:
+            pending_cats = response if isinstance(response, list) else []
+            print(f"   Found {len(pending_cats)} pending categories")
+            for cat in pending_cats:
+                if cat.get('status') == 'pending':
+                    print(f"   - {cat.get('name')} ({cat.get('slug')})")
+        
+        return success
+
+    def test_approve_category(self):
+        """Test PUT /api/categories/{slug}/approve - approve a pending category"""
+        if not hasattr(self, 'suggested_slug'):
+            print("❌ Skipping approve test - no suggested category slug")
+            return False
             
-            response = requests.post(
-                f"{self.base_url}/posts/{self.test_post_id}/comments", 
-                json=comment_data, 
-                headers=headers, 
-                timeout=10
+        success, response = self.run_test(
+            "Approve Pending Category",
+            "PUT",
+            f"categories/{self.suggested_slug}/approve",
+            200
+        )
+        
+        if success and response.get('status') == 'approved':
+            print(f"   ✅ Category {response.get('name')} approved successfully")
+            self.approved_slug = self.suggested_slug
+            return True
+        
+        return success
+
+    def test_approved_category_appears(self):
+        """Test that approved category appears in main categories list"""
+        if not hasattr(self, 'approved_slug'):
+            print("❌ Skipping approved category test - no approved slug")
+            return False
+            
+        success, response = self.run_test(
+            "Approved Category in Main List",
+            "GET",
+            "categories",
+            200
+        )
+        
+        if success:
+            categories = response if isinstance(response, list) else []
+            found_approved = False
+            for cat in categories:
+                if cat.get('slug') == self.approved_slug and cat.get('status') == 'approved':
+                    found_approved = True
+                    print(f"   ✅ Found approved category: {cat.get('name')}")
+                    break
+            
+            if not found_approved:
+                print(f"   ❌ Approved category {self.approved_slug} not found in main list")
+                self.failed_tests.append(f"Approved category {self.approved_slug} not in main list")
+            
+            return found_approved
+        
+        return success
+
+    def test_reject_category(self):
+        """Test DELETE /api/categories/{slug}/reject - reject a pending category"""
+        # First create another pending category to reject
+        test_name = f"Reject Test {datetime.now().strftime('%H%M%S')}"
+        success, response = self.run_test(
+            "Create Category to Reject",
+            "POST",
+            "categories/suggest",
+            200,
+            data={
+                "name": test_name,
+                "description": "Category created to test rejection"
+            }
+        )
+        
+        if success and 'slug' in response:
+            reject_slug = response['slug']
+            success, response = self.run_test(
+                "Reject Pending Category",
+                "DELETE",
+                f"categories/{reject_slug}/reject",
+                200
             )
             
-            if response.status_code == 200:
-                data = response.json()
-                if 'id' in data and data.get('content') == comment_data['content']:
-                    self.log(f"Comment created successfully: {data['id']}")
-                    self.log("Note: Email notification should be triggered (check backend logs)")
-                    return True
-            
-            self.log(f"Comment creation failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Comment creation error: {str(e)}")
-            return False
+            if success and 'message' in response:
+                print(f"   ✅ Rejection message: {response['message']}")
+                return True
+        
+        return success
 
-    def test_get_posts_endpoint(self):
-        """Test GET /api/posts to see if posts with cover images are returned"""
-        try:
-            response = requests.get(f"{self.base_url}/posts?limit=10", timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                if 'posts' in data and len(data['posts']) > 0:
-                    # Check if any posts have cover_image field
-                    posts_with_covers = [p for p in data['posts'] if p.get('cover_image')]
-                    self.log(f"Found {len(posts_with_covers)} posts with cover images out of {len(data['posts'])} total posts")
-                    return True
-                else:
-                    self.log("No posts found in response")
-                    return False
-            
-            self.log(f"Get posts failed: {response.status_code} - {response.text}")
-            return False
-        except Exception as e:
-            self.log(f"Get posts error: {str(e)}")
-            return False
+    def test_duplicate_category_error(self):
+        """Test that suggesting duplicate category returns error"""
+        success, response = self.run_test(
+            "Duplicate Category Error",
+            "POST",
+            "categories/suggest",
+            400,  # Expecting error
+            data={
+                "name": "Social Media Marketing",  # This already exists
+                "description": "Duplicate category test"
+            }
+        )
+        return success
 
-    def run_all_tests(self):
-        """Run all backend API tests"""
-        self.log("🧪 Starting Blogs 4 Blocks Backend API Tests")
-        self.log(f"Backend URL: {self.base_url}")
+    def test_specific_new_categories(self):
+        """Test that all 4 new categories are present"""
+        success, response = self.run_test(
+            "Check New Categories",
+            "GET",
+            "categories",
+            200
+        )
         
-        # Authentication test
-        self.run_test("User Login", self.test_login)
-        
-        # Image upload tests
-        self.run_test("Image Upload (POST /api/upload)", self.test_image_upload)
-        self.run_test("Uploaded Images Access (GET /api/uploads/{filename})", self.test_uploaded_image_access)
-        
-        # Post with cover image tests  
-        self.run_test("Create Post with Cover Image", self.test_create_post_with_cover_image)
-        self.run_test("Get Post with Cover Image Field", self.test_get_post_with_cover_image)
-        self.run_test("Get Posts Endpoint", self.test_get_posts_endpoint)
-        
-        # WebSocket test
-        self.run_test("WebSocket Endpoint Structure", self.test_websocket_endpoint)
-        
-        # Comment and notification test
-        self.run_test("Comment Creation & Email Notification", self.test_create_comment)
-        
-        # Final report
-        self.log(f"\n📊 Test Results: {self.tests_passed}/{self.tests_run} passed")
-        
-        if self.failed_tests:
-            self.log("❌ Failed Tests:")
-            for test in self.failed_tests:
-                self.log(f"   - {test}")
-        
-        if self.tests_passed == self.tests_run:
-            self.log("🎉 All backend tests passed!")
+        if success:
+            categories = response if isinstance(response, list) else []
+            new_cats = {
+                'digital-marketing': 'Digital Marketing',
+                'marketing-and-ai': 'Marketing & AI', 
+                'keywords': 'Keywords & Search Strategy',
+                'careers': 'Marketing Careers'
+            }
+            
+            found_cats = {}
+            for cat in categories:
+                slug = cat.get('slug')
+                if slug in new_cats:
+                    found_cats[slug] = cat.get('name')
+                    print(f"   ✅ Found: {cat.get('name')} ({slug})")
+            
+            missing = set(new_cats.keys()) - set(found_cats.keys())
+            if missing:
+                print(f"   ❌ Missing new categories: {[new_cats[m] for m in missing]}")
+                return False
+            
             return True
-        else:
-            self.log(f"⚠️  {len(self.failed_tests)} tests failed")
-            return False
+        
+        return success
 
 def main():
-    tester = B4BTestSuite()
-    success = tester.run_all_tests()
-    return 0 if success else 1
+    """Run all category system tests"""
+    print("🚀 Starting Category System Testing")
+    print("="*50)
+    
+    tester = CategorySystemTester()
+    
+    # Login first
+    if not tester.test_login():
+        print("❌ Login failed, stopping tests")
+        return 1
+    
+    # Test all category endpoints
+    tests = [
+        tester.test_get_all_categories,
+        tester.test_specific_new_categories,
+        tester.test_get_category_with_subcategories,
+        tester.test_suggest_category,
+        tester.test_get_pending_categories,
+        tester.test_approve_category,
+        tester.test_approved_category_appears,
+        tester.test_reject_category,
+        tester.test_duplicate_category_error,
+    ]
+    
+    for test in tests:
+        try:
+            test()
+        except Exception as e:
+            print(f"❌ Test {test.__name__} crashed: {e}")
+            tester.failed_tests.append(f"{test.__name__}: {e}")
+    
+    # Print results
+    print("\n" + "="*50)
+    print(f"📊 Test Results: {tester.tests_passed}/{tester.tests_run} passed")
+    
+    if tester.failed_tests:
+        print(f"\n❌ Failed tests:")
+        for failure in tester.failed_tests:
+            print(f"   - {failure}")
+    else:
+        print("✅ All tests passed!")
+    
+    return 0 if tester.tests_passed == tester.tests_run else 1
 
 if __name__ == "__main__":
     sys.exit(main())
