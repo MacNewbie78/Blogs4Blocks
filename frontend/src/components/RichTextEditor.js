@@ -172,6 +172,19 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
         <ToolbarButton onClick={addLink} active={editor.isActive('link')} title="Add Link">
           <Link2 className="w-4 h-4" />
         </ToolbarButton>
+
+        {/* Image upload */}
+        <ToolbarButton onClick={() => fileInputRef.current?.click()} title="Insert Image">
+          <ImagePlus className="w-4 h-4" />
+        </ToolbarButton>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+          data-testid="editor-image-input"
+        />
       </div>
 
       {/* Editor content */}
