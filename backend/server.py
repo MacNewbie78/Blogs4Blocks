@@ -316,11 +316,12 @@ async def register(user: UserCreate):
         "password": hash_password(user.password),
         "city": user.city,
         "country": user.country,
+        "is_admin": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.users.insert_one(user_doc)
     token = create_token(user_id)
-    return {"token": token, "user": {"id": user_id, "name": user.name, "email": user.email, "city": user.city, "country": user.country}}
+    return {"token": token, "user": {"id": user_id, "name": user.name, "email": user.email, "city": user.city, "country": user.country, "is_admin": False}}
 
 @api_router.post("/auth/login")
 async def login(creds: UserLogin):
@@ -328,11 +329,11 @@ async def login(creds: UserLogin):
     if not user or not verify_password(creds.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_token(user["id"])
-    return {"token": token, "user": {"id": user["id"], "name": user["name"], "email": user["email"], "city": user["city"], "country": user["country"]}}
+    return {"token": token, "user": {"id": user["id"], "name": user["name"], "email": user["email"], "city": user["city"], "country": user["country"], "is_admin": user.get("is_admin", False)}}
 
 @api_router.get("/auth/me")
 async def get_me(user=Depends(require_user)):
-    return {"id": user["id"], "name": user["name"], "email": user["email"], "city": user["city"], "country": user["country"]}
+    return {"id": user["id"], "name": user["name"], "email": user["email"], "city": user["city"], "country": user["country"], "is_admin": user.get("is_admin", False)}
 
 # ==================== CATEGORY ROUTES ====================
 
