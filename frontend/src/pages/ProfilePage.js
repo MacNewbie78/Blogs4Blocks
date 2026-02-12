@@ -134,7 +134,7 @@ function DiscussionThread({ post, onClose }) {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNewComment('');
-      fetchComments();
+      // Don't refetch - WebSocket will deliver the new comment
     } catch (e) {
       console.error(e);
     }
