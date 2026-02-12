@@ -373,6 +373,7 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         "category_slug": post.category_slug,
         "subcategory": post.subcategory,
         "tags": post.tags,
+        "cover_image": post.cover_image,
         "is_guest": is_guest,
         "likes": 0,
         "views": 0,
@@ -396,6 +397,10 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
     
     await db.posts.insert_one(post_doc)
     created = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    
+    # Send email notifications (fire and forget)
+    asyncio.create_task(notify_new_post_to_category_followers(post_doc))
+    
     return created
 
 @api_router.post("/posts/{post_id}/like")
