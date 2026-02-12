@@ -24,8 +24,19 @@ export default function BlogCard({ post, index = 0 }) {
       style={{ animationDelay: `${index * 80}ms` }}
       data-testid={`blog-card-${post.id}`}
     >
-      {/* Color bar at top */}
-      <div className="h-1.5 w-full" style={{ backgroundColor: catColor }} />
+      {/* Cover image or color bar */}
+      {post.cover_image ? (
+        <div className="relative h-40 overflow-hidden">
+          <img
+            src={`${process.env.REACT_APP_BACKEND_URL}${post.cover_image}`}
+            alt=""
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          <div className="absolute bottom-0 left-0 right-0 h-1.5" style={{ backgroundColor: catColor }} />
+        </div>
+      ) : (
+        <div className="h-1.5 w-full" style={{ backgroundColor: catColor }} />
+      )}
 
       <div className="p-5 sm:p-6">
         {/* Category + meta */}
