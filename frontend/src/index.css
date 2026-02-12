@@ -185,6 +185,8 @@ h1, h2, h3, h4, h5, h6 {
 .tiptap mark { background-color: #FACC15; padding: 0.05rem 0.15rem; border-radius: 0.1rem; }
 .tiptap hr { border: none; border-top: 2px solid #E2E8F0; margin: 1.5rem 0; }
 .tiptap a { color: #3B82F6; text-decoration: underline; cursor: pointer; }
+.tiptap img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1rem 0; }
+.blog-content img { max-width: 100%; height: auto; border-radius: 0.75rem; margin: 1rem 0; }
 
 /* Scrollbar styling */
 ::-webkit-scrollbar { width: 8px; }
