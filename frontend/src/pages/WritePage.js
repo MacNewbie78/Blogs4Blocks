@@ -35,6 +35,25 @@ export default function WritePage() {
   const [subcategories, setSubcategories] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [coverImage, setCoverImage] = useState(null);
+  const [coverUploading, setCoverUploading] = useState(false);
+  const coverInputRef = useRef(null);
+
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCoverUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await axios.post(`${API}/upload`, formData);
+      setCoverImage(res.data.url);
+    } catch (err) {
+      setError('Failed to upload cover image. Max size is 5MB.');
+    }
+    setCoverUploading(false);
+    e.target.value = '';
+  };
 
   const handleCategoryChange = async (value) => {
     setFormData(prev => ({ ...prev, category_slug: value, subcategory: '' }));
