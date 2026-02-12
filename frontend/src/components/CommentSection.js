@@ -128,9 +128,15 @@ export default function CommentSection({ postId }) {
 
   return (
     <div data-testid="comment-section">
-      <h3 className="font-heading font-bold text-xl mb-6">
-        Discussion ({comments.length})
-      </h3>
+      <div className="flex items-center gap-3 mb-6">
+        <h3 className="font-heading font-bold text-xl">
+          Discussion ({comments.length})
+        </h3>
+        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${wsConnected ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`} data-testid="ws-status">
+          {wsConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+          {wsConnected ? 'Live' : 'Connecting...'}
+        </span>
+      </div>
 
       {/* Comment form */}
       <form onSubmit={handleSubmit} className="mb-8 bg-gray-50 rounded-2xl p-5" data-testid="comment-form">
