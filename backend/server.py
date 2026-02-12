@@ -859,7 +859,28 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.user_likes.create_index([("user_id", 1), ("post_id", 1)], unique=True)
     await db.user_prefs.create_index("user_id", unique=True)
-    # Auto-seed on startup
+    await db.categories.create_index("slug", unique=True)
+    await db.subcategories.create_index("slug", unique=True)
+    
+    # Seed categories into MongoDB (upsert to avoid duplicates)
+    for cat in SEED_CATEGORIES:
+        await db.categories.update_one(
+            {"slug": cat["slug"]},
+            {"$setOnInsert": cat},
+            upsert=True
+        )
+    logger.info(f"Ensured {len(SEED_CATEGORIES)} categories in database")
+    
+    # Seed subcategories
+    for sub in SEED_SUBCATEGORIES:
+        await db.subcategories.update_one(
+            {"slug": sub["slug"]},
+            {"$setOnInsert": sub},
+            upsert=True
+        )
+    logger.info(f"Ensured {len(SEED_SUBCATEGORIES)} subcategories in database")
+    
+    # Auto-seed posts on startup
     existing = await db.posts.count_documents({})
     if existing == 0:
         now = datetime.now(timezone.utc)
