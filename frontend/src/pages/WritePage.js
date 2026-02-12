@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
-import { PenLine, Send, AlertCircle, ImagePlus, X } from 'lucide-react';
+import { PenLine, Send, AlertCircle, ImagePlus, X, Plus, Lightbulb } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import RichTextEditor from '../components/RichTextEditor';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Textarea } from '../components/ui/textarea';
 import {
   Select,
   SelectContent,
