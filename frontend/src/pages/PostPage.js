@@ -167,6 +167,17 @@ export default function PostPage() {
           {post.title}
         </h1>
 
+        {/* Cover Image */}
+        {post.cover_image && (
+          <div className="rounded-2xl overflow-hidden mb-8 border border-gray-100" data-testid="post-cover-image">
+            <img
+              src={`${process.env.REACT_APP_BACKEND_URL}${post.cover_image}`}
+              alt={post.title}
+              className="w-full h-auto max-h-[400px] object-cover"
+            />
+          </div>
+        )}
+
         {/* Author + meta */}
         <div className="flex items-center gap-4 mb-8 pb-8 border-b border-gray-100">
           <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold" style={{ backgroundColor: catColor }}>
