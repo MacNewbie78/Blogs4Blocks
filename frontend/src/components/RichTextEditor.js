@@ -37,6 +37,8 @@ function ToolbarDivider() {
 }
 
 export default function RichTextEditor({ content, onChange, placeholder = "Start writing..." }) {
+  const fileInputRef = useRef(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -47,6 +49,7 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       LinkExt.configure({ openOnClick: false }),
       Highlight,
+      ImageExt.configure({ inline: false, allowBase64: false }),
     ],
     content: content || '',
     onUpdate: ({ editor }) => {
@@ -66,6 +69,21 @@ export default function RichTextEditor({ content, onChange, placeholder = "Start
     if (url) {
       editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
     }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await axios.post(`${API}/upload`, formData);
+      const imageUrl = `${process.env.REACT_APP_BACKEND_URL}${res.data.url}`;
+      editor.chain().focus().setImage({ src: imageUrl }).run();
+    } catch (err) {
+      console.error('Image upload failed:', err);
+    }
+    e.target.value = '';
   };
 
   return (
