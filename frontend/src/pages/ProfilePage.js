@@ -60,11 +60,19 @@ function ColorPicker({ label, value, onChange, testId }) {
   );
 }
 
+function getWsUrl() {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+  return backendUrl.replace(/^http/, 'ws');
+}
+
 function DiscussionThread({ post, onClose }) {
   const { user, token, API } = useApp();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+  const scrollRef = useRef(null);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -77,9 +85,45 @@ function DiscussionThread({ post, onClose }) {
 
   useEffect(() => {
     fetchComments();
-    const interval = setInterval(fetchComments, 5000);
-    return () => clearInterval(interval);
   }, [fetchComments]);
+
+  // WebSocket for real-time
+  useEffect(() => {
+    const wsUrl = `${getWsUrl()}/api/ws/comments/${post.id}`;
+    let ws;
+    let pingInterval;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+        ws.onopen = () => {
+          setWsConnected(true);
+          pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) ws.send('ping');
+          }, 25000);
+        };
+        ws.onmessage = (event) => {
+          if (event.data === 'pong') return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_comment' && data.comment) {
+              setComments(prev => {
+                if (prev.some(c => c.id === data.comment.id)) return prev;
+                return [...prev, data.comment];
+              });
+              // Auto-scroll to bottom
+              setTimeout(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }), 100);
+            }
+          } catch (e) {}
+        };
+        ws.onclose = () => { setWsConnected(false); clearInterval(pingInterval); setTimeout(connect, 3000); };
+        ws.onerror = () => { setWsConnected(false); ws.close(); };
+      } catch (e) { setWsConnected(false); }
+    };
+    connect();
+    return () => { clearInterval(pingInterval); if (ws) ws.close(); };
+  }, [post.id]);
 
   const handleSend = async (e) => {
     e.preventDefault();
