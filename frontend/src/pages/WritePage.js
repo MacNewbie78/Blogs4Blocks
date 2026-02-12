@@ -308,6 +308,17 @@ export default function WritePage() {
               )}
             </div>
 
+            {/* Suggest a topic link */}
+            <button
+              type="button"
+              onClick={() => setShowSuggestDialog(true)}
+              className="flex items-center gap-2 text-sm text-b4b-blue hover:underline font-medium"
+              data-testid="suggest-topic-btn"
+            >
+              <Lightbulb className="w-4 h-4" />
+              Don't see your topic? Suggest a new one
+            </button>
+
             <div>
               <Label htmlFor="content">Content *</Label>
               <div className="mt-1">
