@@ -177,6 +177,49 @@ export default function WritePage() {
           <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
             <h3 className="font-heading font-semibold text-lg">Your Post</h3>
 
+            {/* Cover Image Upload */}
+            <div data-testid="cover-image-section">
+              <Label>Cover Image</Label>
+              {coverImage ? (
+                <div className="relative mt-2 rounded-xl overflow-hidden border-2 border-gray-100">
+                  <img
+                    src={`${process.env.REACT_APP_BACKEND_URL}${coverImage}`}
+                    alt="Cover"
+                    className="w-full h-48 object-cover"
+                    data-testid="cover-image-preview"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCoverImage(null)}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors"
+                    data-testid="cover-image-remove"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => coverInputRef.current?.click()}
+                  disabled={coverUploading}
+                  className="mt-2 w-full border-2 border-dashed border-gray-200 hover:border-gray-400 rounded-xl py-10 flex flex-col items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  data-testid="cover-image-upload-btn"
+                >
+                  <ImagePlus className="w-8 h-8" />
+                  <span className="text-sm font-medium">{coverUploading ? 'Uploading...' : 'Click to add a cover image'}</span>
+                  <span className="text-xs">JPG, PNG up to 5MB</span>
+                </button>
+              )}
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCoverUpload}
+                className="hidden"
+                data-testid="cover-image-file-input"
+              />
+            </div>
+
             <div>
               <Label htmlFor="title">Title *</Label>
               <Input
