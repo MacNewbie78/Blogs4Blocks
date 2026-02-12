@@ -69,23 +69,23 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
 - 12 seed blog posts from global authors
 
 ## Test Results
-- Backend: 100% (18/18 tests passed)
-- Frontend: 100% (all features working)
+- Backend: 100% (all tests passed across 3 iterations)
+- Frontend: 95%+ (all core features working)
 
 ## Prioritized Backlog
 ### P0 (Next)
-- Email notification system for registered users (new posts, comments on their posts)
-- Real-time WebSocket discussion threads (currently polling every 5s)
+- Verify Resend domain for blogs4blocks.com custom sender
+- Image compression/optimization on upload
 
 ### P1
-- Image upload for blog posts
-- Pagination for posts listing
-- User following system (follow other contributors)
+- User following system (follow contributors)
 - Post editing and deletion
+- Pagination for posts listing
+- Rich media embeds (YouTube, Twitter)
 
 ### P2
 - Social sharing buttons (Twitter, LinkedIn)
-- Newsletter subscription
+- Newsletter subscription / Weekly Digest
 - Admin dashboard for content moderation
 - Most popular posts widget
 - Related posts suggestions
