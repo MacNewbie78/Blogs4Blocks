@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import { Menu, X, PenLine, LogIn, LogOut, User, ChevronDown } from 'lucide-react';
+import { Menu, X, PenLine, LogIn, LogOut, User, ChevronDown, Shield } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import {
   DropdownMenu,
