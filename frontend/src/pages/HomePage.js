@@ -174,18 +174,18 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="categories-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="categories-grid">
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.slug}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
+                transition={{ duration: 0.4, delay: i * 0.06 }}
               >
                 <Link
                   to={`/category/${cat.slug}`}
-                  className={`relative overflow-hidden rounded-2xl p-6 flex flex-col justify-between no-underline group transition-all duration-300 hover:scale-[1.02] border-2 border-transparent hover:border-gray-200 ${i === 0 ? 'md:col-span-2 md:row-span-2 min-h-[240px]' : 'min-h-[180px]'}`}
+                  className="relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between no-underline group transition-all duration-300 hover:scale-[1.02] border-2 border-transparent hover:border-gray-200 min-h-[160px]"
                   style={{ backgroundColor: `${cat.color}10` }}
                   data-testid={`category-card-${cat.slug}`}
                 >
