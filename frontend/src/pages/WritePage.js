@@ -370,6 +370,58 @@ export default function WritePage() {
             </Button>
           </div>
         </form>
+
+        {/* Suggest Topic Dialog */}
+        <Dialog open={showSuggestDialog} onOpenChange={setShowSuggestDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-heading font-bold text-xl flex items-center gap-2">
+                <Lightbulb className="w-5 h-5 text-b4b-yellow" />
+                Suggest a New Topic
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-gray-500 -mt-2">
+              Don't see a topic that fits? Suggest one and it'll be reviewed. Once approved, anyone can post under it.
+            </p>
+            <div className="space-y-4 mt-2">
+              <div>
+                <Label htmlFor="suggest-name">Topic Name *</Label>
+                <Input
+                  id="suggest-name"
+                  placeholder="e.g. Growth Hacking, Neuromarketing, B2B Marketing..."
+                  value={suggestName}
+                  onChange={(e) => setSuggestName(e.target.value)}
+                  className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                  data-testid="suggest-name-input"
+                />
+              </div>
+              <div>
+                <Label htmlFor="suggest-desc">Short Description *</Label>
+                <Textarea
+                  id="suggest-desc"
+                  placeholder="What would this topic cover? Who would find it useful?"
+                  value={suggestDesc}
+                  onChange={(e) => setSuggestDesc(e.target.value)}
+                  rows={3}
+                  className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl resize-none"
+                  data-testid="suggest-desc-input"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowSuggestDialog(false)} className="rounded-full" data-testid="suggest-cancel-btn">Cancel</Button>
+                <Button
+                  onClick={handleSuggestTopic}
+                  disabled={suggestSubmitting || !suggestName.trim() || !suggestDesc.trim()}
+                  className="bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.4)]"
+                  data-testid="suggest-submit-btn"
+                >
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  {suggestSubmitting ? 'Submitting...' : 'Submit Suggestion'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
