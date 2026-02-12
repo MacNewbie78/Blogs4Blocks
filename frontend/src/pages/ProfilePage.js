@@ -150,11 +150,16 @@ function DiscussionThread({ post, onClose }) {
         <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
           <MapPin className="w-3 h-3" />
           <span>{post.author_name} — {post.author_city}, {post.author_country}</span>
+          {wsConnected && (
+            <span className="flex items-center gap-1 text-green-500 ml-auto">
+              <Wifi className="w-3 h-3" /> Live
+            </span>
+          )}
         </div>
       </DialogHeader>
 
       {/* Chat-style comments */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px] bg-gray-50/50" data-testid="discussion-thread">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px] bg-gray-50/50" data-testid="discussion-thread">
         {comments.length === 0 && (
           <div className="text-center py-8 text-gray-400 text-sm">
             No discussion yet. Start the conversation!
