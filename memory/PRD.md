@@ -67,6 +67,12 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
   - Custom app icons (192x192 and 512x512)
 - Fixed stats: now shows "Contributors" (unique authors) instead of "Members"
 - 12 seed blog posts from global authors
+- **Dynamic Categories System** (MongoDB-based, scalable):
+  - 11 pre-loaded categories: Social Media, SEO/SEM, Influencer Marketing, Integrated Marketing, Consumer Behavior, Branding, Marketing Tools, Digital Marketing, Marketing & AI, Keywords & Search Strategy, Marketing Careers
+  - 18 subcategories across categories
+  - "Suggest a Topic" feature: users can propose new categories
+  - Moderation system: user suggestions start as "pending", admin can approve/reject
+  - Auto-assigned colors from palette for new categories
 
 ## Test Results
 - Backend: 100% (all tests passed across 3 iterations)
