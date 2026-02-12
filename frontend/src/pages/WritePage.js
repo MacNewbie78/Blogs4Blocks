@@ -85,6 +85,7 @@ export default function WritePage() {
         ...formData,
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
         subcategory: formData.subcategory || null,
+        cover_image: coverImage,
       };
 
       if (!user) {
