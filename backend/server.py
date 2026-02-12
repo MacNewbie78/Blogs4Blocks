@@ -71,6 +71,7 @@ class PostCreate(BaseModel):
     category_slug: str
     subcategory: Optional[str] = None
     tags: List[str] = []
+    cover_image: Optional[str] = None
     guest_author: Optional[GuestAuthor] = None
 
 class CommentCreate(BaseModel):
