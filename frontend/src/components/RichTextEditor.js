@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -6,13 +6,17 @@ import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import LinkExt from '@tiptap/extension-link';
 import Highlight from '@tiptap/extension-highlight';
+import ImageExt from '@tiptap/extension-image';
+import axios from 'axios';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Code,
   AlignLeft, AlignCenter, AlignRight,
-  Link2, Highlighter, Undo, Redo, Minus
+  Link2, Highlighter, Undo, Redo, Minus, ImagePlus
 } from 'lucide-react';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 function ToolbarButton({ onClick, active, children, title }) {
   return (
