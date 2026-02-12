@@ -82,6 +82,10 @@ class ProfileColors(BaseModel):
     my_posts_color: str = "#3B82F6"
     interacted_color: str = "#A855F7"
 
+class CategorySuggest(BaseModel):
+    name: str
+    description: str
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
