@@ -453,6 +453,13 @@ async def create_comment(post_id: str, comment: CommentCreate, user=Depends(get_
     
     await db.comments.insert_one(comment_doc)
     created = await db.comments.find_one({"id": comment_id}, {"_id": 0})
+    
+    # Broadcast via WebSocket
+    asyncio.create_task(ws_manager.broadcast(post_id, {"type": "new_comment", "comment": created}))
+    
+    # Email notification to post author (fire and forget)
+    asyncio.create_task(notify_post_author_of_comment(post, comment_doc))
+    
     return created
 
 # ==================== SEED ROUTE ====================
