@@ -13,6 +13,7 @@ import WritePage from './pages/WritePage';
 import AuthPage from './pages/AuthPage';
 import AboutPage from './pages/AboutPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   return (
