@@ -763,6 +763,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve uploaded images
+app.mount("/api/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
