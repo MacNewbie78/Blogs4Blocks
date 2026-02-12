@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
-import { Palette, PenLine, MessageCircle, Heart, Eye, MapPin, Clock, ArrowRight, ChevronDown, ChevronUp, Send, X } from 'lucide-react';
+import { Palette, PenLine, MessageCircle, Heart, Eye, MapPin, Clock, ArrowRight, ChevronDown, ChevronUp, Send, X, Wifi } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
