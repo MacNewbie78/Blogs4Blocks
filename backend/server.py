@@ -555,6 +555,190 @@ async def get_comments_live(post_id: str):
     comments = await db.comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", 1).to_list(500)
     return comments
 
+# ==================== IMAGE UPLOAD ====================
+
+@api_router.post("/upload")
+async def upload_image(file: UploadFile = File(...)):
+    if not file.content_type or not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Only image files are allowed")
+    
+    # Limit to 5MB
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="File too large. Max 5MB.")
+    
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    filename = f"{uuid.uuid4()}.{ext}"
+    filepath = UPLOADS_DIR / filename
+    
+    with open(filepath, 'wb') as f:
+        f.write(contents)
+    
+    url = f"/api/uploads/{filename}"
+    return {"url": url, "filename": filename}
+
+# ==================== EMAIL NOTIFICATIONS ====================
+
+async def send_email_notification(to_email: str, subject: str, html_content: str):
+    """Send email notification via Resend (non-blocking)"""
+    if not resend.api_key:
+        return
+    try:
+        params = {
+            "from": SENDER_EMAIL,
+            "to": [to_email],
+            "subject": subject,
+            "html": html_content
+        }
+        await asyncio.to_thread(resend.Emails.send, params)
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Email send failed: {e}")
+
+async def notify_post_author_of_comment(post, comment_doc):
+    """Notify post author when someone comments on their post"""
+    if not post.get("author_id"):
+        return  # Can't notify seed/guest posts
+    author = await db.users.find_one({"id": post["author_id"]}, {"_id": 0})
+    if not author or not author.get("email"):
+        return
+    # Don't notify if the commenter is the author
+    if comment_doc.get("author_name") == author.get("name"):
+        return
+    
+    html = f"""
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span style="font-weight: 900; font-size: 20px;">
+          <span style="color: #EF4444;">B</span><span style="color: #F97316;">L</span><span style="color: #FACC15;">O</span><span style="color: #22C55E;">G</span><span style="color: #14B8A6;">S</span>
+          <span style="color: #22C55E;">4</span>
+          <span style="color: #EF4444;">B</span><span style="color: #3B82F6;">L</span><span style="color: #22C55E;">O</span><span style="color: #A855F7;">C</span><span style="color: #3B82F6;">K</span><span style="color: #14B8A6;">S</span>
+        </span>
+      </div>
+      <h2 style="color: #0F172A; font-size: 18px; margin-bottom: 8px;">New comment on your post</h2>
+      <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+        <strong style="color: #0F172A;">{comment_doc.get('author_name', 'Someone')}</strong> 
+        from {comment_doc.get('author_city', 'somewhere')} commented on 
+        <strong style="color: #0F172A;">"{post['title']}"</strong>:
+      </p>
+      <div style="background: #F8FAFC; border-left: 3px solid #3B82F6; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;">
+        <p style="color: #334155; font-size: 14px; line-height: 1.6; margin: 0;">{comment_doc['content'][:300]}</p>
+      </div>
+      <p style="color: #94A3B8; font-size: 12px; margin-top: 24px;">You're receiving this because you're a registered author on Blogs 4 Blocks.</p>
+    </div>
+    """
+    await send_email_notification(
+        author["email"],
+        f"New comment on \"{post['title'][:50]}\"",
+        html
+    )
+
+async def notify_new_post_to_category_followers(post_doc):
+    """Notify registered users who have engaged with posts in this category"""
+    category = post_doc.get("category_slug")
+    if not category:
+        return
+    
+    # Find posts in same category
+    cat_posts = await db.posts.find({"category_slug": category}, {"_id": 0, "id": 1}).to_list(500)
+    cat_post_ids = [p["id"] for p in cat_posts]
+    
+    # Find users who commented on these posts
+    commenters = await db.comments.distinct("author_name", {"post_id": {"$in": cat_post_ids}, "is_guest": False})
+    
+    # Find users who liked these posts
+    likers_docs = await db.user_likes.find({"post_id": {"$in": cat_post_ids}}, {"_id": 0, "user_id": 1}).to_list(500)
+    liker_ids = list(set([d["user_id"] for d in likers_docs]))
+    
+    # Get unique user emails (exclude the post author)
+    notified = set()
+    
+    # Notify commenters
+    for name in commenters:
+        if name == post_doc.get("author_name"):
+            continue
+        user = await db.users.find_one({"name": name}, {"_id": 0})
+        if user and user.get("email") and user["email"] not in notified:
+            notified.add(user["email"])
+    
+    # Notify likers
+    for uid in liker_ids:
+        if uid == post_doc.get("author_id"):
+            continue
+        user = await db.users.find_one({"id": uid}, {"_id": 0})
+        if user and user.get("email") and user["email"] not in notified:
+            notified.add(user["email"])
+    
+    cat_name = category.replace('-', ' ').title()
+    for email in notified:
+        html = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <span style="font-weight: 900; font-size: 20px;">
+              <span style="color: #EF4444;">B</span><span style="color: #F97316;">L</span><span style="color: #FACC15;">O</span><span style="color: #22C55E;">G</span><span style="color: #14B8A6;">S</span>
+              <span style="color: #22C55E;">4</span>
+              <span style="color: #EF4444;">B</span><span style="color: #3B82F6;">L</span><span style="color: #22C55E;">O</span><span style="color: #A855F7;">C</span><span style="color: #3B82F6;">K</span><span style="color: #14B8A6;">S</span>
+            </span>
+          </div>
+          <h2 style="color: #0F172A; font-size: 18px; margin-bottom: 8px;">New post in {cat_name}</h2>
+          <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+            <strong style="color: #0F172A;">{post_doc.get('author_name', 'Someone')}</strong> 
+            from {post_doc.get('author_city', 'somewhere')} published a new post:
+          </p>
+          <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+            <h3 style="color: #0F172A; font-size: 16px; margin: 0 0 8px 0;">{post_doc['title']}</h3>
+            <p style="color: #64748B; font-size: 13px; line-height: 1.5; margin: 0;">{post_doc.get('excerpt', '')[:200]}</p>
+          </div>
+          <p style="color: #94A3B8; font-size: 12px; margin-top: 24px;">You're receiving this because you've engaged with {cat_name} posts on Blogs 4 Blocks.</p>
+        </div>
+        """
+        await send_email_notification(email, f"New in {cat_name}: \"{post_doc['title'][:50]}\"", html)
+
+# ==================== WEBSOCKET MANAGER ====================
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, Set[WebSocket]] = {}
+    
+    async def connect(self, post_id: str, websocket: WebSocket):
+        await websocket.accept()
+        if post_id not in self.active_connections:
+            self.active_connections[post_id] = set()
+        self.active_connections[post_id].add(websocket)
+    
+    def disconnect(self, post_id: str, websocket: WebSocket):
+        if post_id in self.active_connections:
+            self.active_connections[post_id].discard(websocket)
+            if not self.active_connections[post_id]:
+                del self.active_connections[post_id]
+    
+    async def broadcast(self, post_id: str, message: dict):
+        if post_id not in self.active_connections:
+            return
+        dead = []
+        for ws in self.active_connections[post_id]:
+            try:
+                await ws.send_json(message)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.active_connections[post_id].discard(ws)
+
+ws_manager = ConnectionManager()
+
+@app.websocket("/api/ws/comments/{post_id}")
+async def websocket_comments(websocket: WebSocket, post_id: str):
+    await ws_manager.connect(post_id, websocket)
+    try:
+        while True:
+            # Keep connection alive, listen for pings
+            data = await websocket.receive_text()
+            if data == "ping":
+                await websocket.send_text("pong")
+    except WebSocketDisconnect:
+        ws_manager.disconnect(post_id, websocket)
+    except Exception:
+        ws_manager.disconnect(post_id, websocket)
+
 # ==================== APP SETUP ====================
 
 app.include_router(api_router)
