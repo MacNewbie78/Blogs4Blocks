@@ -40,6 +40,29 @@ export default function WritePage() {
   const [coverImage, setCoverImage] = useState(null);
   const [coverUploading, setCoverUploading] = useState(false);
   const coverInputRef = useRef(null);
+  const [showSuggestDialog, setShowSuggestDialog] = useState(false);
+  const [suggestName, setSuggestName] = useState('');
+  const [suggestDesc, setSuggestDesc] = useState('');
+  const [suggestSubmitting, setSuggestSubmitting] = useState(false);
+
+  const handleSuggestTopic = async () => {
+    if (!suggestName.trim() || !suggestDesc.trim()) return;
+    setSuggestSubmitting(true);
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.post(`${API}/categories/suggest`, {
+        name: suggestName.trim(),
+        description: suggestDesc.trim()
+      }, { headers });
+      toast.success('Topic suggested! It will appear once reviewed.');
+      setShowSuggestDialog(false);
+      setSuggestName('');
+      setSuggestDesc('');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to suggest topic');
+    }
+    setSuggestSubmitting(false);
+  };
 
   const handleCoverUpload = async (e) => {
     const file = e.target.files?.[0];
