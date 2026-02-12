@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
-import { Send, MapPin, Clock } from 'lucide-react';
+import { Send, MapPin, Clock, Wifi, WifiOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { Input } from '../components/ui/input';
+
+function getWsUrl() {
+  const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+  return backendUrl.replace(/^http/, 'ws');
+}
 
 export default function CommentSection({ postId }) {
   const { user, token, API } = useApp();
@@ -14,6 +19,8 @@ export default function CommentSection({ postId }) {
   const [guestCity, setGuestCity] = useState('');
   const [guestCountry, setGuestCountry] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
 
   const fetchComments = useCallback(async () => {
     try {
@@ -27,6 +34,67 @@ export default function CommentSection({ postId }) {
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
+
+  // WebSocket connection for real-time comments
+  useEffect(() => {
+    const wsUrl = `${getWsUrl()}/api/ws/comments/${postId}`;
+    let ws;
+    let pingInterval;
+
+    const connect = () => {
+      try {
+        ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          setWsConnected(true);
+          // Ping every 25s to keep alive
+          pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send('ping');
+            }
+          }, 25000);
+        };
+
+        ws.onmessage = (event) => {
+          if (event.data === 'pong') return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_comment' && data.comment) {
+              setComments(prev => {
+                // Avoid duplicates
+                if (prev.some(c => c.id === data.comment.id)) return prev;
+                return [data.comment, ...prev];
+              });
+            }
+          } catch (e) {
+            // ignore non-JSON
+          }
+        };
+
+        ws.onclose = () => {
+          setWsConnected(false);
+          clearInterval(pingInterval);
+          // Reconnect after 3s
+          setTimeout(connect, 3000);
+        };
+
+        ws.onerror = () => {
+          setWsConnected(false);
+          ws.close();
+        };
+      } catch (e) {
+        setWsConnected(false);
+      }
+    };
+
+    connect();
+
+    return () => {
+      clearInterval(pingInterval);
+      if (ws) ws.close();
+    };
+  }, [postId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
