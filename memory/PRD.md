@@ -39,6 +39,25 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
   - 5-second auto-refresh for live-ish discussion updates
 - Navbar with rainbow logo, topics dropdown, mobile responsive, profile link
 - Footer with community stats, quick links, category links
+- **Email Notification System** (Resend):
+  - Notifies post authors when someone comments on their post
+  - Notifies category followers (users who've liked/commented in a category) when new posts are published
+  - Branded HTML emails with B4B rainbow branding
+  - Fire-and-forget async sending (non-blocking)
+  - Uses onboarding@resend.dev sender (upgradeable to notifications@blogs4blocks.com after domain verification)
+- **Real-time WebSocket Discussion Threads**:
+  - WebSocket endpoint at /api/ws/comments/{post_id}
+  - Live "connected" indicator on comment sections
+  - New comments broadcast instantly to all viewers
+  - Auto-reconnect on disconnect (3s delay)
+  - Ping/pong keepalive every 25s
+  - Works in both PostPage comment section and ProfilePage discussion dialog
+- **Image Upload System**:
+  - Cover/hero image upload for blog posts (drag-and-drop area)
+  - Inline image insertion in TipTap rich text editor (toolbar button)
+  - Images stored in backend filesystem, served via static files
+  - 5MB file size limit, image-type validation
+  - Cover images displayed on blog cards and post detail pages
 - **PWA (Progressive Web App)** support:
   - manifest.json with app metadata and icons
   - Service worker for offline caching (network-first strategy)
