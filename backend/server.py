@@ -405,14 +405,14 @@ async def suggest_category(suggestion: CategorySuggest, user=Depends(get_current
     return {"slug": slug, "name": suggestion.name, "status": "pending", "message": "Your topic suggestion has been submitted for review. It will appear once approved."}
 
 @api_router.get("/categories/pending/list")
-async def get_pending_categories():
-    """Get pending categories (for moderation view)"""
+async def get_pending_categories(user=Depends(require_admin)):
+    """Get pending categories (admin only)"""
     cats = await db.categories.find({"status": "pending"}, {"_id": 0}).sort("created_at", -1).to_list(100)
     return cats
 
 @api_router.put("/categories/{slug}/approve")
-async def approve_category(slug: str):
-    """Approve a pending category"""
+async def approve_category(slug: str, user=Depends(require_admin)):
+    """Approve a pending category (admin only)"""
     result = await db.categories.update_one({"slug": slug, "status": "pending"}, {"$set": {"status": "approved"}})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Pending category not found")
@@ -420,12 +420,73 @@ async def approve_category(slug: str):
     return cat
 
 @api_router.delete("/categories/{slug}/reject")
-async def reject_category(slug: str):
-    """Reject and remove a pending category"""
+async def reject_category(slug: str, user=Depends(require_admin)):
+    """Reject and remove a pending category (admin only)"""
     result = await db.categories.delete_one({"slug": slug, "status": "pending"})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Pending category not found")
     return {"message": "Category suggestion rejected and removed"}
+
+# ==================== ADMIN ROUTES ====================
+
+@api_router.post("/admin/make-admin")
+async def make_admin_by_secret(email: str, secret: str):
+    """Bootstrap admin: promote user to admin via server secret"""
+    if secret != JWT_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret")
+    result = await db.users.update_one({"email": email}, {"$set": {"is_admin": True}})
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": f"{email} is now an admin"}
+
+@api_router.get("/admin/stats")
+async def admin_stats(user=Depends(require_admin)):
+    """Get admin dashboard stats"""
+    total_posts = await db.posts.count_documents({})
+    total_comments = await db.comments.count_documents({})
+    total_users = await db.users.count_documents({})
+    pending_cats = await db.categories.count_documents({"status": "pending"})
+    approved_cats = await db.categories.count_documents({"status": "approved"})
+    guest_posts = await db.posts.count_documents({"is_guest": True})
+    recent_posts = await db.posts.find({}, {"_id": 0, "id": 1, "title": 1, "author_name": 1, "author_city": 1, "category_slug": 1, "created_at": 1, "likes": 1, "views": 1, "is_guest": 1}).sort("created_at", -1).limit(10).to_list(10)
+    recent_comments = await db.comments.find({}, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10)
+    countries = await db.posts.distinct("author_country")
+    
+    return {
+        "total_posts": total_posts,
+        "total_comments": total_comments,
+        "total_users": total_users,
+        "pending_categories": pending_cats,
+        "approved_categories": approved_cats,
+        "guest_posts": guest_posts,
+        "countries_represented": len(countries),
+        "recent_posts": recent_posts,
+        "recent_comments": recent_comments,
+    }
+
+@api_router.delete("/admin/posts/{post_id}")
+async def admin_delete_post(post_id: str, user=Depends(require_admin)):
+    """Delete a post (admin only)"""
+    result = await db.posts.delete_one({"id": post_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Post not found")
+    # Also delete associated comments
+    await db.comments.delete_many({"post_id": post_id})
+    return {"message": "Post and associated comments deleted"}
+
+@api_router.delete("/admin/comments/{comment_id}")
+async def admin_delete_comment(comment_id: str, user=Depends(require_admin)):
+    """Delete a comment (admin only)"""
+    result = await db.comments.delete_one({"id": comment_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    return {"message": "Comment deleted"}
+
+@api_router.get("/admin/users")
+async def admin_list_users(user=Depends(require_admin)):
+    """List all registered users"""
+    users = await db.users.find({}, {"_id": 0, "password": 0}).sort("created_at", -1).to_list(200)
+    return users
 
 # ==================== POST ROUTES ====================
 
