@@ -85,6 +85,8 @@ export default function AuthPage() {
                   <Input
                     id="login-email"
                     type="email"
+                    autoComplete="username"
+                    autoFocus
                     placeholder="you@example.com"
                     value={loginForm.email}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
@@ -97,6 +99,7 @@ export default function AuthPage() {
                   <Input
                     id="login-password"
                     type="password"
+                    autoComplete="current-password"
                     placeholder="Your password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
