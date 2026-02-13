@@ -125,6 +125,7 @@ export default function AuthPage() {
                   <Label htmlFor="reg-name">Full Name *</Label>
                   <Input
                     id="reg-name"
+                    autoComplete="name"
                     placeholder="Your name"
                     value={regForm.name}
                     onChange={(e) => setRegForm(prev => ({ ...prev, name: e.target.value }))}
@@ -137,6 +138,7 @@ export default function AuthPage() {
                   <Input
                     id="reg-email"
                     type="email"
+                    autoComplete="email"
                     placeholder="you@example.com"
                     value={regForm.email}
                     onChange={(e) => setRegForm(prev => ({ ...prev, email: e.target.value }))}
@@ -149,6 +151,7 @@ export default function AuthPage() {
                   <Input
                     id="reg-password"
                     type="password"
+                    autoComplete="new-password"
                     placeholder="Choose a strong password"
                     value={regForm.password}
                     onChange={(e) => setRegForm(prev => ({ ...prev, password: e.target.value }))}
