@@ -110,6 +110,13 @@ export default function Navbar() {
                     <User className="w-4 h-4 mr-2" />
                     My Dashboard
                   </DropdownMenuItem>
+                  {user.is_admin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')} data-testid="nav-admin-btn">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Admin Panel
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => { logout(); navigate('/'); }} data-testid="nav-logout-btn">
                     <LogOut className="w-4 h-4 mr-2" />
                     Sign Out
