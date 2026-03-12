@@ -15,6 +15,7 @@ import bcrypt
 import jwt
 import resend
 import json
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -496,6 +497,13 @@ async def admin_stats(user=Depends(require_admin)):
         "recent_comments": recent_comments,
     }
 
+@api_router.delete("/admin/posts/expired-guests")
+async def clear_expired_guest_posts(user=Depends(require_admin)):
+    """Delete all expired guest posts"""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    result = await db.posts.delete_many({"is_guest": True, "expires_at": {"$lte": now_iso}})
+    return {"message": f"Deleted {result.deleted_count} expired guest posts", "deleted": result.deleted_count}
+
 @api_router.delete("/admin/posts/{post_id}")
 async def admin_delete_post(post_id: str, user=Depends(require_admin)):
     """Delete a post (admin only)"""
@@ -733,6 +741,34 @@ async def send_weekly_digest(user=Depends(require_admin)):
     result = await _send_weekly_digest()
     return result
 
+@api_router.get("/admin/digest-status")
+async def get_digest_status(user=Depends(require_admin)):
+    """Get digest status: last sent, subscriber count, schedule info"""
+    last_digest = await db.digest_log.find_one(
+        {"status": {"$in": ["sent", "skipped"]}},
+        {"_id": 0},
+        sort=[("sent_at", -1)]
+    )
+    active_subscribers = await db.newsletter.count_documents({"active": True})
+    registered_users = await db.users.count_documents({})
+    total_digests_sent = await db.digest_log.count_documents({"status": "sent"})
+    recent_logs = await db.digest_log.find({}, {"_id": 0}).sort("sent_at", -1).limit(5).to_list(5)
+    return {
+        "last_digest": last_digest,
+        "active_subscribers": active_subscribers,
+        "registered_users": registered_users,
+        "total_audience": active_subscribers + registered_users,
+        "total_digests_sent": total_digests_sent,
+        "schedule": "Every Monday at 9:00 AM UTC",
+        "recent_logs": recent_logs
+    }
+
+@api_router.get("/admin/subscribers")
+async def get_subscribers(user=Depends(require_admin)):
+    """Get all newsletter subscribers"""
+    subscribers = await db.newsletter.find({}, {"_id": 0}).sort("subscribed_at", -1).to_list(5000)
+    return subscribers
+
 async def _send_weekly_digest():
     """Generate and send weekly digest to all active subscribers"""
     one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
@@ -745,6 +781,13 @@ async def _send_weekly_digest():
     ).sort([("likes", -1), ("views", -1)]).limit(5).to_list(5)
 
     if not top_posts:
+        await db.digest_log.insert_one({
+            "sent_at": now_iso,
+            "recipients": 0,
+            "posts_included": 0,
+            "status": "skipped",
+            "reason": "No new posts this week"
+        })
         return {"message": "No posts from this week to include in digest", "sent": 0}
 
     # Get active subscribers
@@ -758,7 +801,7 @@ async def _send_weekly_digest():
     for u in all_users:
         subscriber_emails.add(u["email"])
 
-    stats = await db.posts.count_documents({"created_at": {"$gte": one_week_ago}})
+    post_count = await db.posts.count_documents({"created_at": {"$gte": one_week_ago}})
     new_comments = await db.comments.count_documents({"created_at": {"$gte": one_week_ago}})
 
     # Build post cards HTML
@@ -772,6 +815,7 @@ async def _send_weekly_digest():
         </div>"""
 
     sent_count = 0
+    errors = 0
     for email in subscriber_emails:
         html = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
@@ -784,16 +828,28 @@ async def _send_weekly_digest():
             <p style="color: #64748B; font-size: 13px; margin: 8px 0 0 0;">Weekly Digest</p>
           </div>
           <h2 style="color: #0F172A; font-size: 18px; margin-bottom: 6px;">This Week on Blogs 4 Blocks</h2>
-          <p style="color: #64748B; font-size: 14px; margin-bottom: 16px;">{stats} new posts &middot; {new_comments} new comments</p>
+          <p style="color: #64748B; font-size: 14px; margin-bottom: 16px;">{post_count} new posts &middot; {new_comments} new comments</p>
           <h3 style="color: #0F172A; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Top Posts This Week</h3>
           {posts_html}
           <p style="color: #94A3B8; font-size: 11px; margin-top: 24px; text-align: center;">You're receiving this as a Blogs 4 Blocks community member.</p>
         </div>
         """
-        await send_email_notification(email, "Your Weekly Digest from Blogs 4 Blocks", html)
-        sent_count += 1
+        try:
+            await send_email_notification(email, "Your Weekly Digest from Blogs 4 Blocks", html)
+            sent_count += 1
+        except Exception:
+            errors += 1
 
-    return {"message": f"Weekly digest sent to {sent_count} subscribers", "sent": sent_count}
+    # Log the digest execution
+    await db.digest_log.insert_one({
+        "sent_at": now_iso,
+        "recipients": sent_count,
+        "errors": errors,
+        "posts_included": len(top_posts),
+        "status": "sent"
+    })
+
+    return {"message": f"Weekly digest sent to {sent_count} subscribers", "sent": sent_count, "errors": errors}
 
 # ==================== COMMENT ROUTES ====================
 
@@ -1136,6 +1192,7 @@ async def startup():
     await db.categories.create_index("slug", unique=True)
     await db.subcategories.create_index("slug", unique=True)
     await db.newsletter.create_index("email", unique=True)
+    await db.digest_log.create_index("sent_at")
     
     # Seed categories into MongoDB (upsert to avoid duplicates)
     for cat in SEED_CATEGORIES:
@@ -1182,6 +1239,22 @@ async def startup():
             }
             await db.posts.insert_one(post_doc)
         logger.info(f"Auto-seeded {len(SEED_POSTS)} blog posts")
+
+    # Start the weekly digest scheduler
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        _send_weekly_digest,
+        'cron',
+        day_of_week='mon',
+        hour=9,
+        minute=0,
+        timezone='UTC',
+        id='weekly_digest',
+        replace_existing=True,
+        misfire_grace_time=3600
+    )
+    scheduler.start()
+    logger.info("Weekly digest scheduler started — runs every Monday at 9:00 AM UTC")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

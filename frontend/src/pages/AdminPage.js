@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext';
 import {
   Shield, Check, X, Trash2, Users, FileText, MessageCircle,
   Globe, Tag, Clock, AlertTriangle, Eye, Heart, MapPin,
-  ChevronDown, ChevronUp, RefreshCw
+  ChevronDown, ChevronUp, RefreshCw, Mail, Send, Calendar
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -203,6 +203,8 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [authChecked, setAuthChecked] = useState(false);
+  const [digestStatus, setDigestStatus] = useState(null);
+  const [sendingDigest, setSendingDigest] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('b4b_token');
@@ -217,14 +219,16 @@ export default function AdminPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const [statsRes, pendingRes, usersRes] = await Promise.all([
+      const [statsRes, pendingRes, usersRes, digestRes] = await Promise.all([
         axios.get(`${API}/admin/stats`, { headers: headers() }),
         axios.get(`${API}/categories/pending/list`, { headers: headers() }),
         axios.get(`${API}/admin/users`, { headers: headers() }),
+        axios.get(`${API}/admin/digest-status`, { headers: headers() }),
       ]);
       setStats(statsRes.data);
       setPendingCats(pendingRes.data);
       setUsers(usersRes.data);
+      setDigestStatus(digestRes.data);
     } catch (e) {
       if (e.response?.status === 403) {
         toast.error('Admin access required');
@@ -289,6 +293,20 @@ export default function AdminPage() {
     }
   };
 
+  const handleSendDigest = async () => {
+    setSendingDigest(true);
+    try {
+      const res = await axios.post(`${API}/admin/send-digest`, {}, { headers: headers() });
+      toast.success(res.data.message);
+      // Refresh digest status
+      const digestRes = await axios.get(`${API}/admin/digest-status`, { headers: headers() });
+      setDigestStatus(digestRes.data);
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to send digest');
+    }
+    setSendingDigest(false);
+  };
+
   if (!user || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -311,6 +329,7 @@ export default function AdminPage() {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Eye className="w-4 h-4" /> },
     { id: 'moderation', label: `Moderation ${pendingCats.length > 0 ? `(${pendingCats.length})` : ''}`, icon: <Shield className="w-4 h-4" /> },
+    { id: 'newsletter', label: 'Newsletter', icon: <Mail className="w-4 h-4" /> },
     { id: 'posts', label: 'Recent Posts', icon: <FileText className="w-4 h-4" /> },
     { id: 'comments', label: 'Recent Comments', icon: <MessageCircle className="w-4 h-4" /> },
     { id: 'users', label: 'Users', icon: <Users className="w-4 h-4" /> },
@@ -386,6 +405,88 @@ export default function AdminPage() {
                 <Check className="w-10 h-10 text-green-400 mx-auto mb-3" />
                 <p className="text-gray-500 font-medium">All clear! No pending topic suggestions.</p>
                 <p className="text-xs text-gray-400 mt-1">User-suggested topics will appear here for your review.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Newsletter Tab */}
+        {activeTab === 'newsletter' && (
+          <div className="space-y-6" data-testid="admin-newsletter">
+            <h2 className="font-heading font-bold text-lg text-gray-900">Weekly Digest Management</h2>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard icon={<Mail className="w-5 h-5" />} value={digestStatus?.active_subscribers || 0} label="Newsletter Subs" color="#3B82F6" />
+              <StatCard icon={<Users className="w-5 h-5" />} value={digestStatus?.registered_users || 0} label="Registered Users" color="#22C55E" />
+              <StatCard icon={<Send className="w-5 h-5" />} value={digestStatus?.total_audience || 0} label="Total Audience" color="#A855F7" />
+              <StatCard icon={<FileText className="w-5 h-5" />} value={digestStatus?.total_digests_sent || 0} label="Digests Sent" color="#F97316" />
+            </div>
+
+            {/* Schedule & Actions */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar className="w-5 h-5 text-b4b-blue" />
+                  <h3 className="font-heading font-bold text-base text-gray-900">Schedule</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-2">Automated digest runs <strong>every Monday at 9:00 AM UTC</strong>.</p>
+                <p className="text-xs text-gray-400">Includes registered users + newsletter subscribers. Top 5 posts from the past week are featured.</p>
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Send className="w-5 h-5 text-green-600" />
+                  <h3 className="font-heading font-bold text-base text-gray-900">Manual Send</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">Trigger a digest now to all subscribers. This will send the top posts from the past 7 days.</p>
+                <Button
+                  onClick={handleSendDigest}
+                  disabled={sendingDigest}
+                  className="bg-green-600 hover:bg-green-700 text-white rounded-full"
+                  data-testid="send-digest-btn"
+                >
+                  {sendingDigest ? (
+                    <><RefreshCw className="w-4 h-4 mr-1.5 animate-spin" /> Sending...</>
+                  ) : (
+                    <><Send className="w-4 h-4 mr-1.5" /> Send Digest Now</>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Recent Digest Logs */}
+            {digestStatus?.recent_logs?.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <h3 className="font-heading font-bold text-base text-gray-900 mb-4">Recent Digest History</h3>
+                <div className="space-y-3">
+                  {digestStatus.recent_logs.map((log, i) => (
+                    <div key={i} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${log.status === 'sent' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
+                        {log.status === 'sent' ? <Check className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-gray-900">
+                          {log.status === 'sent' ? `Sent to ${log.recipients} recipients` : 'Skipped'}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {new Date(log.sent_at).toLocaleString()} — {log.posts_included} posts included
+                          {log.errors > 0 && <span className="text-red-500 ml-2">({log.errors} errors)</span>}
+                          {log.reason && <span className="ml-2">({log.reason})</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Last Digest Info */}
+            {!digestStatus?.recent_logs?.length && (
+              <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+                <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No digests sent yet</p>
+                <p className="text-xs text-gray-400 mt-1">The first automated digest will go out next Monday, or you can trigger one manually above.</p>
               </div>
             )}
           </div>
