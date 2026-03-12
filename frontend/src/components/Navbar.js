@@ -11,8 +11,7 @@ import {
   DropdownMenuSeparator
 } from '../components/ui/dropdown-menu';
 
-const RAINBOW = ['#EF4444', '#F97316', '#FACC15', '#22C55E', '#14B8A6', '#3B82F6', '#A855F7', '#EC4899', '#A16207', '#EF4444', '#3B82F6', '#22C55E', '#F97316'];
-const LOGO_TEXT = "BLOGS 4 BLOCKS";
+const LOGO_URL = 'https://customer-assets.emergentagent.com/job_marketing-forum-hub/artifacts/wa9v5wt9_b4blogo.png';
 
 export default function Navbar() {
   const { user, logout, categories } = useApp();
@@ -27,16 +26,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-0.5 no-underline" data-testid="nav-logo">
-            {LOGO_TEXT.split('').map((char, i) => (
-              <span
-                key={i}
-                className="rainbow-letter font-heading text-lg sm:text-xl font-black"
-                style={{ color: char === ' ' ? 'transparent' : RAINBOW[i % RAINBOW.length] }}
-              >
-                {char === ' ' ? '\u00A0' : char}
-              </span>
-            ))}
+          <Link to="/" className="flex items-center gap-2 no-underline" data-testid="nav-logo">
+            <img src={LOGO_URL} alt="Blogs 4 Blocks" className="h-14 w-auto object-contain" />
           </Link>
 
           {/* Desktop nav */}
