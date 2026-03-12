@@ -86,6 +86,19 @@ class CategorySuggest(BaseModel):
     name: str
     description: str
 
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    excerpt: Optional[str] = None
+    category_slug: Optional[str] = None
+    subcategory: Optional[str] = None
+    tags: Optional[List[str]] = None
+    cover_image: Optional[str] = None
+
+class NewsletterSubscribe(BaseModel):
+    email: str
+    name: Optional[str] = None
+
 # ==================== AUTH HELPERS ====================
 
 def hash_password(password: str) -> str:
@@ -510,7 +523,7 @@ async def admin_list_users(user=Depends(require_admin)):
 # ==================== POST ROUTES ====================
 
 @api_router.get("/posts")
-async def get_posts(category: Optional[str] = None, subcategory: Optional[str] = None, search: Optional[str] = None, limit: int = 50, skip: int = 0, include_expired: bool = False):
+async def get_posts(category: Optional[str] = None, subcategory: Optional[str] = None, search: Optional[str] = None, limit: int = 12, skip: int = 0, page: int = 1, include_expired: bool = False):
     now_iso = datetime.now(timezone.utc).isoformat()
     query = {}
     if category:
@@ -532,9 +545,12 @@ async def get_posts(category: Optional[str] = None, subcategory: Optional[str] =
                 {"expires_at": {"$gt": now_iso}}
             ]}
         ]
-    posts = await db.posts.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    # Use page-based pagination if page > 1, otherwise use skip
+    actual_skip = (page - 1) * limit if page > 1 else skip
+    posts = await db.posts.find(query, {"_id": 0}).sort("created_at", -1).skip(actual_skip).limit(limit).to_list(limit)
     total = await db.posts.count_documents(query)
-    return {"posts": posts, "total": total}
+    total_pages = max(1, -(-total // limit))  # ceiling division
+    return {"posts": posts, "total": total, "page": page, "per_page": limit, "total_pages": total_pages}
 
 @api_router.get("/posts/{post_id}")
 async def get_post(post_id: str):
@@ -608,6 +624,176 @@ async def like_post(post_id: str, user=Depends(get_current_user)):
         )
     post = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
     return {"likes": post["likes"]}
+
+# ==================== POST EDIT / DELETE ====================
+
+@api_router.put("/posts/{post_id}")
+async def update_post(post_id: str, update: PostUpdate, user=Depends(require_user)):
+    post = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if post.get("author_id") != user["id"] and not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="You can only edit your own posts")
+    update_fields = {k: v for k, v in update.model_dump().items() if v is not None}
+    update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+    await db.posts.update_one({"id": post_id}, {"$set": update_fields})
+    updated = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/posts/{post_id}")
+async def delete_post(post_id: str, user=Depends(require_user)):
+    post = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if post.get("author_id") != user["id"] and not user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="You can only delete your own posts")
+    await db.posts.delete_one({"id": post_id})
+    await db.comments.delete_many({"post_id": post_id})
+    return {"message": "Post deleted successfully"}
+
+# ==================== POPULAR & RELATED POSTS ====================
+
+@api_router.get("/posts/popular/list")
+async def get_popular_posts(limit: int = 6):
+    """Get popular posts sorted by likes + views"""
+    now_iso = datetime.now(timezone.utc).isoformat()
+    query = {"$or": [
+        {"expires_at": None},
+        {"expires_at": {"$exists": False}},
+        {"expires_at": {"$gt": now_iso}}
+    ]}
+    posts = await db.posts.find(query, {"_id": 0}).sort([("likes", -1), ("views", -1)]).limit(limit).to_list(limit)
+    return posts
+
+@api_router.get("/posts/{post_id}/related")
+async def get_related_posts(post_id: str, limit: int = 3):
+    """Get related posts based on category and tags"""
+    post = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        return []
+    now_iso = datetime.now(timezone.utc).isoformat()
+    # Find posts in same category, excluding current post and expired
+    query = {
+        "id": {"$ne": post_id},
+        "category_slug": post.get("category_slug"),
+        "$or": [
+            {"expires_at": None},
+            {"expires_at": {"$exists": False}},
+            {"expires_at": {"$gt": now_iso}}
+        ]
+    }
+    related = await db.posts.find(query, {"_id": 0}).sort([("likes", -1), ("created_at", -1)]).limit(limit).to_list(limit)
+    # If not enough, fill with posts sharing tags
+    if len(related) < limit and post.get("tags"):
+        existing_ids = [post_id] + [r["id"] for r in related]
+        tag_query = {
+            "id": {"$nin": existing_ids},
+            "tags": {"$in": post["tags"]},
+            "$or": [
+                {"expires_at": None},
+                {"expires_at": {"$exists": False}},
+                {"expires_at": {"$gt": now_iso}}
+            ]
+        }
+        more = await db.posts.find(tag_query, {"_id": 0}).limit(limit - len(related)).to_list(limit - len(related))
+        related.extend(more)
+    return related
+
+# ==================== NEWSLETTER ====================
+
+@api_router.post("/newsletter/subscribe")
+async def newsletter_subscribe(data: NewsletterSubscribe):
+    existing = await db.newsletter.find_one({"email": data.email}, {"_id": 0})
+    if existing:
+        if existing.get("active"):
+            return {"message": "You're already subscribed!", "subscribed": True}
+        # Reactivate
+        await db.newsletter.update_one({"email": data.email}, {"$set": {"active": True, "resubscribed_at": datetime.now(timezone.utc).isoformat()}})
+        return {"message": "Welcome back! You've been resubscribed.", "subscribed": True}
+    doc = {
+        "id": str(uuid.uuid4()),
+        "email": data.email,
+        "name": data.name or "",
+        "active": True,
+        "subscribed_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.newsletter.insert_one(doc)
+    return {"message": "You're subscribed to the weekly digest!", "subscribed": True}
+
+@api_router.post("/newsletter/unsubscribe")
+async def newsletter_unsubscribe(data: NewsletterSubscribe):
+    result = await db.newsletter.update_one({"email": data.email}, {"$set": {"active": False}})
+    if result.matched_count == 0:
+        return {"message": "Email not found in our list.", "subscribed": False}
+    return {"message": "You've been unsubscribed.", "subscribed": False}
+
+@api_router.post("/admin/send-digest")
+async def send_weekly_digest(user=Depends(require_admin)):
+    """Manually trigger a weekly digest email (admin only)"""
+    result = await _send_weekly_digest()
+    return result
+
+async def _send_weekly_digest():
+    """Generate and send weekly digest to all active subscribers"""
+    one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    # Get top posts from the last 7 days
+    top_posts = await db.posts.find(
+        {"created_at": {"$gte": one_week_ago}, "$or": [{"expires_at": None}, {"expires_at": {"$exists": False}}, {"expires_at": {"$gt": now_iso}}]},
+        {"_id": 0}
+    ).sort([("likes", -1), ("views", -1)]).limit(5).to_list(5)
+
+    if not top_posts:
+        return {"message": "No posts from this week to include in digest", "sent": 0}
+
+    # Get active subscribers
+    subscribers = await db.newsletter.find({"active": True}, {"_id": 0}).to_list(5000)
+    # Also get registered users (they're auto-subscribed)
+    all_users = await db.users.find({}, {"_id": 0, "email": 1, "name": 1}).to_list(1000)
+    
+    subscriber_emails = set()
+    for s in subscribers:
+        subscriber_emails.add(s["email"])
+    for u in all_users:
+        subscriber_emails.add(u["email"])
+
+    stats = await db.posts.count_documents({"created_at": {"$gte": one_week_ago}})
+    new_comments = await db.comments.count_documents({"created_at": {"$gte": one_week_ago}})
+
+    # Build post cards HTML
+    posts_html = ""
+    for p in top_posts:
+        posts_html += f"""
+        <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #3B82F6;">
+          <h3 style="color: #0F172A; font-size: 15px; margin: 0 0 6px 0; font-weight: 700;">{p['title']}</h3>
+          <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{p.get('excerpt', '')[:150]}</p>
+          <div style="font-size: 12px; color: #94A3B8;">By {p.get('author_name', 'Unknown')} from {p.get('author_city', '')} &middot; {p.get('likes', 0)} likes</div>
+        </div>"""
+
+    sent_count = 0
+    for email in subscriber_emails:
+        html = f"""
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+          <div style="text-align: center; margin-bottom: 24px;">
+            <span style="font-weight: 900; font-size: 22px;">
+              <span style="color: #EF4444;">B</span><span style="color: #F97316;">L</span><span style="color: #FACC15;">O</span><span style="color: #22C55E;">G</span><span style="color: #14B8A6;">S</span>
+              <span style="color: #22C55E;">4</span>
+              <span style="color: #EF4444;">B</span><span style="color: #3B82F6;">L</span><span style="color: #22C55E;">O</span><span style="color: #A855F7;">C</span><span style="color: #3B82F6;">K</span><span style="color: #14B8A6;">S</span>
+            </span>
+            <p style="color: #64748B; font-size: 13px; margin: 8px 0 0 0;">Weekly Digest</p>
+          </div>
+          <h2 style="color: #0F172A; font-size: 18px; margin-bottom: 6px;">This Week on Blogs 4 Blocks</h2>
+          <p style="color: #64748B; font-size: 14px; margin-bottom: 16px;">{stats} new posts &middot; {new_comments} new comments</p>
+          <h3 style="color: #0F172A; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Top Posts This Week</h3>
+          {posts_html}
+          <p style="color: #94A3B8; font-size: 11px; margin-top: 24px; text-align: center;">You're receiving this as a Blogs 4 Blocks community member.</p>
+        </div>
+        """
+        await send_email_notification(email, "Your Weekly Digest from Blogs 4 Blocks", html)
+        sent_count += 1
+
+    return {"message": f"Weekly digest sent to {sent_count} subscribers", "sent": sent_count}
 
 # ==================== COMMENT ROUTES ====================
 
@@ -949,6 +1135,7 @@ async def startup():
     await db.user_prefs.create_index("user_id", unique=True)
     await db.categories.create_index("slug", unique=True)
     await db.subcategories.create_index("slug", unique=True)
+    await db.newsletter.create_index("email", unique=True)
     
     # Seed categories into MongoDB (upsert to avoid duplicates)
     for cat in SEED_CATEGORIES:

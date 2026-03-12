@@ -3,10 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import BlogCard from '../components/BlogCard';
-import { ArrowRight, Globe, Users, PenLine, TrendingUp, Sparkles, Search } from 'lucide-react';
+import { ArrowRight, Globe, Users, PenLine, TrendingUp, Sparkles, Search, Flame, Mail, Check } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const CITY_IMAGES = [
   'https://images.unsplash.com/photo-1603547142979-56242264e65c?w=600&q=75',
@@ -36,10 +37,15 @@ export default function HomePage() {
   const { categories, stats, API } = useApp();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
+  const [popularPosts, setPopularPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   useEffect(() => {
     axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => {});
+    axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => {});
   }, [API]);
 
   const handleSearch = (e) => {
@@ -47,6 +53,20 @@ export default function HomePage() {
     if (searchQuery.trim()) {
       navigate(`/category/all?search=${encodeURIComponent(searchQuery.trim())}`);
     }
+  };
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    setSubscribing(true);
+    try {
+      await axios.post(`${API}/newsletter/subscribe`, { email: newsletterEmail.trim() });
+      setSubscribed(true);
+      toast.success('You\'re subscribed to the weekly digest!');
+    } catch (err) {
+      toast.error('Failed to subscribe. Try again.');
+    }
+    setSubscribing(false);
   };
 
   return (
@@ -244,6 +264,78 @@ export default function HomePage() {
             >
               View All Posts <ArrowRight className="w-4 h-4" />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* POPULAR POSTS */}
+      {popularPosts.length > 0 && (
+        <section className="py-16 md:py-24 bg-white" data-testid="popular-posts-section">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mb-12">
+              <div className="flex items-center gap-2 mb-3">
+                <Flame className="w-6 h-6 text-orange-500" />
+                <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-gray-900" data-testid="popular-heading">
+                  Trending Now
+                </h2>
+              </div>
+              <p className="text-base md:text-lg text-gray-500">
+                The most liked and viewed posts from the community.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" data-testid="popular-posts-grid">
+              {popularPosts.map((post, i) => (
+                <BlogCard key={post.id} post={post} index={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* NEWSLETTER SECTION */}
+      <section className="py-16 md:py-24 bg-gray-50/50" data-testid="newsletter-section">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-950 to-black p-8 md:p-14">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-b4b-blue/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-b4b-purple/10 rounded-full blur-3xl" />
+            <div className="relative max-w-2xl">
+              <div className="flex items-center gap-2 mb-4">
+                <Mail className="w-6 h-6 text-b4b-blue" />
+                <span className="text-sm font-semibold text-b4b-blue uppercase tracking-wider">Weekly Digest</span>
+              </div>
+              <h2 className="font-heading font-bold text-2xl md:text-3xl text-white mb-3 tracking-tight" data-testid="newsletter-heading">
+                Get the best marketing insights delivered weekly
+              </h2>
+              <p className="text-gray-400 text-sm md:text-base mb-6">
+                Join the community. Every Monday, we curate the top posts, trending topics, and fresh perspectives from marketing professionals worldwide.
+              </p>
+              {subscribed ? (
+                <div className="flex items-center gap-2 text-green-400 font-semibold" data-testid="newsletter-success">
+                  <Check className="w-5 h-5" /> You're subscribed! Check your inbox on Monday.
+                </div>
+              ) : (
+                <form onSubmit={handleSubscribe} className="flex gap-3 max-w-md" data-testid="newsletter-form">
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    required
+                    className="bg-white/10 border-gray-700 text-white placeholder:text-gray-500 rounded-full h-12"
+                    data-testid="newsletter-email-input"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={subscribing}
+                    className="bg-b4b-blue text-white hover:bg-blue-600 rounded-full h-12 px-6 font-bold"
+                    data-testid="newsletter-submit-btn"
+                  >
+                    {subscribing ? 'Subscribing...' : 'Subscribe'}
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </section>

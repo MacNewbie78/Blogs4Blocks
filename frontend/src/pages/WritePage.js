@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import { PenLine, Send, AlertCircle, ImagePlus, X, Plus, Lightbulb } from 'lucide-react';
@@ -21,6 +21,9 @@ import { toast } from 'sonner';
 export default function WritePage() {
   const { user, token, categories, API } = useApp();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     excerpt: '',
@@ -44,6 +47,28 @@ export default function WritePage() {
   const [suggestName, setSuggestName] = useState('');
   const [suggestDesc, setSuggestDesc] = useState('');
   const [suggestSubmitting, setSuggestSubmitting] = useState(false);
+
+  // Load existing post data for editing
+  useEffect(() => {
+    if (editId && token) {
+      setIsEditing(true);
+      axios.get(`${API}/posts/${editId}`).then(res => {
+        const p = res.data;
+        setFormData({
+          title: p.title || '',
+          excerpt: p.excerpt || '',
+          content: p.content || '',
+          category_slug: p.category_slug || '',
+          subcategory: p.subcategory || '',
+          tags: (p.tags || []).join(', '),
+        });
+        if (p.cover_image) setCoverImage(p.cover_image);
+        if (p.category_slug) {
+          axios.get(`${API}/categories/${p.category_slug}`).then(r => setSubcategories(r.data.subcategories || [])).catch(() => {});
+        }
+      }).catch(() => { toast.error('Failed to load post for editing'); });
+    }
+  }, [editId, token, API]);
 
   const handleSuggestTopic = async () => {
     if (!suggestName.trim() || !suggestDesc.trim()) return;
@@ -122,9 +147,18 @@ export default function WritePage() {
       }
 
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const res = await axios.post(`${API}/posts`, payload, { headers });
-      toast.success('Your post has been published!');
-      navigate(`/post/${res.data.id}`);
+      
+      if (isEditing && editId) {
+        // Update existing post
+        const res = await axios.put(`${API}/posts/${editId}`, payload, { headers });
+        toast.success('Post updated!');
+        navigate(`/post/${editId}`);
+      } else {
+        // Create new post
+        const res = await axios.post(`${API}/posts`, payload, { headers });
+        toast.success('Your post has been published!');
+        navigate(`/post/${res.data.id}`);
+      }
     } catch (e) {
       setError(e.response?.data?.detail || 'Failed to publish. Please try again.');
     }
@@ -137,10 +171,10 @@ export default function WritePage() {
         <div className="mb-8">
           <h1 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-gray-900 mb-2" data-testid="write-heading">
             <PenLine className="inline w-8 h-8 mr-2 text-b4b-blue" />
-            Share Your Marketing Insight
+            {isEditing ? 'Edit Your Post' : 'Share Your Marketing Insight'}
           </h1>
           <p className="text-base text-gray-500">
-            Your experience matters. Share what works in your market, what doesn't, and help fellow marketers around the world.
+            {isEditing ? 'Update your post with the latest insights.' : 'Your experience matters. Share what works in your market, what doesn\'t, and help fellow marketers around the world.'}
           </p>
         </div>
 
@@ -366,7 +400,7 @@ export default function WritePage() {
               data-testid="write-submit-btn"
             >
               <Send className="w-4 h-4 mr-2" />
-              {submitting ? 'Publishing...' : 'Publish Post'}
+              {submitting ? (isEditing ? 'Updating...' : 'Publishing...') : (isEditing ? 'Update Post' : 'Publish Post')}
             </Button>
           </div>
         </form>

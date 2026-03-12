@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import CommentSection from '../components/CommentSection';
-import { ArrowLeft, Heart, Eye, MapPin, Clock, Share2, Tag, Timer } from 'lucide-react';
+import { ArrowLeft, Heart, Eye, MapPin, Clock, Share2, Tag, Timer, Pencil, Trash2, Facebook, Twitter, Linkedin, Link2 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import BlogCard from '../components/BlogCard';
 import { toast } from 'sonner';
 
 const CATEGORY_COLORS = {
@@ -20,15 +21,20 @@ const CATEGORY_COLORS = {
 
 export default function PostPage() {
   const { id } = useParams();
-  const { API, token } = useApp();
+  const { API, token, user } = useApp();
+  const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [liked, setLiked] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [related, setRelated] = useState([]);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchPost = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/posts/${id}`);
       setPost(res.data);
+      // Fetch related posts
+      axios.get(`${API}/posts/${id}/related`).then(r => setRelated(r.data)).catch(() => {});
     } catch (e) {
       console.error(e);
     }
@@ -52,9 +58,30 @@ export default function PostPage() {
     }
   };
 
-  const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast.success('Link copied to clipboard!');
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this post? This cannot be undone.')) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`${API}/posts/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Post deleted');
+      navigate('/');
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to delete');
+    }
+    setDeleting(false);
+  };
+
+  const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+  const shareTitle = post?.title || '';
+
+  const handleShare = (platform) => {
+    const urls = {
+      copy: () => { navigator.clipboard.writeText(shareUrl); toast.success('Link copied!'); },
+      twitter: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareTitle)}&url=${encodeURIComponent(shareUrl)}`, '_blank'),
+      facebook: () => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank'),
+      linkedin: () => window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank'),
+    };
+    urls[platform]?.();
   };
 
   if (loading) {
@@ -75,6 +102,8 @@ export default function PostPage() {
   }
 
   const catColor = CATEGORY_COLORS[post.category_slug] || '#3B82F6';
+  const isAuthor = user && post.author_id === user.id;
+  const isAdmin = user?.is_admin;
 
   // Render markdown-like content
   const renderContent = (content) => {
@@ -121,15 +150,29 @@ export default function PostPage() {
             <ArrowLeft className="w-4 h-4" /> Back to {post.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </Link>
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleShare}
-              className="rounded-full"
-              data-testid="post-share-btn"
-            >
-              <Share2 className="w-4 h-4" />
-            </Button>
+            {(isAuthor || isAdmin) && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/write?edit=${post.id}`)}
+                  className="rounded-full"
+                  data-testid="post-edit-btn"
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="rounded-full text-red-500 hover:text-red-700 hover:bg-red-50"
+                  data-testid="post-delete-btn"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </>
+            )}
             <Button
               variant={liked ? "default" : "outline"}
               size="sm"
@@ -217,6 +260,25 @@ export default function PostPage() {
           </div>
         )}
 
+        {/* Social Sharing */}
+        <div className="mt-8 pt-6 border-t border-gray-100" data-testid="post-social-share">
+          <p className="text-sm font-semibold text-gray-500 mb-3">Share this post</p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleShare('twitter')} className="rounded-full gap-2 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200" data-testid="share-twitter">
+              <Twitter className="w-4 h-4" /> Twitter
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleShare('linkedin')} className="rounded-full gap-2 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200" data-testid="share-linkedin">
+              <Linkedin className="w-4 h-4" /> LinkedIn
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleShare('facebook')} className="rounded-full gap-2 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200" data-testid="share-facebook">
+              <Facebook className="w-4 h-4" /> Facebook
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => handleShare('copy')} className="rounded-full gap-2" data-testid="share-copy">
+              <Link2 className="w-4 h-4" /> Copy Link
+            </Button>
+          </div>
+        </div>
+
         {/* Guest post expiration notice */}
         {post.is_guest && post.expires_at && (
           (() => {
@@ -241,6 +303,18 @@ export default function PostPage() {
         <div className="mt-12 pt-8 border-t border-gray-100">
           <CommentSection postId={post.id} />
         </div>
+
+        {/* Related Posts */}
+        {related.length > 0 && (
+          <div className="mt-12 pt-8 border-t border-gray-100" data-testid="related-posts-section">
+            <h2 className="font-heading font-bold text-2xl text-gray-900 mb-6">You Might Also Like</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              {related.map((r, i) => (
+                <BlogCard key={r.id} post={r} index={i} />
+              ))}
+            </div>
+          </div>
+        )}
       </article>
     </div>
   );

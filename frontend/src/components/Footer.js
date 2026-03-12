@@ -1,12 +1,33 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import { useApp } from '../context/AppContext';
-import { MapPin, Heart } from 'lucide-react';
+import { MapPin, Heart, Mail, Check } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { toast } from 'sonner';
 
 const RAINBOW = ['#EF4444', '#F97316', '#FACC15', '#22C55E', '#14B8A6', '#3B82F6', '#A855F7', '#EC4899', '#A16207'];
 
 export default function Footer() {
-  const { categories, stats } = useApp();
+  const { categories, stats, API } = useApp();
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubscribing(true);
+    try {
+      await axios.post(`${API}/newsletter/subscribe`, { email: email.trim() });
+      setSubscribed(true);
+      toast.success('Subscribed to weekly digest!');
+    } catch (err) {
+      toast.error('Failed to subscribe');
+    }
+    setSubscribing(false);
+  };
 
   return (
     <footer className="bg-gray-950 text-white mt-auto" data-testid="footer">
@@ -59,25 +80,48 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Newsletter + Stats */}
           <div>
-            <h4 className="font-heading font-bold text-sm uppercase tracking-wider text-gray-400 mb-4">Community</h4>
+            <h4 className="font-heading font-bold text-sm uppercase tracking-wider text-gray-400 mb-4">Weekly Digest</h4>
+            {subscribed ? (
+              <div className="flex items-center gap-2 text-green-400 text-sm font-medium mb-4" data-testid="footer-subscribed">
+                <Check className="w-4 h-4" /> Subscribed!
+              </div>
+            ) : (
+              <form onSubmit={handleSubscribe} className="mb-4" data-testid="footer-newsletter-form">
+                <p className="text-xs text-gray-500 mb-2">Top posts in your inbox every Monday.</p>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-600 rounded-full h-9 text-xs"
+                    data-testid="footer-newsletter-email"
+                  />
+                  <Button type="submit" disabled={subscribing} size="sm" className="bg-b4b-blue text-white hover:bg-blue-600 rounded-full text-xs px-3" data-testid="footer-newsletter-btn">
+                    <Mail className="w-3 h-3" />
+                  </Button>
+                </div>
+              </form>
+            )}
             {stats && (
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <div className="text-2xl font-heading font-bold text-b4b-blue">{stats.total_posts}</div>
+                  <div className="text-xl font-heading font-bold text-b4b-blue">{stats.total_posts}</div>
                   <div className="text-xs text-gray-500">Posts</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-heading font-bold text-b4b-green">{stats.total_comments}</div>
+                  <div className="text-xl font-heading font-bold text-b4b-green">{stats.total_comments}</div>
                   <div className="text-xs text-gray-500">Comments</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-heading font-bold text-b4b-purple">{stats.contributors || 0}</div>
+                  <div className="text-xl font-heading font-bold text-b4b-purple">{stats.contributors || 0}</div>
                   <div className="text-xs text-gray-500">Contributors</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-heading font-bold text-b4b-orange">{stats.countries_represented}</div>
+                  <div className="text-xl font-heading font-bold text-b4b-orange">{stats.countries_represented}</div>
                   <div className="text-xs text-gray-500">Countries</div>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import { useParams, Link, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import BlogCard from '../components/BlogCard';
-import { ArrowLeft, Search, Filter } from 'lucide-react';
+import { ArrowLeft, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -26,9 +26,12 @@ export default function CategoryPage() {
   const [category, setCategory] = useState(null);
   const [posts, setPosts] = useState([]);
   const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState(searchParams.get('search') || '');
   const [activeSubcategory, setActiveSubcategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const perPage = 12;
 
   const isAll = slug === 'all';
 
@@ -44,13 +47,17 @@ export default function CategoryPage() {
     if (!isAll && slug) params.set('category', slug);
     if (activeSubcategory) params.set('subcategory', activeSubcategory);
     if (search) params.set('search', search);
-    params.set('limit', '50');
+    params.set('limit', perPage.toString());
+    params.set('page', currentPage.toString());
 
     axios.get(`${API}/posts?${params.toString()}`)
-      .then(res => { setPosts(res.data.posts); setTotal(res.data.total); })
+      .then(res => { setPosts(res.data.posts); setTotal(res.data.total); setTotalPages(res.data.total_pages || 1); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [slug, activeSubcategory, search, API, isAll]);
+  }, [slug, activeSubcategory, search, API, isAll, currentPage]);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [slug, activeSubcategory, search]);
 
   const catColor = category?.color || '#3B82F6';
 
@@ -162,11 +169,63 @@ export default function CategoryPage() {
               ))}
             </div>
           ) : posts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="category-posts-grid">
-              {posts.map((post, i) => (
-                <BlogCard key={post.id} post={post} index={i} />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="category-posts-grid">
+                {posts.map((post, i) => (
+                  <BlogCard key={post.id} post={post} index={i} />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-12" data-testid="pagination">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="rounded-full"
+                    data-testid="pagination-prev"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 7) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 4) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNum = totalPages - 6 + i;
+                    } else {
+                      pageNum = currentPage - 3 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`rounded-full min-w-[36px] ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                        data-testid={`pagination-page-${pageNum}`}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="rounded-full"
+                    data-testid="pagination-next"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-20" data-testid="no-posts">
               <p className="text-gray-400 text-lg mb-4">No posts found in this category yet.</p>
