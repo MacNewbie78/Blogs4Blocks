@@ -1,77 +1,95 @@
-# Blogs 4 Blocks - PRD
+# Blogs 4 Blocks - Product Requirements Document
 
 ## Original Problem Statement
-Build a blogging website based in New York City called "Blogs 4 Blocks." An open forum for marketing professionals worldwide to share strategies, insights, and experiences. The website should be inviting, easy to navigate, cheerful, and exciting.
+Build a blogging website based in New York City. Title: "Blogs 4 Blocks." Goal: marketing professionals share blog posts about strategies for their demographic, creating an open forum. Inviting, easy to navigate, cheerful, exciting.
+
+## Tech Stack
+- **Backend:** FastAPI (Python)
+- **Frontend:** React.js
+- **Database:** MongoDB
+- **Real-time:** WebSockets
+- **Email:** Resend API
+- **Styling:** Tailwind CSS, shadcn/ui
+- **Authentication:** JWT
+- **Deployment Model:** PWA
+- **Analytics:** Google Analytics 4 (GA4)
+- **Scheduler:** APScheduler (AsyncIOScheduler)
+
+## Core Requirements (All Implemented)
+1. City photo background for pages
+2. User registration + guest posting (guest posts expire in 30 days)
+3. Registered users notified about new posts and comments (via Resend)
+4. Dynamic blog categories with admin moderation
+5. User profile/dashboard with custom color-coding
+6. Rich text editor (TipTap) for creating posts
+7. Email notifications for new posts and comments
+8. Real-time discussion threads using WebSockets
+9. Image uploads for blog posts
+10. Progressive Web App (PWA)
+11. Admin panel to moderate user-suggested topics
+12. Custom logo for navbar + hero section background
+13. Weekly digest feature (automated + manual)
+14. Deployment guide for Hostinger
+
+## Key DB Collections
+- `users`: {email, username, password_hash, is_admin, profile_colors}
+- `posts`: {title, content, author_id, is_guest, created_at, expires_at}
+- `categories`: {name, slug, status, color}
+- `comments`: {post_id, content, author_name}
+- `newsletter`: {email, name, active, subscribed_at}
+- `digest_log`: {sent_at, recipients, errors, posts_included, status}
+- `user_likes`, `user_prefs`, `subcategories`
+
+## Completed Features
+- Full auth system (JWT) with registration and login
+- Guest posting with 30-day expiration countdown
+- Rich text editor (TipTap)
+- Real-time comments via WebSocket
+- Email notifications (new posts, new comments)
+- Dynamic categories with admin moderation
+- User profile dashboard with custom colors
+- Popular/related posts (trending section)
+- Post editing and deleting
+- Pagination on category pages
+- Newsletter subscription UI (homepage + footer)
+- **Weekly Digest backend logic (APScheduler cron: every Monday 9AM UTC)**
+- **Admin Newsletter tab (digest status, manual trigger, history log)**
+- Admin panel (overview, moderation, posts, comments, users, newsletter)
+- PWA support
+- GA4 analytics
+- Deployment guide for Hostinger (at /hosting-guide route - may need verification)
 
 ## Architecture
-- **Frontend**: React + Tailwind CSS + Shadcn/UI + Framer Motion
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **Auth**: JWT-based + guest posting (30-day expiry)
-- **Email**: Resend API
-- **Real-time**: WebSockets
-- **Analytics**: Google Analytics 4 (GA4)
-- **PWA**: Progressive Web App support
-
-## What's Been Implemented (Complete)
-
-### Core Platform
-- Full backend API with auth, posts, comments, categories, likes, stats, seed data
-- HomePage with hero, categories bento grid, latest posts, popular posts, newsletter signup
-- CategoryPage with subcategory filters, search, pagination
-- PostPage with full content, likes, comments, social sharing, related posts, edit/delete
-- WritePage with TipTap rich text editor + edit mode
-- AuthPage, AboutPage, ProfilePage, AdminPage, AdminSetupPage
-- Navbar with logo, topics dropdown, mobile responsive
-- Footer with newsletter subscription, community stats
-
-### Features
-- Email Notifications via Resend (new posts to all users, comments to authors)
-- Real-time WebSocket Discussion Threads
-- Image Upload System (cover images + inline)
-- PWA support (manifest, service worker, install prompt)
-- Dynamic Categories (MongoDB-based, user suggestions, admin moderation)
-- Guest Post Expiration (30-day auto-hide with countdown badges)
-- Post Editing & Deletion by authors
-- Page-based Pagination for post listings
-- Social Sharing (Twitter, LinkedIn, Facebook, Copy Link)
-- Popular Posts / Trending Now section
-- Related Posts suggestions ("You Might Also Like")
-- Newsletter Subscription & Weekly Digest email system
-- Google Analytics 4 (GA4) integration
-
-### Admin System
-- Admin Dashboard with stats, moderation queue, user management
-- Admin Setup Page (self-service with secret key)
-- User Promotion/Demotion
-- Topic Moderation (approve/reject)
-- Content Moderation (delete posts/comments)
-- Manual Weekly Digest trigger
+```
+/app
+├── backend/
+│   ├── server.py (all routes, models, scheduler)
+│   ├── uploads/
+│   ├── tests/
+│   └── .env
+└── frontend/
+    ├── src/
+    │   ├── components/ (BlogCard, CommentSection, Footer, Navbar, etc.)
+    │   ├── pages/ (Home, Category, Post, Write, Auth, Profile, Admin, etc.)
+    │   ├── context/AppContext.js
+    │   └── App.js
+    └── public/
+```
 
 ## Key API Endpoints
-- `/api/auth/{register, login, me}`
-- `/api/posts` (GET with pagination, POST create)
-- `/api/posts/{id}` (GET, PUT edit, DELETE)
-- `/api/posts/popular/list` - Trending posts
-- `/api/posts/{id}/related` - Related posts
-- `/api/posts/{id}/like`
-- `/api/posts/{id}/comments`
-- `/api/categories` - Dynamic categories
-- `/api/newsletter/subscribe` - Newsletter signup
-- `/api/newsletter/unsubscribe`
-- `/api/admin/send-digest` - Weekly digest trigger
-- `/api/admin/self-promote` - Admin setup
-- `/api/admin/users/{id}/toggle-admin`
-- `/api/admin/stats`, `/api/admin/users`
-- `/api/upload` - Image uploads
-- `/api/ws/comments/{post_id}` - WebSocket
+- Auth: POST /api/auth/register, /api/auth/login, GET /api/auth/me
+- Posts: GET/POST /api/posts, GET/PUT/DELETE /api/posts/{id}
+- Comments: GET/POST /api/posts/{id}/comments
+- Categories: GET /api/categories, POST /api/categories/suggest
+- Newsletter: POST /api/newsletter/subscribe, /api/newsletter/unsubscribe
+- Admin: GET /api/admin/stats, /api/admin/digest-status, POST /api/admin/send-digest, GET /api/admin/subscribers
+- Upload: POST /api/upload
+- WebSocket: /api/ws/comments/{post_id}
 
 ## Credentials
-- **Demo Admin**: demo@b4b.com / password123
-- **Admin Setup Key**: b4b-admin-2024
+- Admin Setup Key: b4b-admin-2024 (at /admin-setup route)
 
-## Deployment
-- Hostinger VPS Deployment Guide: /app/DEPLOYMENT_GUIDE.md
-
-## Status: PRODUCTION READY
-All features implemented, tested, and verified. 100% test pass rate across all iterations.
+## Backlog / Future
+- Refactor server.py into modular routers for scalability
+- Verify HostingGuidePage is accessible
+- User feedback cycle
