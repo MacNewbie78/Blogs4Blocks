@@ -14,6 +14,7 @@ import AuthPage from './pages/AuthPage';
 import AboutPage from './pages/AboutPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import AdminSetupPage from './pages/AdminSetupPage';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
               <Route path="/about" element={<AboutPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin-setup" element={<AdminSetupPage />} />
             </Routes>
           </main>
           <Footer />

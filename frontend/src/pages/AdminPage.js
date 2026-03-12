@@ -154,7 +154,16 @@ function RecentCommentRow({ comment, onDelete }) {
   );
 }
 
-function UserRow({ u }) {
+function UserRow({ u, currentUserId, onToggleAdmin }) {
+  const [loading, setLoading] = useState(false);
+  const isSelf = u.id === currentUserId;
+
+  const handleToggle = async () => {
+    setLoading(true);
+    await onToggleAdmin(u.id, u.is_admin);
+    setLoading(false);
+  };
+
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0" data-testid={`admin-user-${u.id}`}>
       <div className="w-8 h-8 rounded-full bg-b4b-blue flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
@@ -164,10 +173,23 @@ function UserRow({ u }) {
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-900">{u.name}</span>
           {u.is_admin && <Badge className="text-xs bg-indigo-100 text-indigo-700 border-0 py-0 h-4">admin</Badge>}
+          {isSelf && <Badge className="text-xs bg-gray-100 text-gray-500 border-0 py-0 h-4">you</Badge>}
         </div>
         <div className="text-xs text-gray-400">{u.email} — {u.city}, {u.country}</div>
       </div>
-      <span className="text-xs text-gray-400 flex-shrink-0">{new Date(u.created_at).toLocaleDateString()}</span>
+      <span className="text-xs text-gray-400 flex-shrink-0 mr-2">{new Date(u.created_at).toLocaleDateString()}</span>
+      {!isSelf && (
+        <Button
+          size="sm"
+          variant={u.is_admin ? "outline" : "default"}
+          disabled={loading}
+          onClick={handleToggle}
+          className={`h-7 text-xs rounded-full flex-shrink-0 ${u.is_admin ? 'border-red-200 text-red-600 hover:bg-red-50' : 'bg-indigo-600 hover:bg-indigo-700 text-white'}`}
+          data-testid={`toggle-admin-${u.id}`}
+        >
+          {loading ? '...' : u.is_admin ? 'Remove Admin' : 'Make Admin'}
+        </Button>
+      )}
     </div>
   );
 }
@@ -254,6 +276,16 @@ export default function AdminPage() {
       fetchData();
     } catch (e) {
       toast.error('Failed to delete comment');
+    }
+  };
+
+  const handleToggleAdmin = async (userId, currentlyAdmin) => {
+    try {
+      const res = await axios.put(`${API}/admin/users/${userId}/toggle-admin`, {}, { headers: headers() });
+      toast.success(res.data.message);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, is_admin: res.data.is_admin } : u));
+    } catch (e) {
+      toast.error(e.response?.data?.detail || 'Failed to update admin status');
     }
   };
 
@@ -393,7 +425,7 @@ export default function AdminPage() {
             <h2 className="font-heading font-bold text-lg text-gray-900 mb-4">Registered Users ({users.length})</h2>
             <div className="bg-white rounded-xl border border-gray-100 p-4">
               {users.map(u => (
-                <UserRow key={u.id} u={u} />
+                <UserRow key={u.id} u={u} currentUserId={user.id} onToggleAdmin={handleToggleAdmin} />
               ))}
             </div>
           </div>

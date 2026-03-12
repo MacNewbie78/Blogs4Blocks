@@ -429,15 +429,31 @@ async def reject_category(slug: str, user=Depends(require_admin)):
 
 # ==================== ADMIN ROUTES ====================
 
-@api_router.post("/admin/make-admin")
-async def make_admin_by_secret(email: str, secret: str):
-    """Bootstrap admin: promote user to admin via server secret"""
-    if secret != JWT_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid secret")
-    result = await db.users.update_one({"email": email}, {"$set": {"is_admin": True}})
-    if result.matched_count == 0:
+class AdminSetupRequest(BaseModel):
+    secret_key: str
+
+@api_router.post("/admin/self-promote")
+async def self_promote_to_admin(req: AdminSetupRequest, user=Depends(require_user)):
+    """Promote the currently logged-in user to admin using a secret key"""
+    setup_key = os.environ.get('ADMIN_SETUP_KEY', 'b4b-admin-2024')
+    if req.secret_key != setup_key:
+        raise HTTPException(status_code=403, detail="Invalid setup key")
+    if user.get("is_admin"):
+        return {"message": "You are already an admin", "is_admin": True}
+    await db.users.update_one({"id": user["id"]}, {"$set": {"is_admin": True}})
+    return {"message": "You are now an admin! Refresh the page to access the admin panel.", "is_admin": True}
+
+@api_router.put("/admin/users/{user_id}/toggle-admin")
+async def toggle_user_admin(user_id: str, admin=Depends(require_admin)):
+    """Toggle admin status for a user (admin only). Cannot demote yourself."""
+    if user_id == admin["id"]:
+        raise HTTPException(status_code=400, detail="You cannot change your own admin status")
+    target = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not target:
         raise HTTPException(status_code=404, detail="User not found")
-    return {"message": f"{email} is now an admin"}
+    new_status = not target.get("is_admin", False)
+    await db.users.update_one({"id": user_id}, {"$set": {"is_admin": new_status}})
+    return {"user_id": user_id, "is_admin": new_status, "message": f"{'Promoted to' if new_status else 'Removed from'} admin"}
 
 @api_router.get("/admin/stats")
 async def admin_stats(user=Depends(require_admin)):
