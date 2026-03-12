@@ -10,6 +10,7 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
 - **Auth**: JWT-based + guest posting (30-day expiry)
 - **Email**: Resend API
 - **Real-time**: WebSockets
+- **Analytics**: Google Analytics 4 (GA4)
 
 ## User Personas
 1. **Registered Marketing Professional**: Creates permanent posts, receives notifications, builds community presence
@@ -53,49 +54,45 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." An open
 - Dynamic Categories (MongoDB-based, user suggestions, admin moderation)
 
 ### Admin System (Feb 12, 2026)
-- **Admin Dashboard** (`/admin`): Overview stats, moderation queue, recent posts/comments, user management
-- **Admin Setup Page** (`/admin-setup`): Self-service admin promotion with secret key (ADMIN_SETUP_KEY env var)
-- **User Promotion/Demotion**: Toggle admin status for any user from the admin panel Users tab
-- **Topic Moderation**: Approve/reject user-suggested categories
-- **Content Moderation**: Delete posts and comments
-- Admin link in navbar (desktop + mobile) for admin users
+- Admin Dashboard (`/admin`): Overview stats, moderation queue, recent posts/comments, user management
+- Admin Setup Page (`/admin-setup`): Self-service admin promotion with secret key
+- User Promotion/Demotion: Toggle admin status for any user from admin panel
+- Topic Moderation: Approve/reject user-suggested categories
+- Content Moderation: Delete posts and comments
+- Google Analytics 4 (GA4) integration
+
+### P1 Features (Mar 12, 2026)
+- **Guest Post Expiration**: Guest posts automatically hidden from listings after 30 days. BlogCard shows countdown badge, PostPage shows colored expiration notice (red=expired, amber=<7 days, yellow=active)
+- **New Post Notifications**: All registered users receive email notification via Resend when new posts are published (async, non-blocking)
+- Admin stats now include expired_guest_posts count
 
 ## Key API Endpoints
 - `/api/auth/{register, login, me}` - User authentication
-- `/api/posts/...` - CRUD for blog posts
+- `/api/posts/...` - CRUD for blog posts (with `include_expired` param)
 - `/api/categories` - Dynamic categories
 - `/api/admin/self-promote` - Self-service admin setup with secret key
-- `/api/admin/users/{user_id}/toggle-admin` - Promote/demote users (admin only)
-- `/api/admin/stats` - Dashboard statistics
+- `/api/admin/users/{user_id}/toggle-admin` - Promote/demote users
+- `/api/admin/stats` - Dashboard statistics (incl. expired guest posts)
 - `/api/admin/users` - List all users
 - `/api/admin/posts/{id}` - Delete posts
 - `/api/admin/comments/{id}` - Delete comments
 - `/api/upload` - Image uploads
-- `/ws/posts/{post_id}` - Real-time comments
+- `/api/ws/comments/{post_id}` - Real-time comments WebSocket
 
 ## Credentials
 - **Demo Admin**: demo@b4b.com / password123
 - **Admin Setup Key**: b4b-admin-2024 (set via ADMIN_SETUP_KEY in backend/.env)
 
-## Test Results
-- Backend: 100% (all tests passed)
-- Frontend: 100% (all UI flows working)
-- Test reports: /app/test_reports/iteration_1-5.json
-
 ## Prioritized Backlog
-### P0 (Next)
-- Verify Resend domain for custom sender
-- Image compression/optimization on upload
 
 ### P1
-- User following system
-- Post editing and deletion
+- Custom Profile Color-Coding (user-selected colors for dashboard sections)
+- Post editing and deletion by author
 - Pagination for posts listing
-- Rich media embeds (YouTube, Twitter)
 
 ### P2
 - Social sharing buttons
 - Newsletter subscription / Weekly Digest
 - Most popular posts widget
 - Related posts suggestions
-- Hosting/deployment guidance
+- Self-hosting/deployment guidance (Hostinger VPS)
