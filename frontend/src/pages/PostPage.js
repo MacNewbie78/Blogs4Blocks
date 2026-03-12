@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import CommentSection from '../components/CommentSection';
-import { ArrowLeft, Heart, Eye, MapPin, Clock, Share2, Tag } from 'lucide-react';
+import { ArrowLeft, Heart, Eye, MapPin, Clock, Share2, Tag, Timer } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
@@ -217,11 +217,24 @@ export default function PostPage() {
           </div>
         )}
 
-        {/* Guest warning */}
+        {/* Guest post expiration notice */}
         {post.is_guest && post.expires_at && (
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-sm text-yellow-800" data-testid="post-guest-notice">
-            This is a guest post and will expire on {new Date(post.expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}.
-          </div>
+          (() => {
+            const daysLeft = Math.ceil((new Date(post.expires_at) - new Date()) / (1000 * 60 * 60 * 24));
+            const isExpired = post.is_expired || daysLeft <= 0;
+            return (
+              <div className={`mt-6 border rounded-xl p-4 text-sm flex items-start gap-3 ${isExpired ? 'bg-red-50 border-red-200 text-red-800' : daysLeft <= 7 ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-yellow-50 border-yellow-200 text-yellow-800'}`} data-testid="post-guest-notice">
+                <Timer className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div>
+                  {isExpired ? (
+                    <p className="font-medium">This guest post has expired and is no longer publicly listed.</p>
+                  ) : (
+                    <p>This is a guest post. It will expire on <strong>{new Date(post.expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong> ({daysLeft} {daysLeft === 1 ? 'day' : 'days'} remaining). Register an account to post permanently!</p>
+                  )}
+                </div>
+              </div>
+            );
+          })()
         )}
 
         {/* Comment Section */}

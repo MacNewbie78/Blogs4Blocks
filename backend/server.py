@@ -464,7 +464,9 @@ async def admin_stats(user=Depends(require_admin)):
     pending_cats = await db.categories.count_documents({"status": "pending"})
     approved_cats = await db.categories.count_documents({"status": "approved"})
     guest_posts = await db.posts.count_documents({"is_guest": True})
-    recent_posts = await db.posts.find({}, {"_id": 0, "id": 1, "title": 1, "author_name": 1, "author_city": 1, "category_slug": 1, "created_at": 1, "likes": 1, "views": 1, "is_guest": 1}).sort("created_at", -1).limit(10).to_list(10)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    expired_guest_posts = await db.posts.count_documents({"is_guest": True, "expires_at": {"$lte": now_iso}})
+    recent_posts = await db.posts.find({}, {"_id": 0, "id": 1, "title": 1, "author_name": 1, "author_city": 1, "category_slug": 1, "created_at": 1, "likes": 1, "views": 1, "is_guest": 1, "expires_at": 1}).sort("created_at", -1).limit(10).to_list(10)
     recent_comments = await db.comments.find({}, {"_id": 0}).sort("created_at", -1).limit(10).to_list(10)
     countries = await db.posts.distinct("author_country")
     
@@ -475,6 +477,7 @@ async def admin_stats(user=Depends(require_admin)):
         "pending_categories": pending_cats,
         "approved_categories": approved_cats,
         "guest_posts": guest_posts,
+        "expired_guest_posts": expired_guest_posts,
         "countries_represented": len(countries),
         "recent_posts": recent_posts,
         "recent_comments": recent_comments,
@@ -507,7 +510,8 @@ async def admin_list_users(user=Depends(require_admin)):
 # ==================== POST ROUTES ====================
 
 @api_router.get("/posts")
-async def get_posts(category: Optional[str] = None, subcategory: Optional[str] = None, search: Optional[str] = None, limit: int = 50, skip: int = 0):
+async def get_posts(category: Optional[str] = None, subcategory: Optional[str] = None, search: Optional[str] = None, limit: int = 50, skip: int = 0, include_expired: bool = False):
+    now_iso = datetime.now(timezone.utc).isoformat()
     query = {}
     if category:
         query["category_slug"] = category
@@ -519,6 +523,15 @@ async def get_posts(category: Optional[str] = None, subcategory: Optional[str] =
             {"content": {"$regex": search, "$options": "i"}},
             {"tags": {"$regex": search, "$options": "i"}}
         ]
+    # Exclude expired guest posts unless explicitly requested
+    if not include_expired:
+        query["$and"] = query.get("$and", []) + [
+            {"$or": [
+                {"expires_at": None},
+                {"expires_at": {"$exists": False}},
+                {"expires_at": {"$gt": now_iso}}
+            ]}
+        ]
     posts = await db.posts.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
     total = await db.posts.count_documents(query)
     return {"posts": posts, "total": total}
@@ -528,6 +541,11 @@ async def get_post(post_id: str):
     post = await db.posts.find_one({"id": post_id}, {"_id": 0})
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
+    # Check if guest post has expired
+    if post.get("expires_at"):
+        now_iso = datetime.now(timezone.utc).isoformat()
+        if post["expires_at"] <= now_iso:
+            post["is_expired"] = True
     await db.posts.update_one({"id": post_id}, {"$inc": {"views": 1}})
     comment_count = await db.comments.count_documents({"post_id": post_id})
     post["comment_count"] = comment_count
@@ -571,8 +589,8 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
     await db.posts.insert_one(post_doc)
     created = await db.posts.find_one({"id": post_id}, {"_id": 0})
     
-    # Send email notifications (fire and forget)
-    asyncio.create_task(notify_new_post_to_category_followers(post_doc))
+    # Send email notifications to all registered users (fire and forget)
+    asyncio.create_task(notify_new_post_to_all_users(post_doc))
     
     return created
 
@@ -817,44 +835,22 @@ async def notify_post_author_of_comment(post, comment_doc):
         html
     )
 
-async def notify_new_post_to_category_followers(post_doc):
-    """Notify registered users who have engaged with posts in this category"""
-    category = post_doc.get("category_slug")
-    if not category:
-        return
-    
-    # Find posts in same category
-    cat_posts = await db.posts.find({"category_slug": category}, {"_id": 0, "id": 1}).to_list(500)
-    cat_post_ids = [p["id"] for p in cat_posts]
-    
-    # Find users who commented on these posts
-    commenters = await db.comments.distinct("author_name", {"post_id": {"$in": cat_post_ids}, "is_guest": False})
-    
-    # Find users who liked these posts
-    likers_docs = await db.user_likes.find({"post_id": {"$in": cat_post_ids}}, {"_id": 0, "user_id": 1}).to_list(500)
-    liker_ids = list(set([d["user_id"] for d in likers_docs]))
-    
-    # Get unique user emails (exclude the post author)
-    notified = set()
-    
-    # Notify commenters
-    for name in commenters:
-        if name == post_doc.get("author_name"):
-            continue
-        user = await db.users.find_one({"name": name}, {"_id": 0})
-        if user and user.get("email") and user["email"] not in notified:
-            notified.add(user["email"])
-    
-    # Notify likers
-    for uid in liker_ids:
-        if uid == post_doc.get("author_id"):
-            continue
-        user = await db.users.find_one({"id": uid}, {"_id": 0})
-        if user and user.get("email") and user["email"] not in notified:
-            notified.add(user["email"])
-    
+async def notify_new_post_to_all_users(post_doc):
+    """Notify all registered users about a new post"""
+    category = post_doc.get("category_slug", "")
     cat_name = category.replace('-', ' ').title()
-    for email in notified:
+    author_id = post_doc.get("author_id")
+
+    # Get all registered users except the post author
+    user_query = {}
+    if author_id:
+        user_query["id"] = {"$ne": author_id}
+    all_users = await db.users.find(user_query, {"_id": 0, "email": 1, "name": 1}).to_list(1000)
+
+    for user in all_users:
+        email = user.get("email")
+        if not email:
+            continue
         html = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
           <div style="text-align: center; margin-bottom: 24px;">
@@ -866,14 +862,14 @@ async def notify_new_post_to_category_followers(post_doc):
           </div>
           <h2 style="color: #0F172A; font-size: 18px; margin-bottom: 8px;">New post in {cat_name}</h2>
           <p style="color: #64748B; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
-            <strong style="color: #0F172A;">{post_doc.get('author_name', 'Someone')}</strong> 
-            from {post_doc.get('author_city', 'somewhere')} published a new post:
+            Hey {user.get('name', 'there')}! <strong style="color: #0F172A;">{post_doc.get('author_name', 'Someone')}</strong>
+            from {post_doc.get('author_city', 'somewhere')} just published a new post:
           </p>
           <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
             <h3 style="color: #0F172A; font-size: 16px; margin: 0 0 8px 0;">{post_doc['title']}</h3>
             <p style="color: #64748B; font-size: 13px; line-height: 1.5; margin: 0;">{post_doc.get('excerpt', '')[:200]}</p>
           </div>
-          <p style="color: #94A3B8; font-size: 12px; margin-top: 24px;">You're receiving this because you've engaged with {cat_name} posts on Blogs 4 Blocks.</p>
+          <p style="color: #94A3B8; font-size: 12px; margin-top: 24px;">You're receiving this because you're a registered member of Blogs 4 Blocks.</p>
         </div>
         """
         await send_email_notification(email, f"New in {cat_name}: \"{post_doc['title'][:50]}\"", html)

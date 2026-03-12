@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, Eye, MapPin, Clock, ArrowRight } from 'lucide-react';
+import { Heart, Eye, MapPin, Clock, ArrowRight, Timer } from 'lucide-react';
 import { Badge } from '../components/ui/badge';
 
 const CATEGORY_COLORS = {
@@ -16,6 +16,7 @@ const CATEGORY_COLORS = {
 export default function BlogCard({ post, index = 0 }) {
   const catColor = CATEGORY_COLORS[post.category_slug] || '#3B82F6';
   const timeAgo = getTimeAgo(post.created_at);
+  const daysLeft = post.expires_at ? getDaysLeft(post.expires_at) : null;
 
   return (
     <Link
@@ -53,6 +54,16 @@ export default function BlogCard({ post, index = 0 }) {
             <span className="text-xs text-gray-400">
               {post.subcategory.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </span>
+          )}
+          {post.is_guest && daysLeft !== null && (
+            <Badge
+              variant="outline"
+              className={`text-xs px-2 py-0.5 rounded-full ${daysLeft <= 7 ? 'border-red-300 text-red-600 bg-red-50' : 'border-amber-300 text-amber-600 bg-amber-50'}`}
+              data-testid={`blog-card-expiry-${post.id}`}
+            >
+              <Timer className="w-3 h-3 mr-1 inline" />
+              {daysLeft <= 0 ? 'Expired' : `${daysLeft}d left`}
+            </Badge>
           )}
         </div>
 
@@ -111,4 +122,11 @@ function getTimeAgo(dateStr) {
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getDaysLeft(expiresAt) {
+  const now = new Date();
+  const expires = new Date(expiresAt);
+  const diff = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+  return diff;
 }
