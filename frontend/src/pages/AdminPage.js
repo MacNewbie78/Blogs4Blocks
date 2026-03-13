@@ -5,7 +5,8 @@ import { useApp } from '../context/AppContext';
 import {
   Shield, Check, X, Trash2, Users, FileText, MessageCircle,
   Globe, Tag, Clock, AlertTriangle, Eye, Heart, MapPin,
-  ChevronDown, ChevronUp, RefreshCw, Mail, Send, Calendar
+  ChevronDown, ChevronUp, RefreshCw, Mail, Send, Calendar,
+  BarChart3, MousePointerClick, TrendingUp
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -205,6 +206,7 @@ export default function AdminPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [digestStatus, setDigestStatus] = useState(null);
   const [sendingDigest, setSendingDigest] = useState(false);
+  const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('b4b_token');
@@ -219,16 +221,18 @@ export default function AdminPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const [statsRes, pendingRes, usersRes, digestRes] = await Promise.all([
+      const [statsRes, pendingRes, usersRes, digestRes, analyticsRes] = await Promise.all([
         axios.get(`${API}/admin/stats`, { headers: headers() }),
         axios.get(`${API}/categories/pending/list`, { headers: headers() }),
         axios.get(`${API}/admin/users`, { headers: headers() }),
         axios.get(`${API}/admin/digest-status`, { headers: headers() }),
+        axios.get(`${API}/admin/analytics`, { headers: headers() }),
       ]);
       setStats(statsRes.data);
       setPendingCats(pendingRes.data);
       setUsers(usersRes.data);
       setDigestStatus(digestRes.data);
+      setAnalytics(analyticsRes.data);
     } catch (e) {
       if (e.response?.status === 403) {
         toast.error('Admin access required');
@@ -330,6 +334,7 @@ export default function AdminPage() {
     { id: 'overview', label: 'Overview', icon: <Eye className="w-4 h-4" /> },
     { id: 'moderation', label: `Moderation ${pendingCats.length > 0 ? `(${pendingCats.length})` : ''}`, icon: <Shield className="w-4 h-4" /> },
     { id: 'newsletter', label: 'Newsletter', icon: <Mail className="w-4 h-4" /> },
+    { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
     { id: 'posts', label: 'Recent Posts', icon: <FileText className="w-4 h-4" /> },
     { id: 'comments', label: 'Recent Comments', icon: <MessageCircle className="w-4 h-4" /> },
     { id: 'users', label: 'Users', icon: <Users className="w-4 h-4" /> },
@@ -487,6 +492,77 @@ export default function AdminPage() {
                 <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-500 font-medium">No digests sent yet</p>
                 <p className="text-xs text-gray-400 mt-1">The first automated digest will go out next Monday, or you can trigger one manually above.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 'analytics' && analytics && (
+          <div className="space-y-6" data-testid="admin-analytics">
+            <h2 className="font-heading font-bold text-lg text-gray-900">Email Analytics</h2>
+
+            {/* Key Metrics */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard icon={<Mail className="w-5 h-5" />} value={`${analytics.open_rate}%`} label="Open Rate" color="#22C55E" />
+              <StatCard icon={<MousePointerClick className="w-5 h-5" />} value={`${analytics.click_rate}%`} label="Click Rate" color="#3B82F6" />
+              <StatCard icon={<Eye className="w-5 h-5" />} value={analytics.unique_opens} label="Unique Opens" color="#A855F7" />
+              <StatCard icon={<TrendingUp className="w-5 h-5" />} value={analytics.unique_clicks} label="Unique Clicks" color="#F97316" />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard icon={<Send className="w-5 h-5" />} value={analytics.total_digests_sent} label="Digests Sent" color="#14B8A6" />
+              <StatCard icon={<Users className="w-5 h-5" />} value={analytics.total_recipients} label="Total Sent Emails" color="#6366F1" />
+              <StatCard icon={<TrendingUp className="w-5 h-5" />} value={analytics.subscriber_growth_30d} label="New Subs (30d)" color="#22C55E" />
+              <StatCard icon={<Mail className="w-5 h-5" />} value={analytics.active_subscribers} label="Active Subs" color="#3B82F6" />
+            </div>
+
+            {/* Per-Digest Breakdown */}
+            {analytics.digest_breakdown?.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <h3 className="font-heading font-bold text-base text-gray-900 mb-4">Digest Performance History</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-2 px-3 text-gray-500 font-medium">Date</th>
+                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Recipients</th>
+                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Opens</th>
+                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Open Rate</th>
+                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Clicks</th>
+                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Click Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.digest_breakdown.map((d, i) => (
+                        <tr key={i} className="border-b border-gray-50 last:border-0">
+                          <td className="py-2.5 px-3 text-gray-700">{new Date(d.date).toLocaleDateString()}</td>
+                          <td className="py-2.5 px-3 text-center text-gray-700">{d.recipients}</td>
+                          <td className="py-2.5 px-3 text-center text-gray-700">{d.opens}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${d.open_rate > 20 ? 'bg-green-100 text-green-700' : d.open_rate > 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                              {d.open_rate}%
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-center text-gray-700">{d.clicks}</td>
+                          <td className="py-2.5 px-3 text-center">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${d.click_rate > 5 ? 'bg-green-100 text-green-700' : d.click_rate > 2 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                              {d.click_rate}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {analytics.digest_breakdown?.length === 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+                <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No digest data yet</p>
+                <p className="text-xs text-gray-400 mt-1">Analytics will appear here after digests are sent and recipients interact with them.</p>
               </div>
             )}
           </div>

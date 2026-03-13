@@ -35,24 +35,29 @@ export default function PostPage() {
       setPost(res.data);
       // Fetch related posts
       axios.get(`${API}/posts/${id}/related`).then(r => setRelated(r.data)).catch(() => {});
+      // Check if user already liked this post
+      if (token) {
+        axios.get(`${API}/posts/${id}/liked`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => setLiked(r.data.liked))
+          .catch(() => {});
+      }
     } catch (e) {
       console.error(e);
     }
     setLoading(false);
-  }, [API, id]);
+  }, [API, id, token]);
 
   useEffect(() => {
     fetchPost();
   }, [fetchPost]);
 
   const handleLike = async () => {
-    if (liked) return;
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const res = await axios.post(`${API}/posts/${id}/like`, {}, { headers });
       setPost(prev => ({ ...prev, likes: res.data.likes }));
-      setLiked(true);
-      toast.success('Thanks for the love!');
+      setLiked(res.data.liked);
+      toast.success(res.data.liked ? 'Thanks for the love!' : 'Like removed');
     } catch (e) {
       console.error(e);
     }
@@ -103,7 +108,9 @@ export default function PostPage() {
 
   const catColor = CATEGORY_COLORS[post.category_slug] || '#3B82F6';
   const isAuthor = user && post.author_id === user.id;
+  const isCoAuthor = user && post.co_authors?.some(ca => ca.id === user.id);
   const isAdmin = user?.is_admin;
+  const canEdit = isAuthor || isCoAuthor || isAdmin;
 
   // Render markdown-like content
   const renderContent = (content) => {
@@ -150,7 +157,7 @@ export default function PostPage() {
             <ArrowLeft className="w-4 h-4" /> Back to {post.category_slug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </Link>
           <div className="flex items-center gap-2">
-            {(isAuthor || isAdmin) && (
+            {canEdit && (
               <>
                 <Button
                   variant="outline"
@@ -226,8 +233,15 @@ export default function PostPage() {
           <div className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold" style={{ backgroundColor: catColor }}>
             {post.author_name?.[0]?.toUpperCase() || '?'}
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">{post.author_name}</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="font-semibold text-gray-900">{post.author_name}</p>
+              {post.co_authors?.length > 0 && (
+                <span className="text-sm text-gray-400">
+                  &amp; {post.co_authors.map(ca => ca.name).join(', ')}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-3 text-sm text-gray-500">
               <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{post.author_city}, {post.author_country}</span>
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{new Date(post.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>

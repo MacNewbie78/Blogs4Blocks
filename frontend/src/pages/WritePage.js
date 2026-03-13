@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
-import { PenLine, Send, AlertCircle, ImagePlus, X, Plus, Lightbulb } from 'lucide-react';
+import { PenLine, Send, AlertCircle, ImagePlus, X, Plus, Lightbulb, Users } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -47,6 +47,17 @@ export default function WritePage() {
   const [suggestName, setSuggestName] = useState('');
   const [suggestDesc, setSuggestDesc] = useState('');
   const [suggestSubmitting, setSuggestSubmitting] = useState(false);
+  const [partners, setPartners] = useState([]);
+  const [selectedCoAuthors, setSelectedCoAuthors] = useState([]);
+
+  // Load partners for co-author selection
+  useEffect(() => {
+    if (user && token) {
+      axios.get(`${API}/partners`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => setPartners(res.data))
+        .catch(() => {});
+    }
+  }, [user, token, API]);
 
   // Load existing post data for editing
   useEffect(() => {
@@ -63,6 +74,7 @@ export default function WritePage() {
           tags: (p.tags || []).join(', '),
         });
         if (p.cover_image) setCoverImage(p.cover_image);
+        if (p.co_authors?.length) setSelectedCoAuthors(p.co_authors.map(ca => ca.id));
         if (p.category_slug) {
           axios.get(`${API}/categories/${p.category_slug}`).then(r => setSubcategories(r.data.subcategories || [])).catch(() => {});
         }
@@ -136,6 +148,7 @@ export default function WritePage() {
         tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
         subcategory: formData.subcategory || null,
         cover_image: coverImage,
+        co_authors: selectedCoAuthors,
       };
 
       if (!user) {
@@ -375,6 +388,46 @@ export default function WritePage() {
                 data-testid="write-tags"
               />
             </div>
+
+            {/* Co-Author Selection (only for logged-in users with partners) */}
+            {user && partners.length > 0 && (
+              <div data-testid="co-author-section">
+                <Label className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-green-600" /> Co-Authors (optional)
+                </Label>
+                <p className="text-xs text-gray-400 mt-0.5 mb-2">Select partners to co-author this post with</p>
+                <div className="flex flex-wrap gap-2">
+                  {partners.map(p => {
+                    const selected = selectedCoAuthors.includes(p.id);
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          if (selected) {
+                            setSelectedCoAuthors(prev => prev.filter(id => id !== p.id));
+                          } else {
+                            setSelectedCoAuthors(prev => [...prev, p.id]);
+                          }
+                        }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm transition-all border ${
+                          selected
+                            ? 'bg-green-50 border-green-300 text-green-700 font-medium'
+                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
+                        }`}
+                        data-testid={`co-author-toggle-${p.id}`}
+                      >
+                        <span className="w-5 h-5 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-bold">
+                          {p.name[0].toUpperCase()}
+                        </span>
+                        {p.name}
+                        {selected && <X className="w-3 h-3 ml-1" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {error && (

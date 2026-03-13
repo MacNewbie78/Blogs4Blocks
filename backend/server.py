@@ -1,5 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, Header, UploadFile, File, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import Response, RedirectResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,6 +16,7 @@ import bcrypt
 import jwt
 import resend
 import json
+import hashlib
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 ROOT_DIR = Path(__file__).parent
@@ -74,6 +76,7 @@ class PostCreate(BaseModel):
     tags: List[str] = []
     cover_image: Optional[str] = None
     guest_author: Optional[GuestAuthor] = None
+    co_authors: List[str] = []
 
 class CommentCreate(BaseModel):
     content: str
@@ -95,10 +98,14 @@ class PostUpdate(BaseModel):
     subcategory: Optional[str] = None
     tags: Optional[List[str]] = None
     cover_image: Optional[str] = None
+    co_authors: Optional[List[str]] = None
 
 class NewsletterSubscribe(BaseModel):
     email: str
     name: Optional[str] = None
+
+class PartnerRequest(BaseModel):
+    target_id: str
 
 # ==================== AUTH HELPERS ====================
 
@@ -589,6 +596,7 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         "subcategory": post.subcategory,
         "tags": post.tags,
         "cover_image": post.cover_image,
+        "co_authors": [],
         "is_guest": is_guest,
         "likes": 0,
         "views": 0,
@@ -607,6 +615,22 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
         post_doc["author_country"] = user["country"]
         post_doc["author_id"] = user["id"]
         post_doc["expires_at"] = None
+        # Resolve co-authors (must be accepted partners)
+        if post.co_authors:
+            co_author_docs = []
+            for ca_id in post.co_authors:
+                partnership = await db.partnerships.find_one({
+                    "status": "accepted",
+                    "$or": [
+                        {"requester_id": user["id"], "target_id": ca_id},
+                        {"requester_id": ca_id, "target_id": user["id"]}
+                    ]
+                })
+                if partnership:
+                    ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "city": 1, "country": 1})
+                    if ca_user:
+                        co_author_docs.append({"id": ca_user["id"], "name": ca_user["name"], "city": ca_user["city"], "country": ca_user["country"]})
+            post_doc["co_authors"] = co_author_docs
     else:
         raise HTTPException(status_code=400, detail="Guest author info required for anonymous posts")
     
@@ -620,18 +644,37 @@ async def create_post(post: PostCreate, user=Depends(get_current_user)):
 
 @api_router.post("/posts/{post_id}/like")
 async def like_post(post_id: str, user=Depends(get_current_user)):
-    result = await db.posts.update_one({"id": post_id}, {"$inc": {"likes": 1}})
-    if result.matched_count == 0:
+    post = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    # Track the like if user is logged in
+    # Toggle like if user is logged in
     if user:
-        await db.user_likes.update_one(
-            {"user_id": user["id"], "post_id": post_id},
-            {"$set": {"user_id": user["id"], "post_id": post_id, "created_at": datetime.now(timezone.utc).isoformat()}},
-            upsert=True
-        )
-    post = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
-    return {"likes": post["likes"]}
+        existing = await db.user_likes.find_one({"user_id": user["id"], "post_id": post_id})
+        if existing:
+            # Unlike
+            await db.user_likes.delete_one({"user_id": user["id"], "post_id": post_id})
+            await db.posts.update_one({"id": post_id}, {"$inc": {"likes": -1}})
+            updated = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
+            return {"likes": max(0, updated["likes"]), "liked": False}
+        else:
+            # Like
+            await db.user_likes.insert_one({"user_id": user["id"], "post_id": post_id, "created_at": datetime.now(timezone.utc).isoformat()})
+            await db.posts.update_one({"id": post_id}, {"$inc": {"likes": 1}})
+            updated = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
+            return {"likes": updated["likes"], "liked": True}
+    else:
+        # Guest like (no toggle)
+        await db.posts.update_one({"id": post_id}, {"$inc": {"likes": 1}})
+        updated = await db.posts.find_one({"id": post_id}, {"_id": 0, "likes": 1})
+        return {"likes": updated["likes"], "liked": True}
+
+@api_router.get("/posts/{post_id}/liked")
+async def check_liked(post_id: str, user=Depends(get_current_user)):
+    """Check if current user has liked a post"""
+    if not user:
+        return {"liked": False}
+    existing = await db.user_likes.find_one({"user_id": user["id"], "post_id": post_id})
+    return {"liked": existing is not None}
 
 # ==================== POST EDIT / DELETE ====================
 
@@ -641,8 +684,20 @@ async def update_post(post_id: str, update: PostUpdate, user=Depends(require_use
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     if post.get("author_id") != user["id"] and not user.get("is_admin"):
-        raise HTTPException(status_code=403, detail="You can only edit your own posts")
+        # Check if user is a co-author
+        co_author_ids = [ca.get("id") for ca in post.get("co_authors", []) if isinstance(ca, dict)]
+        if user["id"] not in co_author_ids:
+            raise HTTPException(status_code=403, detail="You can only edit your own posts")
     update_fields = {k: v for k, v in update.model_dump().items() if v is not None}
+    # Resolve co-authors if provided
+    if "co_authors" in update_fields and isinstance(update_fields["co_authors"], list):
+        co_author_docs = []
+        for ca_id in update_fields["co_authors"]:
+            if isinstance(ca_id, str):
+                ca_user = await db.users.find_one({"id": ca_id}, {"_id": 0, "id": 1, "name": 1, "city": 1, "country": 1})
+                if ca_user:
+                    co_author_docs.append({"id": ca_user["id"], "name": ca_user["name"], "city": ca_user["city"], "country": ca_user["country"]})
+        update_fields["co_authors"] = co_author_docs
     update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.posts.update_one({"id": post_id}, {"$set": update_fields})
     updated = await db.posts.find_one({"id": post_id}, {"_id": 0})
@@ -773,6 +828,10 @@ async def _send_weekly_digest():
     """Generate and send weekly digest to all active subscribers"""
     one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
     now_iso = datetime.now(timezone.utc).isoformat()
+    digest_id = now_iso[:10]  # Date as digest identifier
+    
+    # Determine site base URL from env
+    site_url = os.environ.get('SITE_URL', '')
 
     # Get top posts from the last 7 days
     top_posts = await db.posts.find(
@@ -804,19 +863,28 @@ async def _send_weekly_digest():
     post_count = await db.posts.count_documents({"created_at": {"$gte": one_week_ago}})
     new_comments = await db.comments.count_documents({"created_at": {"$gte": one_week_ago}})
 
-    # Build post cards HTML
-    posts_html = ""
-    for p in top_posts:
-        posts_html += f"""
-        <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #3B82F6;">
-          <h3 style="color: #0F172A; font-size: 15px; margin: 0 0 6px 0; font-weight: 700;">{p['title']}</h3>
-          <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{p.get('excerpt', '')[:150]}</p>
-          <div style="font-size: 12px; color: #94A3B8;">By {p.get('author_name', 'Unknown')} from {p.get('author_city', '')} &middot; {p.get('likes', 0)} likes</div>
-        </div>"""
-
     sent_count = 0
     errors = 0
     for email in subscriber_emails:
+        email_hash = hashlib.md5(email.encode()).hexdigest()[:12]
+        
+        # Build post cards with click tracking
+        posts_html = ""
+        for p in top_posts:
+            post_url = f"{site_url}/post/{p['id']}" if site_url else f"/post/{p['id']}"
+            tracked_url = f"{site_url}/api/track/click?d={digest_id}&e={email_hash}&url={post_url}" if site_url else post_url
+            posts_html += f"""
+            <a href="{tracked_url}" style="text-decoration: none; display: block;">
+              <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px; border-left: 4px solid #3B82F6;">
+                <h3 style="color: #0F172A; font-size: 15px; margin: 0 0 6px 0; font-weight: 700;">{p['title']}</h3>
+                <p style="color: #64748B; font-size: 13px; line-height: 1.4; margin: 0 0 8px 0;">{p.get('excerpt', '')[:150]}</p>
+                <div style="font-size: 12px; color: #94A3B8;">By {p.get('author_name', 'Unknown')} from {p.get('author_city', '')} &middot; {p.get('likes', 0)} likes</div>
+              </div>
+            </a>"""
+        
+        # Tracking pixel
+        tracking_pixel = f'<img src="{site_url}/api/track/open?d={digest_id}&e={email_hash}" width="1" height="1" style="display:none" />' if site_url else ''
+        
         html = f"""
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
           <div style="text-align: center; margin-bottom: 24px;">
@@ -832,6 +900,7 @@ async def _send_weekly_digest():
           <h3 style="color: #0F172A; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Top Posts This Week</h3>
           {posts_html}
           <p style="color: #94A3B8; font-size: 11px; margin-top: 24px; text-align: center;">You're receiving this as a Blogs 4 Blocks community member.</p>
+          {tracking_pixel}
         </div>
         """
         try:
@@ -999,6 +1068,191 @@ async def get_comments_live(post_id: str):
     """Get comments sorted oldest-first for chat-like view"""
     comments = await db.comments.find({"post_id": post_id}, {"_id": 0}).sort("created_at", 1).to_list(500)
     return comments
+
+# ==================== PARTNERS ====================
+
+@api_router.get("/users/search")
+async def search_users(q: str, user=Depends(require_user)):
+    """Search registered users by name (for partner requests)"""
+    if len(q) < 2:
+        return []
+    users = await db.users.find(
+        {"name": {"$regex": q, "$options": "i"}, "id": {"$ne": user["id"]}},
+        {"_id": 0, "id": 1, "name": 1, "city": 1, "country": 1}
+    ).limit(10).to_list(10)
+    return users
+
+@api_router.post("/partners/request")
+async def send_partner_request(req: PartnerRequest, user=Depends(require_user)):
+    """Send a partnership request to another user"""
+    if req.target_id == user["id"]:
+        raise HTTPException(status_code=400, detail="You can't partner with yourself")
+    target = await db.users.find_one({"id": req.target_id}, {"_id": 0, "id": 1, "name": 1})
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Check for existing partnership
+    existing = await db.partnerships.find_one({
+        "$or": [
+            {"requester_id": user["id"], "target_id": req.target_id},
+            {"requester_id": req.target_id, "target_id": user["id"]}
+        ]
+    })
+    if existing:
+        if existing["status"] == "accepted":
+            raise HTTPException(status_code=400, detail=f"You're already partners with {target['name']}")
+        raise HTTPException(status_code=400, detail="A partner request already exists")
+    doc = {
+        "id": str(uuid.uuid4()),
+        "requester_id": user["id"],
+        "requester_name": user["name"],
+        "target_id": req.target_id,
+        "target_name": target["name"],
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.partnerships.insert_one(doc)
+    return {"message": f"Partner request sent to {target['name']}", "partnership_id": doc["id"]}
+
+@api_router.get("/partners")
+async def get_partners(user=Depends(require_user)):
+    """Get accepted partners for current user"""
+    partnerships = await db.partnerships.find(
+        {"status": "accepted", "$or": [{"requester_id": user["id"]}, {"target_id": user["id"]}]},
+        {"_id": 0}
+    ).to_list(100)
+    partners = []
+    for p in partnerships:
+        partner_id = p["target_id"] if p["requester_id"] == user["id"] else p["requester_id"]
+        partner_user = await db.users.find_one({"id": partner_id}, {"_id": 0, "id": 1, "name": 1, "city": 1, "country": 1})
+        if partner_user:
+            partners.append({**partner_user, "partnership_id": p["id"], "since": p.get("accepted_at", p["created_at"])})
+    return partners
+
+@api_router.get("/partners/requests")
+async def get_partner_requests(user=Depends(require_user)):
+    """Get pending partner requests for current user"""
+    incoming = await db.partnerships.find(
+        {"target_id": user["id"], "status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    outgoing = await db.partnerships.find(
+        {"requester_id": user["id"], "status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    return {"incoming": incoming, "outgoing": outgoing}
+
+@api_router.put("/partners/{partnership_id}/accept")
+async def accept_partner(partnership_id: str, user=Depends(require_user)):
+    """Accept a partnership request"""
+    partnership = await db.partnerships.find_one({"id": partnership_id, "target_id": user["id"], "status": "pending"})
+    if not partnership:
+        raise HTTPException(status_code=404, detail="Partner request not found")
+    await db.partnerships.update_one(
+        {"id": partnership_id},
+        {"$set": {"status": "accepted", "accepted_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"message": f"You're now partners with {partnership['requester_name']}!"}
+
+@api_router.delete("/partners/{partnership_id}")
+async def remove_partner(partnership_id: str, user=Depends(require_user)):
+    """Decline or remove a partnership"""
+    partnership = await db.partnerships.find_one({
+        "id": partnership_id,
+        "$or": [{"requester_id": user["id"]}, {"target_id": user["id"]}]
+    })
+    if not partnership:
+        raise HTTPException(status_code=404, detail="Partnership not found")
+    await db.partnerships.delete_one({"id": partnership_id})
+    return {"message": "Partnership removed"}
+
+# ==================== EMAIL ANALYTICS TRACKING ====================
+
+@api_router.get("/track/open")
+async def track_email_open(d: str, e: str):
+    """Track email opens via 1x1 tracking pixel"""
+    await db.email_events.insert_one({
+        "digest_id": d,
+        "email_hash": e,
+        "event_type": "open",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    # Return 1x1 transparent PNG
+    pixel = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\nIDATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n\xb4\x00\x00\x00\x00IEND\xaeB`\x82'
+    return Response(content=pixel, media_type="image/png", headers={"Cache-Control": "no-cache, no-store"})
+
+@api_router.get("/track/click")
+async def track_email_click(d: str, e: str, url: str):
+    """Track email clicks via redirect"""
+    await db.email_events.insert_one({
+        "digest_id": d,
+        "email_hash": e,
+        "event_type": "click",
+        "url": url,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    return RedirectResponse(url=url)
+
+@api_router.get("/admin/analytics")
+async def get_email_analytics(user=Depends(require_admin)):
+    """Get email analytics for the admin dashboard"""
+    # Total events
+    total_opens = await db.email_events.count_documents({"event_type": "open"})
+    total_clicks = await db.email_events.count_documents({"event_type": "click"})
+    
+    # Unique opens/clicks (by email_hash)
+    unique_opens_pipeline = [{"$match": {"event_type": "open"}}, {"$group": {"_id": "$email_hash"}}, {"$count": "count"}]
+    unique_clicks_pipeline = [{"$match": {"event_type": "click"}}, {"$group": {"_id": "$email_hash"}}, {"$count": "count"}]
+    unique_opens_res = await db.email_events.aggregate(unique_opens_pipeline).to_list(1)
+    unique_clicks_res = await db.email_events.aggregate(unique_clicks_pipeline).to_list(1)
+    unique_opens = unique_opens_res[0]["count"] if unique_opens_res else 0
+    unique_clicks = unique_clicks_res[0]["count"] if unique_clicks_res else 0
+    
+    # Total digests sent
+    total_sent = await db.digest_log.count_documents({"status": "sent"})
+    total_recipients = 0
+    sent_logs = await db.digest_log.find({"status": "sent"}, {"_id": 0, "recipients": 1}).to_list(100)
+    for log in sent_logs:
+        total_recipients += log.get("recipients", 0)
+    
+    # Per-digest breakdown (last 10)
+    digest_logs = await db.digest_log.find({"status": "sent"}, {"_id": 0}).sort("sent_at", -1).limit(10).to_list(10)
+    digest_breakdown = []
+    for dl in digest_logs:
+        d_id = dl.get("sent_at", "")[:10]  # Use date as digest identifier
+        opens = await db.email_events.count_documents({"digest_id": d_id, "event_type": "open"})
+        clicks = await db.email_events.count_documents({"digest_id": d_id, "event_type": "click"})
+        digest_breakdown.append({
+            "date": dl["sent_at"],
+            "recipients": dl.get("recipients", 0),
+            "opens": opens,
+            "clicks": clicks,
+            "open_rate": round(opens / max(dl.get("recipients", 1), 1) * 100, 1),
+            "click_rate": round(clicks / max(dl.get("recipients", 1), 1) * 100, 1)
+        })
+    
+    # Subscriber growth (last 30 days)
+    thirty_days_ago = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+    new_subs = await db.newsletter.count_documents({"subscribed_at": {"$gte": thirty_days_ago}})
+    total_active = await db.newsletter.count_documents({"active": True})
+    total_inactive = await db.newsletter.count_documents({"active": False})
+    
+    open_rate = round(unique_opens / max(total_recipients, 1) * 100, 1)
+    click_rate = round(unique_clicks / max(total_recipients, 1) * 100, 1)
+    
+    return {
+        "total_opens": total_opens,
+        "total_clicks": total_clicks,
+        "unique_opens": unique_opens,
+        "unique_clicks": unique_clicks,
+        "total_digests_sent": total_sent,
+        "total_recipients": total_recipients,
+        "open_rate": open_rate,
+        "click_rate": click_rate,
+        "digest_breakdown": digest_breakdown,
+        "subscriber_growth_30d": new_subs,
+        "active_subscribers": total_active,
+        "inactive_subscribers": total_inactive
+    }
 
 # ==================== IMAGE UPLOAD ====================
 
@@ -1193,6 +1447,10 @@ async def startup():
     await db.subcategories.create_index("slug", unique=True)
     await db.newsletter.create_index("email", unique=True)
     await db.digest_log.create_index("sent_at")
+    await db.partnerships.create_index([("requester_id", 1), ("target_id", 1)], unique=True)
+    await db.partnerships.create_index("status")
+    await db.email_events.create_index("digest_id")
+    await db.email_events.create_index("event_type")
     
     # Seed categories into MongoDB (upsert to avoid duplicates)
     for cat in SEED_CATEGORIES:
