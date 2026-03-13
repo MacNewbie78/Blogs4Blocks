@@ -12,7 +12,7 @@ Build a blogging website based in New York City. Title: "Blogs 4 Blocks." Goal: 
 - **Styling:** Tailwind CSS, shadcn/ui
 - **Authentication:** JWT
 - **Deployment Model:** PWA
-- **Analytics:** Google Analytics 4 (GA4)
+- **Analytics:** Google Analytics 4 (GA4) + Custom Email Analytics
 - **Scheduler:** APScheduler (AsyncIOScheduler)
 
 ## Core Requirements (All Implemented)
@@ -30,66 +30,47 @@ Build a blogging website based in New York City. Title: "Blogs 4 Blocks." Goal: 
 12. Custom logo for navbar + hero section background
 13. Weekly digest feature (automated + manual)
 14. Deployment guide for Hostinger
+15. **Subscriber Analytics Dashboard** (email open/click tracking)
+16. **Like toggle** (like/unlike with persistent state)
+17. **Partners system** (user connections + co-authoring)
 
 ## Key DB Collections
 - `users`: {email, username, password_hash, is_admin, profile_colors}
-- `posts`: {title, content, author_id, is_guest, created_at, expires_at}
+- `posts`: {title, content, author_id, is_guest, created_at, expires_at, co_authors}
 - `categories`: {name, slug, status, color}
 - `comments`: {post_id, content, author_name}
 - `newsletter`: {email, name, active, subscribed_at}
 - `digest_log`: {sent_at, recipients, errors, posts_included, status}
+- `partnerships`: {id, requester_id, target_id, requester_name, target_name, status}
+- `email_events`: {digest_id, email_hash, event_type, timestamp, url}
 - `user_likes`, `user_prefs`, `subcategories`
 
-## Completed Features
-- Full auth system (JWT) with registration and login
-- Guest posting with 30-day expiration countdown
-- Rich text editor (TipTap)
-- Real-time comments via WebSocket
-- Email notifications (new posts, new comments)
-- Dynamic categories with admin moderation
-- User profile dashboard with custom colors
-- Popular/related posts (trending section)
-- Post editing and deleting
-- Pagination on category pages
-- Newsletter subscription UI (homepage + footer)
-- **Weekly Digest backend logic (APScheduler cron: every Monday 9AM UTC)**
-- **Admin Newsletter tab (digest status, manual trigger, history log)**
-- Admin panel (overview, moderation, posts, comments, users, newsletter)
-- PWA support
-- GA4 analytics
-- Deployment guide for Hostinger (at /hosting-guide route - may need verification)
-
-## Architecture
-```
-/app
-├── backend/
-│   ├── server.py (all routes, models, scheduler)
-│   ├── uploads/
-│   ├── tests/
-│   └── .env
-└── frontend/
-    ├── src/
-    │   ├── components/ (BlogCard, CommentSection, Footer, Navbar, etc.)
-    │   ├── pages/ (Home, Category, Post, Write, Auth, Profile, Admin, etc.)
-    │   ├── context/AppContext.js
-    │   └── App.js
-    └── public/
-```
-
 ## Key API Endpoints
-- Auth: POST /api/auth/register, /api/auth/login, GET /api/auth/me
-- Posts: GET/POST /api/posts, GET/PUT/DELETE /api/posts/{id}
-- Comments: GET/POST /api/posts/{id}/comments
-- Categories: GET /api/categories, POST /api/categories/suggest
-- Newsletter: POST /api/newsletter/subscribe, /api/newsletter/unsubscribe
-- Admin: GET /api/admin/stats, /api/admin/digest-status, POST /api/admin/send-digest, GET /api/admin/subscribers
-- Upload: POST /api/upload
-- WebSocket: /api/ws/comments/{post_id}
+### Auth
+- POST /api/auth/register, /api/auth/login, GET /api/auth/me
+
+### Posts
+- GET/POST /api/posts, GET/PUT/DELETE /api/posts/{id}
+- POST /api/posts/{id}/like (toggle), GET /api/posts/{id}/liked
+
+### Partners
+- GET /api/users/search?q=name
+- POST /api/partners/request, GET /api/partners, GET /api/partners/requests
+- PUT /api/partners/{id}/accept, DELETE /api/partners/{id}
+
+### Email Analytics
+- GET /api/track/open?d=&e= (tracking pixel)
+- GET /api/track/click?d=&e=&url= (click redirect)
+- GET /api/admin/analytics
+
+### Admin
+- GET /api/admin/stats, /api/admin/digest-status, /api/admin/analytics
+- POST /api/admin/send-digest, GET /api/admin/subscribers
 
 ## Credentials
 - Admin Setup Key: b4b-admin-2024 (at /admin-setup route)
 
 ## Backlog / Future
 - Refactor server.py into modular routers for scalability
-- Verify HostingGuidePage is accessible
+- Verify HostingGuidePage is accessible at /hosting-guide
 - User feedback cycle
