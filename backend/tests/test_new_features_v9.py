@@ -17,7 +17,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://marketing-hub-360.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://demo-b4b.preview.emergentagent.com').rstrip('/')
 
 class TestSetup:
     """Setup and verify test prerequisites"""
