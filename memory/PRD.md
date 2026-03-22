@@ -10,13 +10,14 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 - **Email:** Resend API
 - **Auth:** JWT
 - **Scheduled Jobs:** APScheduler
-- **Deployment:** PWA
+- **Deployment Target:** Oracle Cloud Always Free (Ubuntu AMD)
+- **PWA:** Yes
 
 ## Architecture
 ```
 /app
 ├── backend/
-│   ├── routes/ (admin, analytics, auth, categories, comments, newsletter, partners, posts, profile, tracking, upload)
+│   ├── routes/ (admin, analytics, auth, categories, comments, newsletter, partners, posts, profile, tracking, upload, misc)
 │   ├── database.py, models.py, seed_data.py, server.py
 │   └── .env
 ├── frontend/
@@ -26,7 +27,8 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 │       ├── context/ (AppContext)
 │       ├── utils/ (colors.js — muted pastel color palette with card gradients)
 │       └── App.js
-└── DEPLOYMENT_GUIDE.md
+├── DEPLOYMENT_GUIDE.md (Oracle Cloud — Ubuntu AMD)
+└── memory/PRD.md
 ```
 
 ## Completed Features
@@ -42,19 +44,21 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 10. Partner/co-authoring system
 11. Newsletter & weekly digest (APScheduler + Resend)
 12. Subscriber analytics (open/click tracking)
-13. Deployment guide for Hostinger VPS
-14. Email notifications for new posts/comments
-15. User profile dashboard with color-coding
-16. **@username mention in comments** — autocomplete popup, mention highlighting, stored mention user IDs
-17. How-to card for non-technical users
-18. Community analytics dashboard on homepage
+13. Email notifications for new posts/comments
+14. User profile dashboard with color-coding
+15. @username mention in comments — autocomplete popup, mention highlighting, stored mention user IDs
+16. How-to card for non-technical users
+17. Community analytics dashboard on homepage
+18. **Oracle Cloud Deployment Guide (Ubuntu AMD)** — comprehensive 7-step in-app guide + full DEPLOYMENT_GUIDE.md with performance tips, swap setup, troubleshooting, MongoDB Atlas integration
+19. **Mobile nav category colors** — colored dots matching category palette (was grey, now uses getCategoryColor)
+20. Footer deployment guide link
 
-## UI Design — "Colorful Editorial" (Latest)
+## UI Design — "Colorful Editorial" (Current)
 ### Design Philosophy
 - **Pastel gradient card fills** — each category has a soft, full-coverage gradient (cardFrom -> cardTo)
 - **Rounded corners** (rounded-xl) on cards for warmth
 - **Muted color palette** — sophisticated but fun and energetic
-- **Category-specific colors** across the entire UI (cards, badges, dropdown indicators, avatars)
+- **Category-specific colors** across the entire UI (cards, badges, dropdown indicators, avatars, mobile nav dots)
 - **Custom b4b logo** in hero section (side-by-side with title)
 - **Colorful title lettering** — each letter in Blogs4Blocks has a unique muted tone
 
@@ -68,25 +72,17 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 - Burnt Orange: #BF6B3A / card: #F0C8A0->#FFF0E0 (Marketing Tools)
 - Sage Green: #5C8A6E / card: #B0D8C0->#E0F0E8 (Digital Marketing)
 
-### New: @mention Feature
-- Backend: `GET /api/users/search?q=prefix&post_id=id` — searches users by name prefix, prioritizes post author + commenters
-- Frontend: CommentSection detects `@` typing, shows autocomplete popup, inserts `@Name`, highlights mentions in blue (#3D6B8E)
-
-### Topics Dropdown
-- Off-white background (#FDFCF8) matching landing page
-- Category-colored dots and left-border for each item
-
 ## Key API Endpoints
+- `GET /api/stats` — Site-wide statistics (total_posts, total_comments, total_users, total_countries)
 - `GET /api/users/search` — User search for @mentions
 - `POST /api/posts/{id}/comments` — Creates comment with mention extraction
 - `GET /api/admin/newsletter/stats` — Newsletter analytics
 - `POST /api/admin/newsletter/trigger-digest` — Manual digest trigger
-- All previous endpoints preserved
+- All CRUD endpoints for posts, categories, users, partners
 
 ## Backlog / Future
-- Advertiser portal / sponsored post feature (user mentioned wanting to monetize with advertisers)
+- **P1: Advertiser portal / sponsored post feature** (user mentioned wanting to monetize with advertisers)
 
 ## Test Reports
-- Backend: 34/34 tests passed (iteration_9-11 original features)
-- Frontend: 24/24 tests passed (iteration_11 — first UI redesign)
-- Combined: 25/25 tests passed (iteration_12 — @mentions, pastel cards, dropdown colors)
+- iteration_12: 25/25 tests passed (previous session — @mentions, pastel cards, dropdown colors)
+- iteration_13: 22/23 tests passed (this session — deployment guide, stats, mobile nav colors, footer link). Minor: /api/health not implemented (non-issue)
