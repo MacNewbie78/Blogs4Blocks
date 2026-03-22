@@ -25,8 +25,8 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-0 no-underline" data-testid="nav-logo">
-            <span className="font-heading font-black text-xl tracking-tight text-[#1A1A1A]">
-              BLOGS<span className="text-brand-yellow">4</span>BLOCKS
+            <span className="font-heading font-black text-xl tracking-tight">
+              <span className="text-[#C2544D]">B</span><span className="text-[#BF6B3A]">L</span><span className="text-[#C4942A]">O</span><span className="text-[#5C8A6E]">G</span><span className="text-[#2D8B7A]">S</span><span className="text-[#3D6B8E]">4</span><span className="text-[#4A6FA5]">B</span><span className="text-[#7B5E8D]">L</span><span className="text-[#B4687A]">O</span><span className="text-[#C2544D]">C</span><span className="text-[#A67C52]">K</span><span className="text-[#6B8E5C]">S</span>
             </span>
           </Link>
 
@@ -73,7 +73,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Button
               onClick={() => navigate('/write')}
-              className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none h-10 px-6 uppercase tracking-widest text-xs font-bold transition-colors"
+              className="bg-[#C2544D] text-white hover:bg-[#A8443E] rounded-none h-10 px-6 uppercase tracking-widest text-xs font-bold transition-colors"
               data-testid="nav-write-btn"
             >
               <PenLine className="w-3.5 h-3.5 mr-2" />
@@ -159,7 +159,7 @@ export default function Navbar() {
                 </Link>
               )}
               <div className="border-t border-[#E5E5E5] mt-4 pt-4 flex flex-col gap-2">
-                <Button onClick={() => { navigate('/write'); setMobileOpen(false); }} className="bg-[#1A1A1A] text-white rounded-none font-bold uppercase tracking-widest text-xs" data-testid="nav-mobile-write-btn">
+                <Button onClick={() => { navigate('/write'); setMobileOpen(false); }} className="bg-[#C2544D] text-white hover:bg-[#A8443E] rounded-none font-bold uppercase tracking-widest text-xs" data-testid="nav-mobile-write-btn">
                   <PenLine className="w-3.5 h-3.5 mr-2" /> Write a Post
                 </Button>
                 {!user && (

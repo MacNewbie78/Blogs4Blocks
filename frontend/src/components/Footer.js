@@ -35,7 +35,7 @@ export default function Footer() {
           <div className="md:col-span-1">
             <div className="mb-6">
               <span className="font-heading font-black text-xl tracking-tight">
-                BLOGS<span className="text-brand-yellow">4</span>BLOCKS
+                <span className="text-[#C2544D]">B</span><span className="text-[#BF6B3A]">L</span><span className="text-[#C4942A]">O</span><span className="text-[#5C8A6E]">G</span><span className="text-[#2D8B7A]">S</span><span className="text-[#3D6B8E]">4</span><span className="text-[#4A6FA5]">B</span><span className="text-[#7B5E8D]">L</span><span className="text-[#B4687A]">O</span><span className="text-[#C2544D]">C</span><span className="text-[#A67C52]">K</span><span className="text-[#6B8E5C]">S</span>
               </span>
             </div>
             <p className="text-[#999] text-sm leading-relaxed mb-6">
