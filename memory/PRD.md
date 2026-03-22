@@ -16,7 +16,7 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 ```
 /app
 ├── backend/
-│   ├── routes/ (admin, analytics, auth, categories, newsletter, partners, posts, users)
+│   ├── routes/ (admin, analytics, auth, categories, comments, newsletter, partners, posts, profile, tracking, upload)
 │   ├── database.py, models.py, seed_data.py, server.py
 │   └── .env
 ├── frontend/
@@ -24,12 +24,12 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 │       ├── components/ (Navbar, BlogCard, Footer, CommentSection, RichTextEditor, InstallPrompt)
 │       ├── pages/ (HomePage, PostPage, CategoryPage, WritePage, AuthPage, AboutPage, ProfilePage, AdminPage, AdminSetupPage, HostingGuidePage)
 │       ├── context/ (AppContext)
-│       ├── utils/ (colors.js — muted color palette)
+│       ├── utils/ (colors.js — muted pastel color palette with card gradients)
 │       └── App.js
 └── DEPLOYMENT_GUIDE.md
 ```
 
-## Completed Features (All Tested & Working)
+## Completed Features
 1. User registration & JWT auth
 2. Guest posting (expires in 30 days)
 3. Dynamic blog categories with admin moderation
@@ -45,46 +45,48 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 13. Deployment guide for Hostinger VPS
 14. Email notifications for new posts/comments
 15. User profile dashboard with color-coding
+16. **@username mention in comments** — autocomplete popup, mention highlighting, stored mention user IDs
+17. How-to card for non-technical users
+18. Community analytics dashboard on homepage
 
-## UI Design — "Metropolitan Editorial with Color" (Latest)
+## UI Design — "Colorful Editorial" (Latest)
 ### Design Philosophy
-- **Muted/matted color palette** — sophisticated, darker pigments (not bright rainbow, not monochrome)
-- **Category-specific gradients** flowing from bottom-left to upper-right on cards
+- **Pastel gradient card fills** — each category has a soft, full-coverage gradient (cardFrom -> cardTo)
+- **Rounded corners** (rounded-xl) on cards for warmth
+- **Muted color palette** — sophisticated but fun and energetic
+- **Category-specific colors** across the entire UI (cards, badges, dropdown indicators, avatars)
+- **Custom b4b logo** in hero section (side-by-side with title)
 - **Colorful title lettering** — each letter in Blogs4Blocks has a unique muted tone
-- **Editorial layout** — clean typography (Outfit headings, DM Sans body), sharp corners (rounded-none), uppercase labels
-- **Warm off-white background** (#FDFCF8) with subtle noise texture
 
 ### Key Color Palette (from /utils/colors.js)
-- Slate Blue: #3D6B8E (Social Media)
-- Warm Amber: #C4942A (SEO/SEM)
-- Dusty Rose: #B4687A (Influencer Marketing)
-- Deep Teal: #2D8B7A (Integrated Marketing)
-- Plum: #7B5E8D (Consumer Behavior)
-- Coral/Terracotta: #C2544D (Branding, primary CTA color)
-- Burnt Orange: #BF6B3A (Marketing Tools)
-- Sage Green: #5C8A6E (Digital Marketing)
-- Steel Blue: #4A6FA5 (Marketing & AI)
+- Slate Blue: #3D6B8E / card: #B8DCF0->#E0F0FA (Social Media)
+- Warm Amber: #C4942A / card: #F5DFA0->#FFF8E1 (SEO/SEM)
+- Dusty Rose: #B4687A / card: #E8B8D0->#FBE8F0 (Influencer Marketing)
+- Deep Teal: #2D8B7A / card: #A8E6CF->#E0F5EC (Integrated Marketing)
+- Plum: #7B5E8D / card: #C8B8E0->#EDE5F5 (Consumer Behavior)
+- Coral/Terracotta: #C2544D / card: #F0B8B0->#FDE8E5 (Branding)
+- Burnt Orange: #BF6B3A / card: #F0C8A0->#FFF0E0 (Marketing Tools)
+- Sage Green: #5C8A6E / card: #B0D8C0->#E0F0E8 (Digital Marketing)
 
-### Hero Section
-- Custom b4b building-block logo placed to the right of the title text
-- No background images — clean warm off-white (#FDFCF8) background
-- Side-by-side layout: text left, logo right (stacks on mobile)
-- Stats strip at bottom showing Posts, Contributors, Countries
-- Colored accent bar at top
-- Gradient from bottom-left (category color, 14% opacity) to transparent upper-right
-- Category badge with matching color
-- Author avatar in category color
-- Stats bar at bottom showing likes, views, time
+### New: @mention Feature
+- Backend: `GET /api/users/search?q=prefix&post_id=id` — searches users by name prefix, prioritizes post author + commenters
+- Frontend: CommentSection detects `@` typing, shows autocomplete popup, inserts `@Name`, highlights mentions in blue (#3D6B8E)
 
-### Special Sections
-- **How-to Card** — 3-step guide for non-technical users on how to post
-- **Community Stats Card** — Posts, Discussions, Contributors, Countries with individual colored stat boxes
+### Topics Dropdown
+- Off-white background (#FDFCF8) matching landing page
+- Category-colored dots and left-border for each item
+
+## Key API Endpoints
+- `GET /api/users/search` — User search for @mentions
+- `POST /api/posts/{id}/comments` — Creates comment with mention extraction
+- `GET /api/admin/newsletter/stats` — Newsletter analytics
+- `POST /api/admin/newsletter/trigger-digest` — Manual digest trigger
+- All previous endpoints preserved
 
 ## Backlog / Future
-- No additional features requested
-- User indicated they are ready to proceed ("I'll probably take it from there")
-- **Potential:** Advertiser portal / sponsored post feature (user mentioned wanting to monetize with advertisers)
+- Advertiser portal / sponsored post feature (user mentioned wanting to monetize with advertisers)
 
 ## Test Reports
-- Backend: 34/34 tests passed (iteration_9-11)
-- Frontend: 24/24 tests passed (iteration_11 — latest UI redesign)
+- Backend: 34/34 tests passed (iteration_9-11 original features)
+- Frontend: 24/24 tests passed (iteration_11 — first UI redesign)
+- Combined: 25/25 tests passed (iteration_12 — @mentions, pastel cards, dropdown colors)
