@@ -32,16 +32,16 @@ function ColorPicker({ label, value, onChange, testId }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors text-sm font-medium"
+        className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-[#FDFCF8] transition-colors text-sm font-medium"
         data-testid={testId}
       >
         <span className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: value }} />
-        <Palette className="w-3.5 h-3.5 text-gray-500" />
-        <span className="text-gray-600">{label}</span>
+        <Palette className="w-3.5 h-3.5 text-brand-grey" />
+        <span className="text-brand-grey">{label}</span>
         {open ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 p-3 z-50 w-56" data-testid={`${testId}-dropdown`}>
+        <div className="absolute top-full left-0 mt-2 bg-white rounded-none shadow-sm border border-[#E5E5E5] p-3 z-50 w-56" data-testid={`${testId}-dropdown`}>
           <div className="grid grid-cols-6 gap-2">
             {COLOR_OPTIONS.map(c => (
               <button
@@ -143,11 +143,11 @@ function DiscussionThread({ post, onClose }) {
 
   return (
     <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0 gap-0">
-      <DialogHeader className="p-5 pb-3 border-b border-gray-100">
+      <DialogHeader className="p-5 pb-3 border-b border-[#E5E5E5]">
         <DialogTitle className="font-heading font-bold text-lg leading-snug pr-8">
           {post.title}
         </DialogTitle>
-        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+        <div className="flex items-center gap-2 text-xs text-brand-grey mt-1">
           <MapPin className="w-3 h-3" />
           <span>{post.author_name} — {post.author_city}, {post.author_country}</span>
           {wsConnected && (
@@ -159,7 +159,7 @@ function DiscussionThread({ post, onClose }) {
       </DialogHeader>
 
       {/* Chat-style comments */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px] bg-gray-50/50" data-testid="discussion-thread">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px] bg-[#FDFCF8]/50" data-testid="discussion-thread">
         {comments.length === 0 && (
           <div className="text-center py-8 text-gray-400 text-sm">
             No discussion yet. Start the conversation!
@@ -169,7 +169,7 @@ function DiscussionThread({ post, onClose }) {
           const isMe = user && c.author_name === user.name;
           return (
             <div key={c.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`} data-testid={`thread-msg-${c.id}`}>
-              <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isMe ? 'bg-black text-white rounded-br-md' : 'bg-white border border-gray-200 rounded-bl-md'}`}>
+              <div className={`max-w-[75%] rounded-none px-4 py-2.5 ${isMe ? 'bg-black text-white rounded-br-md' : 'bg-white border border-gray-200 rounded-bl-md'}`}>
                 {!isMe && (
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-xs font-semibold" style={{ color: isMe ? '#A5B4FC' : '#3B82F6' }}>{c.author_name}</span>
@@ -188,7 +188,7 @@ function DiscussionThread({ post, onClose }) {
 
       {/* Comment input */}
       {user ? (
-        <form onSubmit={handleSend} className="p-4 border-t border-gray-100 flex gap-2" data-testid="thread-input-form">
+        <form onSubmit={handleSend} className="p-4 border-t border-[#E5E5E5] flex gap-2" data-testid="thread-input-form">
           <Input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
@@ -207,8 +207,8 @@ function DiscussionThread({ post, onClose }) {
           </Button>
         </form>
       ) : (
-        <div className="p-4 border-t border-gray-100 text-center text-sm text-gray-500">
-          <Link to="/auth" className="text-b4b-blue font-semibold hover:underline">Sign in</Link> to join the discussion.
+        <div className="p-4 border-t border-[#E5E5E5] text-center text-sm text-brand-grey">
+          <Link to="/auth" className="text-[#1A1A1A] font-semibold hover:underline">Sign in</Link> to join the discussion.
         </div>
       )}
     </DialogContent>
@@ -218,7 +218,7 @@ function DiscussionThread({ post, onClose }) {
 function PostCard({ post, color, type }) {
   return (
     <div
-      className="group bg-white border rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
+      className="group bg-white border rounded-none overflow-hidden hover:shadow-sm transition-all duration-300 hover:-translate-y-0.5"
       style={{ borderColor: `${color}30` }}
       data-testid={`profile-card-${post.id}`}
     >
@@ -238,10 +238,10 @@ function PostCard({ post, color, type }) {
             </div>
           )}
         </div>
-        <h3 className="font-heading font-bold text-base text-gray-900 mb-1.5 line-clamp-2 group-hover:text-opacity-80 transition-colors leading-snug">
+        <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-1.5 line-clamp-2 group-hover:text-opacity-80 transition-colors leading-snug">
           {post.title}
         </h3>
-        <p className="text-sm text-gray-500 line-clamp-2 mb-3">{post.excerpt}</p>
+        <p className="text-sm text-brand-grey line-clamp-2 mb-3">{post.excerpt}</p>
         <div className="flex items-center justify-between text-xs text-gray-400">
           <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{post.author_city}</span>
           <div className="flex items-center gap-3">
@@ -386,25 +386,25 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-gray-200 border-t-b4b-blue rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#1A1A1A] rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50" data-testid="profile-page">
+    <div className="min-h-screen bg-[#FDFCF8]/50" data-testid="profile-page">
       {/* Profile header */}
-      <section className="bg-white border-b border-gray-100">
+      <section className="bg-white border-b border-[#E5E5E5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white text-2xl font-heading font-black" style={{ backgroundColor: myPostsColor }}>
+            <div className="w-16 h-16 rounded-none flex items-center justify-center text-white text-2xl font-heading font-black" style={{ backgroundColor: myPostsColor }}>
               {user.name[0].toUpperCase()}
             </div>
             <div className="flex-1">
-              <h1 className="font-heading font-bold text-2xl md:text-3xl tracking-tight text-gray-900" data-testid="profile-name">
+              <h1 className="font-heading font-bold text-2xl md:text-3xl tracking-tight text-[#1A1A1A]" data-testid="profile-name">
                 {user.name}
               </h1>
-              <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+              <div className="flex items-center gap-3 mt-1 text-sm text-brand-grey">
                 <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{user.city}, {user.country || ''}</span>
                 <span>{user.email}</span>
               </div>
@@ -435,7 +435,7 @@ export default function ProfilePage() {
                 key={tab.id}
                 onClick={() => setActiveSection(tab.id)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  activeSection === tab.id ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
+                  activeSection === tab.id ? 'bg-[#1A1A1A] text-white' : 'text-brand-grey hover:text-[#1A1A1A] hover:bg-[#F4F4F5]'
                 }`}
                 data-testid={`profile-tab-${tab.id}`}
               >
@@ -455,7 +455,7 @@ export default function ProfilePage() {
         <section data-testid="my-posts-section">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: myPostsColor }} />
-            <h2 className="font-heading font-bold text-xl text-gray-900">
+            <h2 className="font-heading font-bold text-xl text-[#1A1A1A]">
               My Posts ({myPosts.length})
             </h2>
           </div>
@@ -468,9 +468,9 @@ export default function ProfilePage() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center" data-testid="my-posts-empty">
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-10 text-center" data-testid="my-posts-empty">
               <PenLine className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4">You haven't written any posts yet.</p>
+              <p className="text-brand-grey mb-4">You haven't written any posts yet.</p>
               <Button onClick={() => navigate('/write')} className="bg-black text-white rounded-full font-bold" data-testid="my-posts-write-btn">
                 <PenLine className="w-4 h-4 mr-1.5" /> Write Your First Post
               </Button>
@@ -484,7 +484,7 @@ export default function ProfilePage() {
         <section data-testid="interacted-posts-section">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-3 h-3 rounded-full" style={{ backgroundColor: interactedColor }} />
-            <h2 className="font-heading font-bold text-xl text-gray-900">
+            <h2 className="font-heading font-bold text-xl text-[#1A1A1A]">
               Posts I've Engaged With ({interactedPosts.length})
             </h2>
           </div>
@@ -499,9 +499,9 @@ export default function ProfilePage() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center" data-testid="interacted-posts-empty">
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-10 text-center" data-testid="interacted-posts-empty">
               <Heart className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4">You haven't interacted with any posts yet.</p>
+              <p className="text-brand-grey mb-4">You haven't interacted with any posts yet.</p>
               <Button variant="outline" onClick={() => navigate('/')} className="rounded-full font-bold" data-testid="interacted-browse-btn">
                 Browse Posts <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
@@ -515,9 +515,9 @@ export default function ProfilePage() {
         <section data-testid="partners-section">
           <div className="space-y-8">
             {/* Search for Partners */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-heading font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-b4b-blue" /> Find Partners
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
+              <h3 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-[#1A1A1A]" /> Find Partners
               </h3>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -525,25 +525,25 @@ export default function ProfilePage() {
                   value={searchQuery}
                   onChange={(e) => handleSearchUsers(e.target.value)}
                   placeholder="Search users by name..."
-                  className="pl-10 border-2 border-gray-100 focus:border-black rounded-xl"
+                  className="pl-10 border-2 border-[#E5E5E5] focus:border-black rounded-none"
                   data-testid="partner-search-input"
                 />
               </div>
               {searchResults.length > 0 && (
                 <div className="mt-3 space-y-2" data-testid="partner-search-results">
                   {searchResults.map(u => (
-                    <div key={u.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="w-9 h-9 rounded-full bg-b4b-blue flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    <div key={u.id} className="flex items-center gap-3 p-3 rounded-none bg-[#FDFCF8] hover:bg-[#F4F4F5] transition-colors">
+                      <div className="w-9 h-9 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                         {u.name[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{u.name}</p>
+                        <p className="text-sm font-medium text-[#1A1A1A]">{u.name}</p>
                         <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" />{u.city}, {u.country}</p>
                       </div>
                       <Button
                         size="sm"
                         onClick={() => handleSendRequest(u.id)}
-                        className="rounded-full bg-b4b-blue hover:bg-blue-600 text-white"
+                        className="rounded-full bg-[#1A1A1A] hover:bg-[#1A1A1A] text-white"
                         data-testid={`send-request-${u.id}`}
                       >
                         <UserPlus className="w-4 h-4 mr-1" /> Partner Up
@@ -559,21 +559,21 @@ export default function ProfilePage() {
 
             {/* Pending Requests */}
             {(partnerRequests.incoming.length > 0 || partnerRequests.outgoing.length > 0) && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6">
-                <h3 className="font-heading font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
+                <h3 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-amber-500" /> Pending Requests
                 </h3>
                 {partnerRequests.incoming.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Incoming</p>
+                    <p className="text-xs font-semibold text-brand-grey uppercase tracking-wider mb-2">Incoming</p>
                     <div className="space-y-2">
                       {partnerRequests.incoming.map(req => (
-                        <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-100" data-testid={`incoming-request-${req.id}`}>
+                        <div key={req.id} className="flex items-center gap-3 p-3 rounded-none bg-amber-50 border border-amber-100" data-testid={`incoming-request-${req.id}`}>
                           <div className="w-9 h-9 rounded-full bg-amber-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                             {req.requester_name[0].toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{req.requester_name}</p>
+                            <p className="text-sm font-medium text-[#1A1A1A]">{req.requester_name}</p>
                             <p className="text-xs text-gray-400">Wants to partner with you</p>
                           </div>
                           <div className="flex gap-2 flex-shrink-0">
@@ -591,15 +591,15 @@ export default function ProfilePage() {
                 )}
                 {partnerRequests.outgoing.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sent</p>
+                    <p className="text-xs font-semibold text-brand-grey uppercase tracking-wider mb-2">Sent</p>
                     <div className="space-y-2">
                       {partnerRequests.outgoing.map(req => (
-                        <div key={req.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50" data-testid={`outgoing-request-${req.id}`}>
+                        <div key={req.id} className="flex items-center gap-3 p-3 rounded-none bg-[#FDFCF8]" data-testid={`outgoing-request-${req.id}`}>
                           <div className="w-9 h-9 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                             {req.target_name[0].toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-900">{req.target_name}</p>
+                            <p className="text-sm font-medium text-[#1A1A1A]">{req.target_name}</p>
                             <p className="text-xs text-gray-400">Pending acceptance</p>
                           </div>
                           <Button size="sm" variant="ghost" onClick={() => handleRemovePartner(req.id)} className="rounded-full text-gray-400 hover:text-red-500" data-testid={`cancel-request-${req.id}`}>
@@ -614,19 +614,19 @@ export default function ProfilePage() {
             )}
 
             {/* Current Partners */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-6">
-              <h3 className="font-heading font-bold text-lg text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
+              <h3 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-green-600" /> My Partners ({partners.length})
               </h3>
               {partners.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="partners-grid">
                   {partners.map(p => (
-                    <div key={p.id} className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-green-200 hover:bg-green-50/30 transition-colors" data-testid={`partner-${p.id}`}>
+                    <div key={p.id} className="flex items-center gap-3 p-4 rounded-none border border-[#E5E5E5] hover:border-green-200 hover:bg-green-50/30 transition-colors" data-testid={`partner-${p.id}`}>
                       <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-bold flex-shrink-0">
                         {p.name[0].toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900">{p.name}</p>
+                        <p className="text-sm font-semibold text-[#1A1A1A]">{p.name}</p>
                         <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin className="w-3 h-3" />{p.city}, {p.country}</p>
                       </div>
                       <Button
@@ -644,7 +644,7 @@ export default function ProfilePage() {
               ) : (
                 <div className="text-center py-8" data-testid="no-partners">
                   <Users className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 mb-2">No partners yet</p>
+                  <p className="text-brand-grey mb-2">No partners yet</p>
                   <p className="text-xs text-gray-400">Search for users above to send partner requests. Partners can co-author posts together!</p>
                 </div>
               )}

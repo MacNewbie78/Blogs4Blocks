@@ -14,13 +14,13 @@ import { toast } from 'sonner';
 
 function StatCard({ icon, value, label, color }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 flex items-start gap-4" data-testid={`admin-stat-${label.toLowerCase().replace(/\s/g, '-')}`}>
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}15`, color }}>
+    <div className="bg-white rounded-none border border-[#E5E5E5] p-5 flex items-start gap-4" data-testid={`admin-stat-${label.toLowerCase().replace(/\s/g, '-')}`}>
+      <div className="w-10 h-10 rounded-none flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${color}15`, color }}>
         {icon}
       </div>
       <div>
         <div className="font-heading font-bold text-2xl" style={{ color }}>{value}</div>
-        <div className="text-xs text-gray-500">{label}</div>
+        <div className="text-xs text-brand-grey">{label}</div>
       </div>
     </div>
   );
@@ -42,18 +42,18 @@ function PendingCategoryCard({ cat, onApprove, onReject }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-amber-200 p-4 flex items-start gap-4" data-testid={`pending-cat-${cat.slug}`}>
-      <div className="w-10 h-10 rounded-xl flex items-center justify-center text-amber-600 bg-amber-50 flex-shrink-0">
+    <div className="bg-white rounded-none border border-amber-200 p-4 flex items-start gap-4" data-testid={`pending-cat-${cat.slug}`}>
+      <div className="w-10 h-10 rounded-none flex items-center justify-center text-amber-600 bg-amber-50 flex-shrink-0">
         <Tag className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <h4 className="font-heading font-bold text-base text-gray-900">{cat.name}</h4>
+          <h4 className="font-heading font-bold text-base text-[#1A1A1A]">{cat.name}</h4>
           <Badge className="text-xs bg-amber-100 text-amber-700 border-0">Pending</Badge>
         </div>
-        <p className="text-sm text-gray-500 mb-2 line-clamp-2">{cat.description}</p>
+        <p className="text-sm text-brand-grey mb-2 line-clamp-2">{cat.description}</p>
         <div className="flex items-center gap-3 text-xs text-gray-400">
-          {cat.suggested_by && <span>Suggested by <strong className="text-gray-600">{cat.suggested_by}</strong></span>}
+          {cat.suggested_by && <span>Suggested by <strong className="text-brand-grey">{cat.suggested_by}</strong></span>}
           {cat.created_at && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{new Date(cat.created_at).toLocaleDateString()}</span>}
         </div>
       </div>
@@ -86,9 +86,9 @@ function RecentPostRow({ post, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className="flex items-center gap-3 py-3 border-b border-gray-50 last:border-0" data-testid={`admin-post-${post.id}`}>
+    <div className="flex items-center gap-3 py-3 border-b border-[#F4F4F5] last:border-0" data-testid={`admin-post-${post.id}`}>
       <div className="flex-1 min-w-0">
-        <Link to={`/post/${post.id}`} className="text-sm font-medium text-gray-900 hover:text-b4b-blue no-underline line-clamp-1">
+        <Link to={`/post/${post.id}`} className="text-sm font-medium text-[#1A1A1A] hover:text-[#1A1A1A] no-underline line-clamp-1">
           {post.title}
         </Link>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
@@ -124,12 +124,12 @@ function RecentCommentRow({ comment, onDelete }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-50 last:border-0" data-testid={`admin-comment-${comment.id}`}>
-      <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 flex-shrink-0 mt-0.5">
+    <div className="flex items-start gap-3 py-3 border-b border-[#F4F4F5] last:border-0" data-testid={`admin-comment-${comment.id}`}>
+      <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-brand-grey flex-shrink-0 mt-0.5">
         {comment.author_name?.[0]?.toUpperCase() || '?'}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 text-xs text-gray-500 mb-0.5">
+        <div className="flex items-center gap-2 text-xs text-brand-grey mb-0.5">
           <span className="font-semibold text-gray-700">{comment.author_name}</span>
           <span>{comment.author_city}</span>
           {comment.is_guest && <Badge className="text-xs bg-yellow-100 text-yellow-700 border-0 py-0 h-4">guest</Badge>}
@@ -166,15 +166,15 @@ function UserRow({ u, currentUserId, onToggleAdmin }) {
   };
 
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-gray-50 last:border-0" data-testid={`admin-user-${u.id}`}>
-      <div className="w-8 h-8 rounded-full bg-b4b-blue flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+    <div className="flex items-center gap-3 py-2.5 border-b border-[#F4F4F5] last:border-0" data-testid={`admin-user-${u.id}`}>
+      <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
         {u.name?.[0]?.toUpperCase() || '?'}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{u.name}</span>
+          <span className="text-sm font-medium text-[#1A1A1A]">{u.name}</span>
           {u.is_admin && <Badge className="text-xs bg-indigo-100 text-indigo-700 border-0 py-0 h-4">admin</Badge>}
-          {isSelf && <Badge className="text-xs bg-gray-100 text-gray-500 border-0 py-0 h-4">you</Badge>}
+          {isSelf && <Badge className="text-xs bg-[#F4F4F5] text-brand-grey border-0 py-0 h-4">you</Badge>}
         </div>
         <div className="text-xs text-gray-400">{u.email} — {u.city}, {u.country}</div>
       </div>
@@ -314,7 +314,7 @@ export default function AdminPage() {
   if (!user || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-gray-200 border-t-b4b-blue rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-[#1A1A1A] rounded-full animate-spin" />
       </div>
     );
   }
@@ -324,7 +324,7 @@ export default function AdminPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4" data-testid="admin-no-access">
         <AlertTriangle className="w-12 h-12 text-amber-500" />
         <h2 className="font-heading font-bold text-xl">Admin Access Required</h2>
-        <p className="text-gray-500 text-sm">You don't have permission to view this page.</p>
+        <p className="text-brand-grey text-sm">You don't have permission to view this page.</p>
         <Button onClick={() => navigate('/')} className="rounded-full" data-testid="admin-go-home">Go Home</Button>
       </div>
     );
@@ -341,18 +341,18 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50" data-testid="admin-page">
+    <div className="min-h-screen bg-[#FDFCF8]/50" data-testid="admin-page">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-white border-b border-[#E5E5E5]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gray-950 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-none bg-[#1A1A1A] flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-heading font-bold text-xl text-gray-900" data-testid="admin-heading">Admin Dashboard</h1>
-                <p className="text-xs text-gray-500">Moderate content, manage topics, and monitor activity</p>
+                <h1 className="font-heading font-bold text-xl text-[#1A1A1A]" data-testid="admin-heading">Admin Dashboard</h1>
+                <p className="text-xs text-brand-grey">Moderate content, manage topics, and monitor activity</p>
               </div>
             </div>
             <Button size="sm" variant="outline" onClick={fetchData} className="rounded-full" data-testid="admin-refresh">
@@ -366,7 +366,7 @@ export default function AdminPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? 'bg-gray-900 text-white' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'}`}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${activeTab === tab.id ? 'bg-[#1A1A1A] text-white' : 'text-brand-grey hover:text-[#1A1A1A] hover:bg-[#F4F4F5]'}`}
                 data-testid={`admin-tab-${tab.id}`}
               >
                 {tab.icon} {tab.label}
@@ -398,7 +398,7 @@ export default function AdminPage() {
         {/* Moderation Tab */}
         {activeTab === 'moderation' && (
           <div className="space-y-4" data-testid="admin-moderation">
-            <h2 className="font-heading font-bold text-lg text-gray-900">Pending Topic Suggestions</h2>
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A]">Pending Topic Suggestions</h2>
             {pendingCats.length > 0 ? (
               <div className="space-y-3">
                 {pendingCats.map(cat => (
@@ -406,9 +406,9 @@ export default function AdminPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl border border-gray-100 p-10 text-center" data-testid="no-pending">
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-10 text-center" data-testid="no-pending">
                 <Check className="w-10 h-10 text-green-400 mx-auto mb-3" />
-                <p className="text-gray-500 font-medium">All clear! No pending topic suggestions.</p>
+                <p className="text-brand-grey font-medium">All clear! No pending topic suggestions.</p>
                 <p className="text-xs text-gray-400 mt-1">User-suggested topics will appear here for your review.</p>
               </div>
             )}
@@ -418,7 +418,7 @@ export default function AdminPage() {
         {/* Newsletter Tab */}
         {activeTab === 'newsletter' && (
           <div className="space-y-6" data-testid="admin-newsletter">
-            <h2 className="font-heading font-bold text-lg text-gray-900">Weekly Digest Management</h2>
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A]">Weekly Digest Management</h2>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -430,21 +430,21 @@ export default function AdminPage() {
 
             {/* Schedule & Actions */}
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Calendar className="w-5 h-5 text-b4b-blue" />
-                  <h3 className="font-heading font-bold text-base text-gray-900">Schedule</h3>
+                  <Calendar className="w-5 h-5 text-[#1A1A1A]" />
+                  <h3 className="font-heading font-bold text-base text-[#1A1A1A]">Schedule</h3>
                 </div>
-                <p className="text-sm text-gray-600 mb-2">Automated digest runs <strong>every Monday at 9:00 AM UTC</strong>.</p>
+                <p className="text-sm text-brand-grey mb-2">Automated digest runs <strong>every Monday at 9:00 AM UTC</strong>.</p>
                 <p className="text-xs text-gray-400">Includes registered users + newsletter subscribers. Top 5 posts from the past week are featured.</p>
               </div>
 
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Send className="w-5 h-5 text-green-600" />
-                  <h3 className="font-heading font-bold text-base text-gray-900">Manual Send</h3>
+                  <h3 className="font-heading font-bold text-base text-[#1A1A1A]">Manual Send</h3>
                 </div>
-                <p className="text-sm text-gray-600 mb-4">Trigger a digest now to all subscribers. This will send the top posts from the past 7 days.</p>
+                <p className="text-sm text-brand-grey mb-4">Trigger a digest now to all subscribers. This will send the top posts from the past 7 days.</p>
                 <Button
                   onClick={handleSendDigest}
                   disabled={sendingDigest}
@@ -462,16 +462,16 @@ export default function AdminPage() {
 
             {/* Recent Digest Logs */}
             {digestStatus?.recent_logs?.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h3 className="font-heading font-bold text-base text-gray-900 mb-4">Recent Digest History</h3>
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
+                <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-4">Recent Digest History</h3>
                 <div className="space-y-3">
                   {digestStatus.recent_logs.map((log, i) => (
-                    <div key={i} className="flex items-center gap-4 py-2 border-b border-gray-50 last:border-0">
+                    <div key={i} className="flex items-center gap-4 py-2 border-b border-[#F4F4F5] last:border-0">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${log.status === 'sent' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'}`}>
                         {log.status === 'sent' ? <Check className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
                       </div>
                       <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-[#1A1A1A]">
                           {log.status === 'sent' ? `Sent to ${log.recipients} recipients` : 'Skipped'}
                         </div>
                         <div className="text-xs text-gray-400">
@@ -488,9 +488,9 @@ export default function AdminPage() {
 
             {/* Last Digest Info */}
             {!digestStatus?.recent_logs?.length && (
-              <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-10 text-center">
                 <Mail className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 font-medium">No digests sent yet</p>
+                <p className="text-brand-grey font-medium">No digests sent yet</p>
                 <p className="text-xs text-gray-400 mt-1">The first automated digest will go out next Monday, or you can trigger one manually above.</p>
               </div>
             )}
@@ -500,7 +500,7 @@ export default function AdminPage() {
         {/* Analytics Tab */}
         {activeTab === 'analytics' && analytics && (
           <div className="space-y-6" data-testid="admin-analytics">
-            <h2 className="font-heading font-bold text-lg text-gray-900">Email Analytics</h2>
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A]">Email Analytics</h2>
 
             {/* Key Metrics */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -519,34 +519,34 @@ export default function AdminPage() {
 
             {/* Per-Digest Breakdown */}
             {analytics.digest_breakdown?.length > 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 p-6">
-                <h3 className="font-heading font-bold text-base text-gray-900 mb-4">Digest Performance History</h3>
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-6">
+                <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-4">Digest Performance History</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">Date</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Recipients</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Opens</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Open Rate</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Clicks</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">Click Rate</th>
+                      <tr className="border-b border-[#E5E5E5]">
+                        <th className="text-left py-2 px-3 text-brand-grey font-medium">Date</th>
+                        <th className="text-center py-2 px-3 text-brand-grey font-medium">Recipients</th>
+                        <th className="text-center py-2 px-3 text-brand-grey font-medium">Opens</th>
+                        <th className="text-center py-2 px-3 text-brand-grey font-medium">Open Rate</th>
+                        <th className="text-center py-2 px-3 text-brand-grey font-medium">Clicks</th>
+                        <th className="text-center py-2 px-3 text-brand-grey font-medium">Click Rate</th>
                       </tr>
                     </thead>
                     <tbody>
                       {analytics.digest_breakdown.map((d, i) => (
-                        <tr key={i} className="border-b border-gray-50 last:border-0">
+                        <tr key={i} className="border-b border-[#F4F4F5] last:border-0">
                           <td className="py-2.5 px-3 text-gray-700">{new Date(d.date).toLocaleDateString()}</td>
                           <td className="py-2.5 px-3 text-center text-gray-700">{d.recipients}</td>
                           <td className="py-2.5 px-3 text-center text-gray-700">{d.opens}</td>
                           <td className="py-2.5 px-3 text-center">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${d.open_rate > 20 ? 'bg-green-100 text-green-700' : d.open_rate > 10 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${d.open_rate > 20 ? 'bg-green-100 text-green-700' : d.open_rate > 10 ? 'bg-amber-100 text-amber-700' : 'bg-[#F4F4F5] text-brand-grey'}`}>
                               {d.open_rate}%
                             </span>
                           </td>
                           <td className="py-2.5 px-3 text-center text-gray-700">{d.clicks}</td>
                           <td className="py-2.5 px-3 text-center">
-                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${d.click_rate > 5 ? 'bg-green-100 text-green-700' : d.click_rate > 2 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${d.click_rate > 5 ? 'bg-green-100 text-green-700' : d.click_rate > 2 ? 'bg-amber-100 text-amber-700' : 'bg-[#F4F4F5] text-brand-grey'}`}>
                               {d.click_rate}%
                             </span>
                           </td>
@@ -559,9 +559,9 @@ export default function AdminPage() {
             )}
 
             {analytics.digest_breakdown?.length === 0 && (
-              <div className="bg-white rounded-xl border border-gray-100 p-10 text-center">
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-10 text-center">
                 <BarChart3 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-500 font-medium">No digest data yet</p>
+                <p className="text-brand-grey font-medium">No digest data yet</p>
                 <p className="text-xs text-gray-400 mt-1">Analytics will appear here after digests are sent and recipients interact with them.</p>
               </div>
             )}
@@ -571,8 +571,8 @@ export default function AdminPage() {
         {/* Posts Tab */}
         {activeTab === 'posts' && stats && (
           <div data-testid="admin-posts">
-            <h2 className="font-heading font-bold text-lg text-gray-900 mb-4">Recent Posts</h2>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4">Recent Posts</h2>
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-4">
               {stats.recent_posts.map(post => (
                 <RecentPostRow key={post.id} post={post} onDelete={handleDeletePost} />
               ))}
@@ -583,8 +583,8 @@ export default function AdminPage() {
         {/* Comments Tab */}
         {activeTab === 'comments' && stats && (
           <div data-testid="admin-comments">
-            <h2 className="font-heading font-bold text-lg text-gray-900 mb-4">Recent Comments</h2>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4">Recent Comments</h2>
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-4">
               {stats.recent_comments.length > 0 ? (
                 stats.recent_comments.map(comment => (
                   <RecentCommentRow key={comment.id} comment={comment} onDelete={handleDeleteComment} />
@@ -599,8 +599,8 @@ export default function AdminPage() {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div data-testid="admin-users">
-            <h2 className="font-heading font-bold text-lg text-gray-900 mb-4">Registered Users ({users.length})</h2>
-            <div className="bg-white rounded-xl border border-gray-100 p-4">
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A] mb-4">Registered Users ({users.length})</h2>
+            <div className="bg-white rounded-none border border-[#E5E5E5] p-4">
               {users.map(u => (
                 <UserRow key={u.id} u={u} currentUserId={user.id} onToggleAdmin={handleToggleAdmin} />
               ))}

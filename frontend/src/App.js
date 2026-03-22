@@ -21,7 +21,7 @@ function App() {
   return (
     <BrowserRouter>
       <AppProvider>
-        <div className="flex flex-col min-h-screen font-body">
+        <div className="flex flex-col min-h-screen font-body noise-overlay">
           <Navbar />
           <main className="flex-1">
             <Routes>

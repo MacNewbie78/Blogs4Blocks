@@ -11,8 +11,6 @@ import {
   DropdownMenuSeparator
 } from '../components/ui/dropdown-menu';
 
-const LOGO_URL = 'https://customer-assets.emergentagent.com/job_marketing-forum-hub/artifacts/wa9v5wt9_b4blogo.png';
-
 export default function Navbar() {
   const { user, logout, categories } = useApp();
   const navigate = useNavigate();
@@ -22,19 +20,21 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100" data-testid="navbar">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="sticky top-0 z-50 bg-[#FDFCF8]/80 backdrop-blur-xl border-b border-[#E5E5E5]" data-testid="navbar">
+      <div className="max-w-7xl mx-auto px-6 md:px-12">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 no-underline" data-testid="nav-logo">
-            <img src={LOGO_URL} alt="Blogs 4 Blocks" className="h-14 w-auto object-contain" />
+          <Link to="/" className="flex items-center gap-0 no-underline" data-testid="nav-logo">
+            <span className="font-heading font-black text-xl tracking-tight text-[#1A1A1A]">
+              BLOGS<span className="text-brand-yellow">4</span>BLOCKS
+            </span>
           </Link>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-1">
             <Link
               to="/"
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors no-underline ${isActive('/') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${isActive('/') ? 'text-[#1A1A1A]' : 'text-brand-grey hover:text-[#1A1A1A]'}`}
               data-testid="nav-home"
             >
               Home
@@ -43,18 +43,18 @@ export default function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${location.pathname.startsWith('/category') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+                  className={`flex items-center gap-1 px-3 py-2 text-xs font-bold uppercase tracking-widest transition-colors ${location.pathname.startsWith('/category') ? 'text-[#1A1A1A]' : 'text-brand-grey hover:text-[#1A1A1A]'}`}
                   data-testid="nav-categories-dropdown"
                 >
-                  Topics <ChevronDown className="w-3.5 h-3.5" />
+                  Topics <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuContent align="start" className="w-64 rounded-lg border-[#E5E5E5]">
                 {categories.map(cat => (
                   <DropdownMenuItem key={cat.slug} onClick={() => navigate(`/category/${cat.slug}`)} data-testid={`nav-cat-${cat.slug}`}>
-                    <span className="w-2.5 h-2.5 rounded-full mr-2 flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                    <span className="font-medium">{cat.name}</span>
-                    <span className="ml-auto text-xs text-gray-400">{cat.post_count}</span>
+                    <span className="w-2 h-2 rounded-full mr-2.5 flex-shrink-0 bg-[#1A1A1A]" />
+                    <span className="font-medium text-sm">{cat.name}</span>
+                    <span className="ml-auto text-xs text-brand-grey">{cat.post_count}</span>
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -62,7 +62,7 @@ export default function Navbar() {
 
             <Link
               to="/about"
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors no-underline ${isActive('/about') ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
+              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${isActive('/about') ? 'text-[#1A1A1A]' : 'text-brand-grey hover:text-[#1A1A1A]'}`}
               data-testid="nav-about"
             >
               About
@@ -73,28 +73,28 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             <Button
               onClick={() => navigate('/write')}
-              className="bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_0px_rgba(59,130,246,0.5)] transition-all"
+              className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none h-10 px-6 uppercase tracking-widest text-xs font-bold transition-colors"
               data-testid="nav-write-btn"
             >
-              <PenLine className="w-4 h-4 mr-1.5" />
-              Write a Post
+              <PenLine className="w-3.5 h-3.5 mr-2" />
+              Write
             </Button>
 
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 px-3 py-2 rounded-full border border-gray-200 hover:bg-gray-50 transition-colors" data-testid="nav-user-menu">
-                    <div className="w-7 h-7 rounded-full bg-b4b-blue flex items-center justify-center text-white text-xs font-bold">
+                  <button className="flex items-center gap-2 px-3 py-2 border border-[#E5E5E5] hover:border-[#1A1A1A] transition-colors" data-testid="nav-user-menu">
+                    <div className="w-7 h-7 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-xs font-bold">
                       {user.name[0].toUpperCase()}
                     </div>
-                    <span className="text-sm font-medium text-gray-700">{user.name.split(' ')[0]}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A]">{user.name.split(' ')[0]}</span>
+                    <ChevronDown className="w-3 h-3 text-brand-grey" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="rounded-lg border-[#E5E5E5]">
                   <div className="px-3 py-2">
-                    <p className="text-sm font-medium">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-sm font-semibold text-[#1A1A1A]">{user.name}</p>
+                    <p className="text-xs text-brand-grey">{user.email}</p>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/profile')} data-testid="nav-profile-btn">
@@ -118,10 +118,10 @@ export default function Navbar() {
               <Button
                 variant="outline"
                 onClick={() => navigate('/auth')}
-                className="rounded-full border-2 border-gray-200 hover:border-gray-300"
+                className="rounded-none border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white uppercase tracking-widest text-xs font-bold h-10 px-6 transition-colors"
                 data-testid="nav-login-btn"
               >
-                <LogIn className="w-4 h-4 mr-1.5" />
+                <LogIn className="w-3.5 h-3.5 mr-2" />
                 Sign In
               </Button>
             )}
@@ -129,7 +129,7 @@ export default function Navbar() {
 
           {/* Mobile hamburger */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100"
+            className="md:hidden p-2 hover:bg-[#F4F4F5] transition-colors"
             onClick={() => setMobileOpen(!mobileOpen)}
             data-testid="nav-mobile-toggle"
           >
@@ -139,37 +139,37 @@ export default function Navbar() {
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="md:hidden py-4 border-t border-gray-100 animate-fade-in-up" data-testid="nav-mobile-menu">
+          <div className="md:hidden py-6 border-t border-[#E5E5E5] animate-fade-in-up" data-testid="nav-mobile-menu">
             <div className="flex flex-col gap-1">
-              <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid="nav-mobile-home">Home</Link>
-              <div className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Topics</div>
+              <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-home">Home</Link>
+              <div className="px-3 py-2 text-[10px] font-bold text-brand-grey uppercase tracking-[0.2em]">Topics</div>
               {categories.map(cat => (
-                <Link key={cat.slug} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)} className="flex items-center px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid={`nav-mobile-cat-${cat.slug}`}>
-                  <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: cat.color }} />
+                <Link key={cat.slug} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)} className="flex items-center px-3 py-2 text-sm text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid={`nav-mobile-cat-${cat.slug}`}>
+                  <span className="w-1.5 h-1.5 rounded-full mr-2.5 bg-brand-grey" />
                   {cat.name}
                 </Link>
               ))}
-              <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid="nav-mobile-about">About</Link>
+              <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-about">About</Link>
               {user && (
-                <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid="nav-mobile-profile">My Dashboard</Link>
+                <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-profile">My Dashboard</Link>
               )}
               {user?.is_admin && (
-                <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 no-underline" data-testid="nav-mobile-admin">
+                <Link to="/admin" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-admin">
                   <Shield className="w-4 h-4" /> Admin Panel
                 </Link>
               )}
-              <div className="border-t border-gray-100 mt-2 pt-2 flex flex-col gap-2">
-                <Button onClick={() => { navigate('/write'); setMobileOpen(false); }} className="bg-black text-white rounded-full font-bold" data-testid="nav-mobile-write-btn">
-                  <PenLine className="w-4 h-4 mr-1.5" /> Write a Post
+              <div className="border-t border-[#E5E5E5] mt-4 pt-4 flex flex-col gap-2">
+                <Button onClick={() => { navigate('/write'); setMobileOpen(false); }} className="bg-[#1A1A1A] text-white rounded-none font-bold uppercase tracking-widest text-xs" data-testid="nav-mobile-write-btn">
+                  <PenLine className="w-3.5 h-3.5 mr-2" /> Write a Post
                 </Button>
                 {!user && (
-                  <Button variant="outline" onClick={() => { navigate('/auth'); setMobileOpen(false); }} className="rounded-full" data-testid="nav-mobile-login-btn">
-                    <LogIn className="w-4 h-4 mr-1.5" /> Sign In
+                  <Button variant="outline" onClick={() => { navigate('/auth'); setMobileOpen(false); }} className="rounded-none border-[#1A1A1A] uppercase tracking-widest text-xs font-bold" data-testid="nav-mobile-login-btn">
+                    <LogIn className="w-3.5 h-3.5 mr-2" /> Sign In
                   </Button>
                 )}
                 {user && (
-                  <Button variant="outline" onClick={() => { logout(); navigate('/'); setMobileOpen(false); }} className="rounded-full" data-testid="nav-mobile-logout-btn">
-                    <LogOut className="w-4 h-4 mr-1.5" /> Sign Out
+                  <Button variant="outline" onClick={() => { logout(); navigate('/'); setMobileOpen(false); }} className="rounded-none border-[#E5E5E5] uppercase tracking-widest text-xs font-bold" data-testid="nav-mobile-logout-btn">
+                    <LogOut className="w-3.5 h-3.5 mr-2" /> Sign Out
                   </Button>
                 )}
               </div>

@@ -18,7 +18,6 @@ export default function AuthPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
   const [regForm, setRegForm] = useState({ name: '', email: '', password: '', city: '', country: '' });
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) navigate('/');
   }, [user, navigate]);
@@ -56,32 +55,33 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 px-4 py-16" data-testid="auth-page">
+    <div className="min-h-screen flex items-center justify-center px-6 py-20" data-testid="auth-page">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="font-heading font-bold text-3xl tracking-tight text-gray-900 mb-2" data-testid="auth-heading">
+        <div className="text-center mb-10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-grey mb-4">Welcome</p>
+          <h1 className="font-heading font-bold text-3xl tracking-tight text-[#1A1A1A] mb-2" data-testid="auth-heading">
             Join the Conversation
           </h1>
-          <p className="text-sm text-gray-500">
-            Sign in or create an account to get notified about discussions and build a permanent presence.
+          <p className="text-sm text-brand-grey">
+            Sign in or create an account to contribute and stay informed.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white border border-[#E5E5E5] p-8">
           <Tabs value={tab} onValueChange={setTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6" data-testid="auth-tabs">
-              <TabsTrigger value="login" data-testid="auth-login-tab">
-                <LogIn className="w-4 h-4 mr-1.5" /> Sign In
+            <TabsList className="grid w-full grid-cols-2 mb-8 rounded-none" data-testid="auth-tabs">
+              <TabsTrigger value="login" className="rounded-none text-xs font-bold uppercase tracking-widest" data-testid="auth-login-tab">
+                <LogIn className="w-3.5 h-3.5 mr-2" /> Sign In
               </TabsTrigger>
-              <TabsTrigger value="register" data-testid="auth-register-tab">
-                <UserPlus className="w-4 h-4 mr-1.5" /> Register
+              <TabsTrigger value="register" className="rounded-none text-xs font-bold uppercase tracking-widest" data-testid="auth-register-tab">
+                <UserPlus className="w-3.5 h-3.5 mr-2" /> Register
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4" data-testid="login-form">
+              <form onSubmit={handleLogin} className="space-y-5" data-testid="login-form">
                 <div>
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-email" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Email</Label>
                   <Input
                     id="login-email"
                     type="email"
@@ -90,12 +90,12 @@ export default function AuthPage() {
                     placeholder="you@example.com"
                     value={loginForm.email}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                    className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                     data-testid="login-email-input"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="login-password">Password</Label>
+                  <Label htmlFor="login-password" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Password</Label>
                   <Input
                     id="login-password"
                     type="password"
@@ -103,38 +103,38 @@ export default function AuthPage() {
                     placeholder="Your password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                    className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                     data-testid="login-password-input"
                   />
                 </div>
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-1px] transition-all"
+                  className="w-full bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold h-12 uppercase tracking-widest text-xs transition-colors"
                   data-testid="login-submit-btn"
                 >
                   {loading ? 'Signing in...' : 'Sign In'}
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </form>
             </TabsContent>
 
             <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4" data-testid="register-form">
+              <form onSubmit={handleRegister} className="space-y-5" data-testid="register-form">
                 <div>
-                  <Label htmlFor="reg-name">Full Name *</Label>
+                  <Label htmlFor="reg-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Full Name *</Label>
                   <Input
                     id="reg-name"
                     autoComplete="name"
                     placeholder="Your name"
                     value={regForm.name}
                     onChange={(e) => setRegForm(prev => ({ ...prev, name: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                    className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                     data-testid="register-name-input"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="reg-email">Email *</Label>
+                  <Label htmlFor="reg-email" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Email *</Label>
                   <Input
                     id="reg-email"
                     type="email"
@@ -142,12 +142,12 @@ export default function AuthPage() {
                     placeholder="you@example.com"
                     value={regForm.email}
                     onChange={(e) => setRegForm(prev => ({ ...prev, email: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                    className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                     data-testid="register-email-input"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="reg-password">Password *</Label>
+                  <Label htmlFor="reg-password" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Password *</Label>
                   <Input
                     id="reg-password"
                     type="password"
@@ -155,30 +155,30 @@ export default function AuthPage() {
                     placeholder="Choose a strong password"
                     value={regForm.password}
                     onChange={(e) => setRegForm(prev => ({ ...prev, password: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                    className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                     data-testid="register-password-input"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="reg-city">City *</Label>
+                    <Label htmlFor="reg-city" className="text-xs font-bold uppercase tracking-wider text-brand-grey">City *</Label>
                     <Input
                       id="reg-city"
                       placeholder="Your city"
                       value={regForm.city}
                       onChange={(e) => setRegForm(prev => ({ ...prev, city: e.target.value }))}
-                      className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                      className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                       data-testid="register-city-input"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="reg-country">Country</Label>
+                    <Label htmlFor="reg-country" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Country</Label>
                     <Input
                       id="reg-country"
                       placeholder="Your country"
                       value={regForm.country}
                       onChange={(e) => setRegForm(prev => ({ ...prev, country: e.target.value }))}
-                      className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
+                      className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12"
                       data-testid="register-country-input"
                     />
                   </div>
@@ -186,24 +186,24 @@ export default function AuthPage() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-1px] transition-all"
+                  className="w-full bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold h-12 uppercase tracking-widest text-xs transition-colors"
                   data-testid="register-submit-btn"
                 >
                   {loading ? 'Creating Account...' : 'Create Account'}
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
 
           {error && (
-            <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700" data-testid="auth-error">
+            <div className="mt-5 border border-brand-red/30 bg-brand-red/5 p-3 text-sm text-brand-red" data-testid="auth-error">
               {error}
             </div>
           )}
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-brand-grey mt-8">
           You can also post as a guest without an account. Guest posts are active for 30 days.
         </p>
       </div>

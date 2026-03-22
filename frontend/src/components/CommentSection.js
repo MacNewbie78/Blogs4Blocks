@@ -35,7 +35,6 @@ export default function CommentSection({ postId }) {
     fetchComments();
   }, [fetchComments]);
 
-  // WebSocket connection for real-time comments
   useEffect(() => {
     const wsUrl = `${getWsUrl()}/api/ws/comments/${postId}`;
     let ws;
@@ -48,11 +47,8 @@ export default function CommentSection({ postId }) {
 
         ws.onopen = () => {
           setWsConnected(true);
-          // Ping every 25s to keep alive
           pingInterval = setInterval(() => {
-            if (ws.readyState === WebSocket.OPEN) {
-              ws.send('ping');
-            }
+            if (ws.readyState === WebSocket.OPEN) ws.send('ping');
           }, 25000);
         };
 
@@ -62,20 +58,16 @@ export default function CommentSection({ postId }) {
             const data = JSON.parse(event.data);
             if (data.type === 'new_comment' && data.comment) {
               setComments(prev => {
-                // Avoid duplicates
                 if (prev.some(c => c.id === data.comment.id)) return prev;
                 return [data.comment, ...prev];
               });
             }
-          } catch (e) {
-            // ignore non-JSON
-          }
+          } catch (e) {}
         };
 
         ws.onclose = () => {
           setWsConnected(false);
           clearInterval(pingInterval);
-          // Reconnect after 3s
           setTimeout(connect, 3000);
         };
 
@@ -128,41 +120,23 @@ export default function CommentSection({ postId }) {
 
   return (
     <div data-testid="comment-section">
-      <div className="flex items-center gap-3 mb-6">
-        <h3 className="font-heading font-bold text-xl">
+      <div className="flex items-center gap-3 mb-8">
+        <h3 className="font-heading font-bold text-xl text-[#1A1A1A]">
           Discussion ({comments.length})
         </h3>
-        <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${wsConnected ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400'}`} data-testid="ws-status">
+        <span className={`flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 ${wsConnected ? 'text-brand-green' : 'text-brand-grey'}`} data-testid="ws-status">
           {wsConnected ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
           {wsConnected ? 'Live' : 'Connecting...'}
         </span>
       </div>
 
       {/* Comment form */}
-      <form onSubmit={handleSubmit} className="mb-8 bg-gray-50 rounded-2xl p-5" data-testid="comment-form">
+      <form onSubmit={handleSubmit} className="mb-10 bg-white border border-[#E5E5E5] p-5" data-testid="comment-form">
         {!user && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-            <Input
-              placeholder="Your name *"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              className="bg-white border-2 border-gray-100 focus:border-black rounded-xl"
-              data-testid="comment-guest-name"
-            />
-            <Input
-              placeholder="City *"
-              value={guestCity}
-              onChange={(e) => setGuestCity(e.target.value)}
-              className="bg-white border-2 border-gray-100 focus:border-black rounded-xl"
-              data-testid="comment-guest-city"
-            />
-            <Input
-              placeholder="Country"
-              value={guestCountry}
-              onChange={(e) => setGuestCountry(e.target.value)}
-              className="bg-white border-2 border-gray-100 focus:border-black rounded-xl"
-              data-testid="comment-guest-country"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+            <Input placeholder="Your name *" value={guestName} onChange={(e) => setGuestName(e.target.value)} className="bg-[#FDFCF8] border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="comment-guest-name" />
+            <Input placeholder="City *" value={guestCity} onChange={(e) => setGuestCity(e.target.value)} className="bg-[#FDFCF8] border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="comment-guest-city" />
+            <Input placeholder="Country" value={guestCountry} onChange={(e) => setGuestCountry(e.target.value)} className="bg-[#FDFCF8] border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="comment-guest-country" />
           </div>
         )}
         <Textarea
@@ -170,59 +144,59 @@ export default function CommentSection({ postId }) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={3}
-          className="bg-white border-2 border-gray-100 focus:border-black rounded-xl mb-3 resize-none"
+          className="bg-[#FDFCF8] border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none mb-3 resize-none"
           data-testid="comment-content"
         />
         <div className="flex items-center justify-between">
-          <p className="text-xs text-gray-400">
-            {user ? `Posting as ${user.name}` : 'Posting as guest (no notifications)'}
+          <p className="text-xs text-brand-grey">
+            {user ? `Posting as ${user.name}` : 'Posting as guest'}
           </p>
           <Button
             type="submit"
             disabled={submitting || !content.trim()}
-            className="bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.4)] hover:translate-y-[-1px] transition-all"
+            className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold uppercase tracking-widest text-xs transition-colors"
             data-testid="comment-submit-btn"
           >
-            <Send className="w-4 h-4 mr-1.5" />
+            <Send className="w-3.5 h-3.5 mr-2" />
             {submitting ? 'Posting...' : 'Post Comment'}
           </Button>
         </div>
       </form>
 
       {/* Comments list */}
-      <div className="space-y-4">
+      <div className="space-y-px bg-[#E5E5E5]">
         {comments.map(comment => (
-          <div key={comment.id} className="bg-white border border-gray-100 rounded-xl p-4" data-testid={`comment-${comment.id}`}>
+          <div key={comment.id} className="bg-[#FDFCF8] p-5" data-testid={`comment-${comment.id}`}>
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-b4b-teal flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
                 {comment.author_name?.[0]?.toUpperCase() || '?'}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="text-sm font-semibold text-gray-900">{comment.author_name}</span>
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className="text-sm font-semibold text-[#1A1A1A]">{comment.author_name}</span>
+                  <span className="flex items-center gap-1 text-xs text-brand-grey">
                     <MapPin className="w-3 h-3" />
                     {comment.author_city}, {comment.author_country}
                   </span>
-                  <span className="flex items-center gap-1 text-xs text-gray-400">
+                  <span className="flex items-center gap-1 text-xs text-brand-grey">
                     <Clock className="w-3 h-3" />
                     {new Date(comment.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                   {comment.is_guest && (
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">guest</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-brand-grey border border-[#E5E5E5] px-2 py-0.5">guest</span>
                   )}
                 </div>
-                <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
+                <p className="text-sm text-[#404040] leading-relaxed">{comment.content}</p>
               </div>
             </div>
           </div>
         ))}
-        {comments.length === 0 && (
-          <div className="text-center py-10 text-gray-400" data-testid="no-comments">
-            <p className="text-sm">No comments yet. Be the first to share your perspective!</p>
-          </div>
-        )}
       </div>
+      {comments.length === 0 && (
+        <div className="text-center py-12 text-brand-grey" data-testid="no-comments">
+          <p className="text-sm">No comments yet. Be the first to share your perspective!</p>
+        </div>
+      )}
     </div>
   );
 }

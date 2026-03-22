@@ -3,34 +3,26 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import BlogCard from '../components/BlogCard';
-import { ArrowRight, Globe, Users, PenLine, TrendingUp, Sparkles, Search, Flame, Mail, Check } from 'lucide-react';
+import { ArrowRight, Globe, Users, PenLine, TrendingUp, Search, Flame, Mail, Check, Megaphone, BarChart3, Share2, Brain, Palette, Wrench, Monitor, Cpu, Key, Briefcase } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 
-const CITY_IMAGES = [
-  'https://images.unsplash.com/photo-1603547142979-56242264e65c?w=600&q=75',
-  'https://images.unsplash.com/photo-1769298084996-8ed5d3a72870?w=600&q=75',
-  'https://images.unsplash.com/photo-1760459477099-ad81fd11d7c6?w=600&q=75',
-  'https://images.unsplash.com/photo-1637329096986-62486d0c4380?w=600&q=75',
-];
-
-const RAINBOW = ['#EF4444', '#F97316', '#FACC15', '#22C55E', '#14B8A6', '#3B82F6', '#A855F7', '#EC4899', '#A16207', '#EF4444', '#3B82F6', '#22C55E', '#F97316'];
-const TITLE = "BLOGS 4 BLOCKS";
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1773720182544-e955f21410b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwzfHxueWMlMjBhcmNoaXRlY3R1cmUlMjBtb2Rlcm4lMjBtaW5pbWFsaXN0fGVufDB8fHx8MTc3NDE0NDkyOHww&ixlib=rb-4.1.0&q=85&w=1600';
 
 const CATEGORY_ICONS = {
-  'social-media': '📱',
-  'seo-sem': '🔍',
-  'influencer-marketing': '🌟',
-  'integrated-marketing': '🔗',
-  'consumer-behavior': '🧠',
-  'branding': '🏷️',
-  'marketing-tools': '🛠️',
-  'digital-marketing': '💻',
-  'marketing-and-ai': '🤖',
-  'keywords': '🔑',
-  'careers': '💼',
+  'social-media': <Megaphone className="w-5 h-5" />,
+  'seo-sem': <BarChart3 className="w-5 h-5" />,
+  'influencer-marketing': <Share2 className="w-5 h-5" />,
+  'integrated-marketing': <Globe className="w-5 h-5" />,
+  'consumer-behavior': <Brain className="w-5 h-5" />,
+  'branding': <Palette className="w-5 h-5" />,
+  'marketing-tools': <Wrench className="w-5 h-5" />,
+  'digital-marketing': <Monitor className="w-5 h-5" />,
+  'marketing-and-ai': <Cpu className="w-5 h-5" />,
+  'keywords': <Key className="w-5 h-5" />,
+  'careers': <Briefcase className="w-5 h-5" />,
 };
 
 export default function HomePage() {
@@ -73,63 +65,53 @@ export default function HomePage() {
     <div className="min-h-screen" data-testid="home-page">
       {/* HERO SECTION */}
       <section className="relative overflow-hidden" data-testid="hero-section">
-        {/* City collage background */}
-        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
-          {CITY_IMAGES.map((img, i) => (
-            <div key={i} className="relative overflow-hidden">
-              <img
-                src={img}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover"
-                loading="eager"
-              />
-            </div>
-          ))}
-          <div className="absolute inset-0 bg-white/85" />
+        {/* Background image with overlay */}
+        <div className="absolute inset-0">
+          <img
+            src={HERO_IMAGE}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            loading="eager"
+          />
+          <div className="absolute inset-0 bg-[#FDFCF8]/90" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+        <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-24 md:py-40">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
             className="max-w-3xl"
           >
-            {/* Rainbow title */}
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-heading font-black tracking-tighter mb-6 leading-[0.9]" data-testid="hero-title">
-              {TITLE.split('').map((char, i) => (
-                <span
-                  key={i}
-                  className="rainbow-letter"
-                  style={{
-                    color: char === ' ' ? 'transparent' : RAINBOW[i % RAINBOW.length],
-                    textShadow: char !== ' ' ? '2px 2px 0px rgba(0,0,0,0.1)' : 'none'
-                  }}
-                >
-                  {char === ' ' ? '\u00A0' : char}
-                </span>
-              ))}
+            {/* Eyebrow */}
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey mb-6" data-testid="hero-eyebrow">
+              Marketing Insights from Every Block
+            </p>
+
+            {/* Title — editorial, no rainbow */}
+            <h1 className="font-heading font-light text-6xl md:text-8xl tracking-tighter mb-8 leading-[0.9] text-[#1A1A1A]" data-testid="hero-title">
+              Blogs<span className="font-black">4</span>Blocks
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed max-w-2xl">
+            <p className="text-lg md:text-xl text-brand-grey mb-10 leading-relaxed max-w-xl">
               A global open forum where marketing professionals share strategies, insights, and real-world experiences from every corner of the world.
             </p>
 
             {/* Search bar */}
-            <form onSubmit={handleSearch} className="flex gap-3 max-w-xl mb-8" data-testid="hero-search-form">
+            <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-10" data-testid="hero-search-form">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-grey" />
                 <Input
                   placeholder="Search marketing topics..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-white/90 border-2 border-gray-200 focus:border-black rounded-full h-12 text-base"
+                  className="pl-11 bg-white border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12 text-sm"
                   data-testid="hero-search-input"
                 />
               </div>
               <Button
                 type="submit"
-                className="bg-black text-white hover:bg-gray-800 rounded-full h-12 px-6 font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-1px] hover:shadow-[4px_4px_0px_0px_rgba(59,130,246,0.5)] transition-all"
+                className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none h-12 px-6 text-xs font-bold uppercase tracking-widest transition-colors"
                 data-testid="hero-search-btn"
               >
                 Search
@@ -137,19 +119,19 @@ export default function HomePage() {
             </form>
 
             {/* CTA buttons */}
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-4">
               <Button
                 onClick={() => navigate('/write')}
-                className="bg-black text-white hover:bg-gray-800 rounded-full font-bold px-8 py-3 h-auto text-base shadow-[4px_4px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(59,130,246,0.5)] transition-all"
+                className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors"
                 data-testid="hero-write-btn"
               >
-                <PenLine className="w-5 h-5 mr-2" />
+                <PenLine className="w-4 h-4 mr-2" />
                 Share Your Strategy
               </Button>
               <Button
                 variant="outline"
                 onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-white text-black border-2 border-black hover:bg-gray-50 rounded-full font-bold px-8 py-3 h-auto text-base shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all"
+                className="bg-transparent text-[#1A1A1A] border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors"
                 data-testid="hero-explore-btn"
               >
                 Explore Topics
@@ -163,18 +145,17 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.3 }}
-              className="flex flex-wrap gap-6 mt-12"
+              className="flex flex-wrap gap-8 mt-16 pt-8 border-t border-[#E5E5E5]/60"
             >
               {[
-                { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#3B82F6' },
-                { icon: <Users className="w-4 h-4" />, value: stats.contributors || 0, label: 'Contributors', color: '#A855F7' },
-                { icon: <Globe className="w-4 h-4" />, value: stats.countries_represented, label: 'Countries', color: '#22C55E' },
-                { icon: <Sparkles className="w-4 h-4" />, value: stats.total_comments, label: 'Discussions', color: '#F97316' },
+                { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts' },
+                { icon: <Users className="w-4 h-4" />, value: stats.contributors || 0, label: 'Contributors' },
+                { icon: <Globe className="w-4 h-4" />, value: stats.countries_represented, label: 'Countries' },
               ].map((stat, i) => (
-                <div key={i} className="flex items-center gap-2.5 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-100">
-                  <span style={{ color: stat.color }}>{stat.icon}</span>
-                  <span className="font-heading font-bold text-lg">{stat.value}</span>
-                  <span className="text-sm text-gray-500">{stat.label}</span>
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-brand-grey">{stat.icon}</span>
+                  <span className="font-heading font-black text-2xl text-[#1A1A1A]">{stat.value}</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-brand-grey">{stat.label}</span>
                 </div>
               ))}
             </motion.div>
@@ -183,44 +164,43 @@ export default function HomePage() {
       </section>
 
       {/* CATEGORIES SECTION */}
-      <section id="categories" className="py-16 md:py-24 bg-white" data-testid="categories-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-12">
-            <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-gray-900 mb-3" data-testid="categories-heading">
-              Explore Marketing Topics
+      <section id="categories" className="py-20 md:py-32" data-testid="categories-section">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="mb-16">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey mb-3">Explore</p>
+            <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-[#1A1A1A]" data-testid="categories-heading">
+              Marketing Topics
             </h2>
-            <p className="text-base md:text-lg text-gray-500 max-w-2xl">
-              Dive into discussions from marketing professionals across every discipline and every continent.
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" data-testid="categories-grid">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-px bg-[#E5E5E5]" data-testid="categories-grid">
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.slug}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: i * 0.06 }}
+                transition={{ duration: 0.4, delay: i * 0.05 }}
               >
                 <Link
                   to={`/category/${cat.slug}`}
-                  className="relative overflow-hidden rounded-2xl p-5 flex flex-col justify-between no-underline group transition-all duration-300 hover:scale-[1.02] border-2 border-transparent hover:border-gray-200 min-h-[160px]"
-                  style={{ backgroundColor: `${cat.color}10` }}
+                  className="relative block bg-[#FDFCF8] p-6 no-underline group hover:bg-white transition-colors min-h-[160px] flex flex-col justify-between"
                   data-testid={`category-card-${cat.slug}`}
                 >
                   <div>
-                    <span className="text-3xl mb-3 block">{CATEGORY_ICONS[cat.slug] || '📊'}</span>
-                    <h3 className="font-heading font-bold text-lg text-gray-900 mb-1 group-hover:translate-x-1 transition-transform">
+                    <span className="text-brand-grey mb-4 block group-hover:text-[#1A1A1A] transition-colors">
+                      {CATEGORY_ICONS[cat.slug] || <BarChart3 className="w-5 h-5" />}
+                    </span>
+                    <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-1 group-hover:translate-x-1 transition-transform">
                       {cat.name}
                     </h3>
-                    <p className="text-sm text-gray-500 line-clamp-2">{cat.description}</p>
+                    <p className="text-xs text-brand-grey leading-relaxed line-clamp-2">{cat.description}</p>
                   </div>
                   <div className="flex items-center justify-between mt-4">
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ backgroundColor: `${cat.color}20`, color: cat.color }}>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-brand-grey">
                       {cat.post_count} posts
                     </span>
-                    <ArrowRight className="w-4 h-4 text-gray-400 group-hover:text-gray-700 group-hover:translate-x-1 transition-all" />
+                    <ArrowRight className="w-3.5 h-3.5 text-brand-grey opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                   </div>
                 </Link>
               </motion.div>
@@ -230,23 +210,21 @@ export default function HomePage() {
       </section>
 
       {/* LATEST POSTS */}
-      <section className="py-16 md:py-24 bg-gray-50/50" data-testid="latest-posts-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-12">
+      <section className="py-20 md:py-32 border-t border-[#E5E5E5]" data-testid="latest-posts-section">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="flex items-end justify-between mb-16">
             <div>
-              <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-gray-900 mb-3" data-testid="latest-heading">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey mb-3">Fresh Perspectives</p>
+              <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-[#1A1A1A]" data-testid="latest-heading">
                 Latest Discussions
               </h2>
-              <p className="text-base md:text-lg text-gray-500">
-                Fresh perspectives from marketing professionals worldwide.
-              </p>
             </div>
             <Link
               to="/category/all"
-              className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-b4b-blue hover:underline no-underline"
+              className="hidden sm:flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:text-brand-red no-underline transition-colors"
               data-testid="view-all-posts"
             >
-              View All <ArrowRight className="w-4 h-4" />
+              View All <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -256,13 +234,13 @@ export default function HomePage() {
             ))}
           </div>
 
-          <div className="sm:hidden mt-8 text-center">
+          <div className="sm:hidden mt-10 text-center">
             <Link
               to="/category/all"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-b4b-blue no-underline"
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] no-underline"
               data-testid="view-all-posts-mobile"
             >
-              View All Posts <ArrowRight className="w-4 h-4" />
+              View All Posts <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -270,21 +248,19 @@ export default function HomePage() {
 
       {/* POPULAR POSTS */}
       {popularPosts.length > 0 && (
-        <section className="py-16 md:py-24 bg-white" data-testid="popular-posts-section">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-12">
-              <div className="flex items-center gap-2 mb-3">
-                <Flame className="w-6 h-6 text-orange-500" />
-                <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-gray-900" data-testid="popular-heading">
-                  Trending Now
-                </h2>
+        <section className="py-20 md:py-32 border-t border-[#E5E5E5]" data-testid="popular-posts-section">
+          <div className="max-w-7xl mx-auto px-6 md:px-12">
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-3">
+                <Flame className="w-5 h-5 text-brand-red" />
+                <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey">Most Engaged</p>
               </div>
-              <p className="text-base md:text-lg text-gray-500">
-                The most liked and viewed posts from the community.
-              </p>
+              <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-[#1A1A1A]" data-testid="popular-heading">
+                Trending Now
+              </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5" data-testid="popular-posts-grid">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="popular-posts-grid">
               {popularPosts.map((post, i) => (
                 <BlogCard key={post.id} post={post} index={i} />
               ))}
@@ -294,24 +270,19 @@ export default function HomePage() {
       )}
 
       {/* NEWSLETTER SECTION */}
-      <section className="py-16 md:py-24 bg-gray-50/50" data-testid="newsletter-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-gray-900 via-gray-950 to-black p-8 md:p-14">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-b4b-blue/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-b4b-purple/10 rounded-full blur-3xl" />
-            <div className="relative max-w-2xl">
-              <div className="flex items-center gap-2 mb-4">
-                <Mail className="w-6 h-6 text-b4b-blue" />
-                <span className="text-sm font-semibold text-b4b-blue uppercase tracking-wider">Weekly Digest</span>
-              </div>
-              <h2 className="font-heading font-bold text-2xl md:text-3xl text-white mb-3 tracking-tight" data-testid="newsletter-heading">
+      <section className="py-20 md:py-32 border-t border-[#E5E5E5]" data-testid="newsletter-section">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="bg-[#1A1A1A] p-10 md:p-20">
+            <div className="max-w-xl">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-yellow mb-6">Weekly Digest</p>
+              <h2 className="font-heading font-light text-3xl md:text-4xl text-white mb-4 tracking-tight leading-tight" data-testid="newsletter-heading">
                 Get the best marketing insights delivered weekly
               </h2>
-              <p className="text-gray-400 text-sm md:text-base mb-6">
+              <p className="text-brand-grey text-sm leading-relaxed mb-8">
                 Join the community. Every Monday, we curate the top posts, trending topics, and fresh perspectives from marketing professionals worldwide.
               </p>
               {subscribed ? (
-                <div className="flex items-center gap-2 text-green-400 font-semibold" data-testid="newsletter-success">
+                <div className="flex items-center gap-2 text-brand-green font-semibold text-sm" data-testid="newsletter-success">
                   <Check className="w-5 h-5" /> You're subscribed! Check your inbox on Monday.
                 </div>
               ) : (
@@ -322,16 +293,16 @@ export default function HomePage() {
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     required
-                    className="bg-white/10 border-gray-700 text-white placeholder:text-gray-500 rounded-full h-12"
+                    className="bg-white/10 border-[#333] text-white placeholder:text-[#666] rounded-none h-12 text-sm focus:border-brand-yellow"
                     data-testid="newsletter-email-input"
                   />
                   <Button
                     type="submit"
                     disabled={subscribing}
-                    className="bg-b4b-blue text-white hover:bg-blue-600 rounded-full h-12 px-6 font-bold"
+                    className="bg-brand-yellow text-[#1A1A1A] hover:bg-[#E5B800] rounded-none h-12 px-6 font-bold uppercase tracking-widest text-xs transition-colors"
                     data-testid="newsletter-submit-btn"
                   >
-                    {subscribing ? 'Subscribing...' : 'Subscribe'}
+                    {subscribing ? '...' : 'Subscribe'}
                   </Button>
                 </form>
               )}
@@ -341,40 +312,33 @@ export default function HomePage() {
       </section>
 
       {/* CTA SECTION */}
-      <section className="py-16 md:py-24 bg-white" data-testid="cta-section">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gray-950 p-8 md:p-16">
-            {/* Subtle city images in background */}
-            <div className="absolute inset-0 grid grid-cols-4 opacity-10">
-              {CITY_IMAGES.map((img, i) => (
-                <img key={i} src={img} alt="" className="w-full h-full object-cover" />
-              ))}
-            </div>
-            <div className="relative text-center">
-              <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-5xl text-white mb-4 tracking-tight" data-testid="cta-heading">
-                Your Market. Your Insights. Your Voice.
-              </h2>
-              <p className="text-base md:text-lg text-gray-400 max-w-2xl mx-auto mb-8">
-                Whether you're a seasoned CMO in London or a startup marketer in Nairobi — your perspective matters. Join the global conversation.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Button
-                  onClick={() => navigate('/write')}
-                  className="bg-white text-black hover:bg-gray-100 rounded-full font-bold px-8 py-3 h-auto text-base shadow-[4px_4px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-2px] transition-all"
-                  data-testid="cta-write-btn"
-                >
-                  <PenLine className="w-5 h-5 mr-2" />
-                  Write Your First Post
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/auth')}
-                  className="border-2 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white rounded-full font-bold px-8 py-3 h-auto text-base transition-all"
-                  data-testid="cta-join-btn"
-                >
-                  Join the Community
-                </Button>
-              </div>
+      <section className="py-20 md:py-32 border-t border-[#E5E5E5]" data-testid="cta-section">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center max-w-2xl mx-auto">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey mb-6">Join the Conversation</p>
+            <h2 className="font-heading font-bold text-3xl md:text-4xl lg:text-5xl text-[#1A1A1A] mb-6 tracking-tight" data-testid="cta-heading">
+              Your Market. Your Insights. Your Voice.
+            </h2>
+            <p className="text-base text-brand-grey max-w-lg mx-auto mb-10 leading-relaxed">
+              Whether you're a seasoned CMO in London or a startup marketer in Nairobi — your perspective matters.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button
+                onClick={() => navigate('/write')}
+                className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors"
+                data-testid="cta-write-btn"
+              >
+                <PenLine className="w-4 h-4 mr-2" />
+                Write Your First Post
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/auth')}
+                className="border border-[#1A1A1A] text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors"
+                data-testid="cta-join-btn"
+              >
+                Join the Community
+              </Button>
             </div>
           </div>
         </div>

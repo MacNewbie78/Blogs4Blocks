@@ -50,7 +50,6 @@ export default function WritePage() {
   const [partners, setPartners] = useState([]);
   const [selectedCoAuthors, setSelectedCoAuthors] = useState([]);
 
-  // Load partners for co-author selection
   useEffect(() => {
     if (user && token) {
       axios.get(`${API}/partners`, { headers: { Authorization: `Bearer ${token}` } })
@@ -59,7 +58,6 @@ export default function WritePage() {
     }
   }, [user, token, API]);
 
-  // Load existing post data for editing
   useEffect(() => {
     if (editId && token) {
       setIsEditing(true);
@@ -162,12 +160,10 @@ export default function WritePage() {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
       if (isEditing && editId) {
-        // Update existing post
-        const res = await axios.put(`${API}/posts/${editId}`, payload, { headers });
+        await axios.put(`${API}/posts/${editId}`, payload, { headers });
         toast.success('Post updated!');
         navigate(`/post/${editId}`);
       } else {
-        // Create new post
         const res = await axios.post(`${API}/posts`, payload, { headers });
         toast.success('Your post has been published!');
         navigate(`/post/${res.data.id}`);
@@ -179,157 +175,97 @@ export default function WritePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50" data-testid="write-page">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
-        <div className="mb-8">
-          <h1 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-gray-900 mb-2" data-testid="write-heading">
-            <PenLine className="inline w-8 h-8 mr-2 text-b4b-blue" />
+    <div className="min-h-screen" data-testid="write-page">
+      <div className="max-w-3xl mx-auto px-6 md:px-12 py-12 md:py-20">
+        <div className="mb-10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-grey mb-4">
+            {isEditing ? 'Editing' : 'New Post'}
+          </p>
+          <h1 className="font-heading font-bold text-3xl md:text-4xl tracking-tight text-[#1A1A1A] mb-2" data-testid="write-heading">
             {isEditing ? 'Edit Your Post' : 'Share Your Marketing Insight'}
           </h1>
-          <p className="text-base text-gray-500">
-            {isEditing ? 'Update your post with the latest insights.' : 'Your experience matters. Share what works in your market, what doesn\'t, and help fellow marketers around the world.'}
+          <p className="text-base text-brand-grey">
+            {isEditing ? 'Update your post with the latest insights.' : 'Your experience matters. Share what works in your market.'}
           </p>
         </div>
 
         {/* Guest notice */}
         {!user && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3" data-testid="write-guest-notice">
-            <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <div className="bg-brand-yellow/10 border border-brand-yellow/30 p-5 mb-8 flex items-start gap-3" data-testid="write-guest-notice">
+            <AlertCircle className="w-5 h-5 text-[#92400E] flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-blue-800">Posting as a guest</p>
-              <p className="text-xs text-blue-600 mt-0.5">Guest posts are active for 30 days and you won't receive notifications. <a href="/auth" className="underline font-semibold">Sign up</a> for a permanent presence!</p>
+              <p className="text-sm font-semibold text-[#92400E]">Posting as a guest</p>
+              <p className="text-xs text-[#92400E]/70 mt-0.5">Guest posts are active for 30 days. <a href="/auth" className="underline font-semibold">Sign up</a> for a permanent presence!</p>
             </div>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6" data-testid="write-form">
+        <form onSubmit={handleSubmit} className="space-y-8" data-testid="write-form">
           {/* Guest fields */}
           {!user && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-4">
-              <h3 className="font-heading font-semibold text-lg">About You</h3>
+            <div className="bg-white border border-[#E5E5E5] p-6 space-y-4">
+              <h3 className="font-heading font-bold text-base uppercase tracking-wider">About You</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="guest-name">Name *</Label>
-                  <Input
-                    id="guest-name"
-                    placeholder="Your name"
-                    value={guestData.name}
-                    onChange={(e) => setGuestData(prev => ({ ...prev, name: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
-                    data-testid="write-guest-name"
-                  />
+                  <Label htmlFor="guest-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Name *</Label>
+                  <Input id="guest-name" placeholder="Your name" value={guestData.name} onChange={(e) => setGuestData(prev => ({ ...prev, name: e.target.value }))} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-guest-name" />
                 </div>
                 <div>
-                  <Label htmlFor="guest-city">City *</Label>
-                  <Input
-                    id="guest-city"
-                    placeholder="Your city"
-                    value={guestData.city}
-                    onChange={(e) => setGuestData(prev => ({ ...prev, city: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
-                    data-testid="write-guest-city"
-                  />
+                  <Label htmlFor="guest-city" className="text-xs font-bold uppercase tracking-wider text-brand-grey">City *</Label>
+                  <Input id="guest-city" placeholder="Your city" value={guestData.city} onChange={(e) => setGuestData(prev => ({ ...prev, city: e.target.value }))} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-guest-city" />
                 </div>
                 <div>
-                  <Label htmlFor="guest-country">Country</Label>
-                  <Input
-                    id="guest-country"
-                    placeholder="Your country"
-                    value={guestData.country}
-                    onChange={(e) => setGuestData(prev => ({ ...prev, country: e.target.value }))}
-                    className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
-                    data-testid="write-guest-country"
-                  />
+                  <Label htmlFor="guest-country" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Country</Label>
+                  <Input id="guest-country" placeholder="Your country" value={guestData.country} onChange={(e) => setGuestData(prev => ({ ...prev, country: e.target.value }))} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-guest-country" />
                 </div>
               </div>
             </div>
           )}
 
           {/* Post content */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-            <h3 className="font-heading font-semibold text-lg">Your Post</h3>
+          <div className="bg-white border border-[#E5E5E5] p-6 space-y-6">
+            <h3 className="font-heading font-bold text-base uppercase tracking-wider">Your Post</h3>
 
             {/* Cover Image Upload */}
             <div data-testid="cover-image-section">
-              <Label>Cover Image</Label>
+              <Label className="text-xs font-bold uppercase tracking-wider text-brand-grey">Cover Image</Label>
               {coverImage ? (
-                <div className="relative mt-2 rounded-xl overflow-hidden border-2 border-gray-100">
-                  <img
-                    src={`${process.env.REACT_APP_BACKEND_URL}${coverImage}`}
-                    alt="Cover"
-                    className="w-full h-48 object-cover"
-                    data-testid="cover-image-preview"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setCoverImage(null)}
-                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-colors"
-                    data-testid="cover-image-remove"
-                  >
+                <div className="relative mt-2 overflow-hidden border border-[#E5E5E5]">
+                  <img src={`${process.env.REACT_APP_BACKEND_URL}${coverImage}`} alt="Cover" className="w-full h-48 object-cover" data-testid="cover-image-preview" />
+                  <button type="button" onClick={() => setCoverImage(null)} className="absolute top-2 right-2 bg-[#1A1A1A]/60 hover:bg-[#1A1A1A]/80 text-white p-1.5 transition-colors" data-testid="cover-image-remove">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => coverInputRef.current?.click()}
-                  disabled={coverUploading}
-                  className="mt-2 w-full border-2 border-dashed border-gray-200 hover:border-gray-400 rounded-xl py-10 flex flex-col items-center gap-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  data-testid="cover-image-upload-btn"
-                >
-                  <ImagePlus className="w-8 h-8" />
-                  <span className="text-sm font-medium">{coverUploading ? 'Uploading...' : 'Click to add a cover image'}</span>
-                  <span className="text-xs">JPG, PNG up to 5MB</span>
+                <button type="button" onClick={() => coverInputRef.current?.click()} disabled={coverUploading} className="mt-2 w-full border border-dashed border-[#E5E5E5] hover:border-[#1A1A1A] py-10 flex flex-col items-center gap-2 text-brand-grey hover:text-[#1A1A1A] transition-colors" data-testid="cover-image-upload-btn">
+                  <ImagePlus className="w-6 h-6" />
+                  <span className="text-xs font-bold uppercase tracking-widest">{coverUploading ? 'Uploading...' : 'Add Cover Image'}</span>
                 </button>
               )}
-              <input
-                ref={coverInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleCoverUpload}
-                className="hidden"
-                data-testid="cover-image-file-input"
-              />
+              <input ref={coverInputRef} type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" data-testid="cover-image-file-input" />
             </div>
 
             <div>
-              <Label htmlFor="title">Title *</Label>
-              <Input
-                id="title"
-                placeholder="A compelling title for your marketing insight..."
-                value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl text-lg"
-                data-testid="write-title"
-              />
+              <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Title *</Label>
+              <Input id="title" placeholder="A compelling title for your marketing insight..." value={formData.title} onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none text-lg h-12" data-testid="write-title" />
             </div>
 
             <div>
-              <Label htmlFor="excerpt">Short Summary *</Label>
-              <Input
-                id="excerpt"
-                placeholder="One-liner that hooks the reader..."
-                value={formData.excerpt}
-                onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
-                className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
-                data-testid="write-excerpt"
-              />
+              <Label htmlFor="excerpt" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Short Summary *</Label>
+              <Input id="excerpt" placeholder="One-liner that hooks the reader..." value={formData.excerpt} onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-excerpt" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>Category *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-brand-grey">Category *</Label>
                 <Select value={formData.category_slug} onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl" data-testid="write-category-select">
+                  <SelectTrigger className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-category-select">
                     <SelectValue placeholder="Choose a topic" />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(cat => (
                       <SelectItem key={cat.slug} value={cat.slug} data-testid={`write-cat-option-${cat.slug}`}>
-                        <span className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cat.color }} />
-                          {cat.name}
-                        </span>
+                        {cat.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -338,9 +274,9 @@ export default function WritePage() {
 
               {subcategories.length > 0 && (
                 <div>
-                  <Label>Subtopic</Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-brand-grey">Subtopic</Label>
                   <Select value={formData.subcategory} onValueChange={(v) => setFormData(prev => ({ ...prev, subcategory: v }))}>
-                    <SelectTrigger className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl" data-testid="write-subcategory-select">
+                    <SelectTrigger className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-subcategory-select">
                       <SelectValue placeholder="Optional subtopic" />
                     </SelectTrigger>
                     <SelectContent>
@@ -355,69 +291,39 @@ export default function WritePage() {
               )}
             </div>
 
-            {/* Suggest a topic link */}
-            <button
-              type="button"
-              onClick={() => setShowSuggestDialog(true)}
-              className="flex items-center gap-2 text-sm text-b4b-blue hover:underline font-medium"
-              data-testid="suggest-topic-btn"
-            >
+            <button type="button" onClick={() => setShowSuggestDialog(true)} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-brand-grey hover:text-[#1A1A1A] transition-colors" data-testid="suggest-topic-btn">
               <Lightbulb className="w-4 h-4" />
-              Don't see your topic? Suggest a new one
+              Suggest a new topic
             </button>
 
             <div>
-              <Label htmlFor="content">Content *</Label>
-              <div className="mt-1">
-                <RichTextEditor
-                  content={formData.content}
-                  onChange={(html) => setFormData(prev => ({ ...prev, content: html }))}
-                  placeholder="Share your marketing strategy, experience, data, and insights. Use the toolbar for formatting — headings, bold, lists, quotes, and more."
-                />
+              <Label htmlFor="content" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Content *</Label>
+              <div className="mt-2">
+                <RichTextEditor content={formData.content} onChange={(html) => setFormData(prev => ({ ...prev, content: html }))} placeholder="Share your marketing strategy, experience, data, and insights." />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="tags">Tags</Label>
-              <Input
-                id="tags"
-                placeholder="e.g. social-media, strategy, ROI (comma-separated)"
-                value={formData.tags}
-                onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))}
-                className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
-                data-testid="write-tags"
-              />
+              <Label htmlFor="tags" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Tags</Label>
+              <Input id="tags" placeholder="e.g. social-media, strategy, ROI (comma-separated)" value={formData.tags} onChange={(e) => setFormData(prev => ({ ...prev, tags: e.target.value }))} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="write-tags" />
             </div>
 
-            {/* Co-Author Selection (only for logged-in users with partners) */}
+            {/* Co-Author Selection */}
             {user && partners.length > 0 && (
               <div data-testid="co-author-section">
-                <Label className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-green-600" /> Co-Authors (optional)
+                <Label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-grey">
+                  <Users className="w-4 h-4" /> Co-Authors (optional)
                 </Label>
-                <p className="text-xs text-gray-400 mt-0.5 mb-2">Select partners to co-author this post with</p>
+                <p className="text-xs text-brand-grey mt-1 mb-3">Select partners to co-author this post with</p>
                 <div className="flex flex-wrap gap-2">
                   {partners.map(p => {
                     const selected = selectedCoAuthors.includes(p.id);
                     return (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => {
-                          if (selected) {
-                            setSelectedCoAuthors(prev => prev.filter(id => id !== p.id));
-                          } else {
-                            setSelectedCoAuthors(prev => [...prev, p.id]);
-                          }
-                        }}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm transition-all border ${
-                          selected
-                            ? 'bg-green-50 border-green-300 text-green-700 font-medium'
-                            : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
-                        }`}
+                      <button key={p.id} type="button" onClick={() => { if (selected) { setSelectedCoAuthors(prev => prev.filter(id => id !== p.id)); } else { setSelectedCoAuthors(prev => [...prev, p.id]); } }}
+                        className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors border ${selected ? 'bg-[#1A1A1A] border-[#1A1A1A] text-white' : 'bg-white border-[#E5E5E5] text-brand-grey hover:border-[#1A1A1A]'}`}
                         data-testid={`co-author-toggle-${p.id}`}
                       >
-                        <span className="w-5 h-5 rounded-full bg-green-600 text-white text-xs flex items-center justify-center font-bold">
+                        <span className="w-5 h-5 rounded-full bg-brand-green text-white text-xs flex items-center justify-center font-bold">
                           {p.name[0].toUpperCase()}
                         </span>
                         {p.name}
@@ -431,27 +337,16 @@ export default function WritePage() {
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700" data-testid="write-error">
+            <div className="border border-brand-red/30 bg-brand-red/5 p-4 text-sm text-brand-red" data-testid="write-error">
               {error}
             </div>
           )}
 
           <div className="flex items-center justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => navigate(-1)}
-              className="rounded-full"
-              data-testid="write-cancel-btn"
-            >
+            <Button type="button" variant="outline" onClick={() => navigate(-1)} className="rounded-none border-[#E5E5E5] uppercase tracking-widest text-xs font-bold" data-testid="write-cancel-btn">
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={submitting}
-              className="bg-black text-white hover:bg-gray-800 rounded-full font-bold px-8 shadow-[4px_4px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_0px_rgba(59,130,246,0.5)] transition-all"
-              data-testid="write-submit-btn"
-            >
+            <Button type="submit" disabled={submitting} className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold px-8 uppercase tracking-widest text-xs transition-colors" data-testid="write-submit-btn">
               <Send className="w-4 h-4 mr-2" />
               {submitting ? (isEditing ? 'Updating...' : 'Publishing...') : (isEditing ? 'Update Post' : 'Publish Post')}
             </Button>
@@ -460,50 +355,30 @@ export default function WritePage() {
 
         {/* Suggest Topic Dialog */}
         <Dialog open={showSuggestDialog} onOpenChange={setShowSuggestDialog}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md rounded-none border-[#E5E5E5]">
             <DialogHeader>
               <DialogTitle className="font-heading font-bold text-xl flex items-center gap-2">
-                <Lightbulb className="w-5 h-5 text-b4b-yellow" />
+                <Lightbulb className="w-5 h-5 text-brand-yellow" />
                 Suggest a New Topic
               </DialogTitle>
             </DialogHeader>
-            <p className="text-sm text-gray-500 -mt-2">
-              Don't see a topic that fits? Suggest one and it'll be reviewed. Once approved, anyone can post under it.
+            <p className="text-sm text-brand-grey -mt-2">
+              Don't see a topic that fits? Suggest one and it'll be reviewed.
             </p>
             <div className="space-y-4 mt-2">
               <div>
-                <Label htmlFor="suggest-name">Topic Name *</Label>
-                <Input
-                  id="suggest-name"
-                  placeholder="e.g. Growth Hacking, Neuromarketing, B2B Marketing..."
-                  value={suggestName}
-                  onChange={(e) => setSuggestName(e.target.value)}
-                  className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl"
-                  data-testid="suggest-name-input"
-                />
+                <Label htmlFor="suggest-name" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Topic Name *</Label>
+                <Input id="suggest-name" placeholder="e.g. Growth Hacking, Neuromarketing..." value={suggestName} onChange={(e) => setSuggestName(e.target.value)} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none" data-testid="suggest-name-input" />
               </div>
               <div>
-                <Label htmlFor="suggest-desc">Short Description *</Label>
-                <Textarea
-                  id="suggest-desc"
-                  placeholder="What would this topic cover? Who would find it useful?"
-                  value={suggestDesc}
-                  onChange={(e) => setSuggestDesc(e.target.value)}
-                  rows={3}
-                  className="mt-1 border-2 border-gray-100 focus:border-black rounded-xl resize-none"
-                  data-testid="suggest-desc-input"
-                />
+                <Label htmlFor="suggest-desc" className="text-xs font-bold uppercase tracking-wider text-brand-grey">Short Description *</Label>
+                <Textarea id="suggest-desc" placeholder="What would this topic cover?" value={suggestDesc} onChange={(e) => setSuggestDesc(e.target.value)} rows={3} className="mt-2 border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none resize-none" data-testid="suggest-desc-input" />
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowSuggestDialog(false)} className="rounded-full" data-testid="suggest-cancel-btn">Cancel</Button>
-                <Button
-                  onClick={handleSuggestTopic}
-                  disabled={suggestSubmitting || !suggestName.trim() || !suggestDesc.trim()}
-                  className="bg-black text-white hover:bg-gray-800 rounded-full font-bold shadow-[3px_3px_0px_0px_rgba(59,130,246,0.4)]"
-                  data-testid="suggest-submit-btn"
-                >
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  {suggestSubmitting ? 'Submitting...' : 'Submit Suggestion'}
+                <Button variant="outline" onClick={() => setShowSuggestDialog(false)} className="rounded-none border-[#E5E5E5] uppercase tracking-widest text-xs font-bold" data-testid="suggest-cancel-btn">Cancel</Button>
+                <Button onClick={handleSuggestTopic} disabled={suggestSubmitting || !suggestName.trim() || !suggestDesc.trim()} className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none font-bold uppercase tracking-widest text-xs" data-testid="suggest-submit-btn">
+                  <Plus className="w-4 h-4 mr-2" />
+                  {suggestSubmitting ? 'Submitting...' : 'Submit'}
                 </Button>
               </div>
             </div>

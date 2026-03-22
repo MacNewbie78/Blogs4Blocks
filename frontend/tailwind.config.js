@@ -45,16 +45,12 @@ module.exports = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        // Rainbow accents
-        'b4b-red': '#EF4444',
-        'b4b-orange': '#F97316',
-        'b4b-yellow': '#FACC15',
-        'b4b-green': '#22C55E',
-        'b4b-teal': '#14B8A6',
-        'b4b-blue': '#3B82F6',
-        'b4b-purple': '#A855F7',
-        'b4b-pink': '#EC4899',
-        'b4b-brown': '#A16207',
+        // Brand colors — Metropolitan Editorial
+        'brand-yellow': '#FACC15',
+        'brand-green': '#10B981',
+        'brand-red': '#B91C1C',
+        'brand-grey': '#737373',
+        'brand-steel': '#64748B',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',

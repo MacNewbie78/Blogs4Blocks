@@ -4,14 +4,7 @@ import { useApp } from '../context/AppContext';
 import { Globe, Users, PenLine, Heart, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
-const CITY_IMAGES = [
-  'https://images.unsplash.com/photo-1603547142979-56242264e65c?w=600&q=75',
-  'https://images.unsplash.com/photo-1769298084996-8ed5d3a72870?w=600&q=75',
-  'https://images.unsplash.com/photo-1760459477099-ad81fd11d7c6?w=600&q=75',
-  'https://images.unsplash.com/photo-1637329096986-62486d0c4380?w=600&q=75',
-];
-
-const RAINBOW = ['#EF4444', '#F97316', '#FACC15', '#22C55E', '#14B8A6', '#3B82F6', '#A855F7', '#EC4899', '#A16207', '#EF4444', '#3B82F6', '#22C55E', '#F97316'];
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1770914910110-03053fdd1685?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxueWMlMjBhcmNoaXRlY3R1cmUlMjBtb2Rlcm4lMjBtaW5pbWFsaXN0fGVufDB8fHx8MTc3NDE0NDkyOHww&ixlib=rb-4.1.0&q=85&w=1600';
 
 export default function AboutPage() {
   const { stats } = useApp();
@@ -19,62 +12,53 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen" data-testid="about-page">
       {/* Hero */}
-      <section className="relative overflow-hidden py-16 md:py-28">
-        <div className="absolute inset-0 grid grid-cols-2 grid-rows-2">
-          {CITY_IMAGES.map((img, i) => (
-            <div key={i} className="relative overflow-hidden">
-              <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-          ))}
-          <div className="absolute inset-0 bg-white/90" />
+      <section className="relative overflow-hidden py-20 md:py-32">
+        <div className="absolute inset-0">
+          <img src={HERO_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-[#FDFCF8]/92" />
         </div>
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="font-heading font-black text-4xl md:text-6xl tracking-tighter mb-6" data-testid="about-title">
-            {"About ".split('').map((c, i) => (
-              <span key={i} style={{ color: '#0F172A' }}>{c}</span>
-            ))}
-            {"Blogs 4 Blocks".split('').map((c, i) => (
-              <span key={i + 6} className="rainbow-letter" style={{ color: c === ' ' ? 'transparent' : RAINBOW[i % RAINBOW.length] }}>
-                {c === ' ' ? '\u00A0' : c}
-              </span>
-            ))}
+        <div className="relative max-w-4xl mx-auto px-6 md:px-12 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-grey mb-6">Our Story</p>
+          <h1 className="font-heading font-light text-5xl md:text-7xl tracking-tighter mb-6 text-[#1A1A1A]" data-testid="about-title">
+            About <span className="font-black">Blogs4Blocks</span>
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-brand-grey max-w-xl mx-auto leading-relaxed">
             Born in the blocks of New York City, built for marketing professionals across every block on every continent.
           </p>
         </div>
       </section>
 
       {/* Mission */}
-      <section className="py-16 md:py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
+      <section className="py-20 md:py-32 border-t border-[#E5E5E5]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-start">
             <div>
-              <h2 className="font-heading font-bold text-3xl tracking-tight text-gray-900 mb-4">The Mission</h2>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                Marketing doesn't work the same everywhere. What drives conversions in Tokyo might fall flat in São Paulo. What goes viral in Lagos might confuse audiences in Stockholm.
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-4">Why We Exist</p>
+              <h2 className="font-heading font-bold text-3xl tracking-tight text-[#1A1A1A] mb-6">The Mission</h2>
+              <p className="text-brand-grey leading-relaxed mb-4">
+                Marketing doesn't work the same everywhere. What drives conversions in Tokyo might fall flat in Sao Paulo. What goes viral in Lagos might confuse audiences in Stockholm.
               </p>
-              <p className="text-gray-600 leading-relaxed mb-4">
-                <strong className="text-gray-900">Blogs 4 Blocks</strong> exists to bridge that gap. We're an open forum where marketing professionals from every corner of the world share what actually works in their markets — the strategies, the failures, the insights you can't find in any textbook.
+              <p className="text-brand-grey leading-relaxed mb-4">
+                <strong className="text-[#1A1A1A]">Blogs 4 Blocks</strong> exists to bridge that gap. We're an open forum where marketing professionals from every corner of the world share what actually works in their markets.
               </p>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-brand-grey leading-relaxed">
                 No gatekeeping. No paywalls. Just real marketers helping real marketers, block by block, city by city.
               </p>
             </div>
-            <div className="space-y-4">
+            <div className="space-y-px bg-[#E5E5E5]">
               {[
-                { icon: <Globe className="w-6 h-6" />, title: 'Global Perspectives', desc: 'Insights from marketing pros on every continent', color: '#3B82F6' },
-                { icon: <Users className="w-6 h-6" />, title: 'Open Forum', desc: 'Anyone can contribute — registered or as a guest', color: '#22C55E' },
-                { icon: <PenLine className="w-6 h-6" />, title: 'Real Strategies', desc: 'Not theory — practical tactics that work in the field', color: '#A855F7' },
-                { icon: <Heart className="w-6 h-6" />, title: 'Community First', desc: 'Built by marketers, for marketers, with no corporate agenda', color: '#EF4444' },
+                { icon: <Globe className="w-5 h-5" />, title: 'Global Perspectives', desc: 'Insights from marketing pros on every continent' },
+                { icon: <Users className="w-5 h-5" />, title: 'Open Forum', desc: 'Anyone can contribute — registered or as a guest' },
+                { icon: <PenLine className="w-5 h-5" />, title: 'Real Strategies', desc: 'Not theory — practical tactics that work in the field' },
+                { icon: <Heart className="w-5 h-5" />, title: 'Community First', desc: 'Built by marketers, for marketers' },
               ].map((item, i) => (
-                <div key={i} className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 hover:shadow-md transition-shadow" data-testid={`about-value-${i}`}>
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${item.color}15`, color: item.color }}>
+                <div key={i} className="flex items-start gap-4 p-6 bg-white" data-testid={`about-value-${i}`}>
+                  <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 text-brand-grey">
                     {item.icon}
                   </div>
                   <div>
-                    <h3 className="font-heading font-bold text-base text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500">{item.desc}</p>
+                    <h3 className="font-heading font-bold text-base text-[#1A1A1A]">{item.title}</h3>
+                    <p className="text-sm text-brand-grey">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -84,23 +68,26 @@ export default function AboutPage() {
       </section>
 
       {/* How it works */}
-      <section className="py-16 md:py-24 bg-gray-50/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="font-heading font-bold text-3xl tracking-tight text-gray-900 mb-10 text-center" data-testid="how-it-works-heading">
-            How It Works
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="py-20 md:py-32 border-t border-[#E5E5E5]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-16">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-3">Getting Started</p>
+            <h2 className="font-heading font-bold text-3xl tracking-tight text-[#1A1A1A]" data-testid="how-it-works-heading">
+              How It Works
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#E5E5E5]">
             {[
-              { step: '01', title: 'Explore Topics', desc: 'Browse categories from Social Media Marketing to Consumer Behavior. Find discussions relevant to your market.', color: '#3B82F6' },
-              { step: '02', title: 'Share Your Insight', desc: 'Write a post about what works in your market. Share data, case studies, or hard-earned wisdom.', color: '#22C55E' },
-              { step: '03', title: 'Join the Discussion', desc: 'Comment on posts, like great insights, and connect with marketers facing similar challenges worldwide.', color: '#A855F7' },
+              { step: '01', title: 'Explore Topics', desc: 'Browse categories from Social Media Marketing to Consumer Behavior. Find discussions relevant to your market.' },
+              { step: '02', title: 'Share Your Insight', desc: 'Write a post about what works in your market. Share data, case studies, or hard-earned wisdom.' },
+              { step: '03', title: 'Join the Discussion', desc: 'Comment on posts, like great insights, and connect with marketers facing similar challenges worldwide.' },
             ].map((item, i) => (
-              <div key={i} className="text-center" data-testid={`how-step-${i}`}>
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 font-heading font-black text-xl text-white" style={{ backgroundColor: item.color }}>
+              <div key={i} className="bg-[#FDFCF8] p-8 text-center" data-testid={`how-step-${i}`}>
+                <div className="font-heading font-black text-4xl text-brand-yellow mb-4">
                   {item.step}
                 </div>
-                <h3 className="font-heading font-bold text-lg text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
+                <h3 className="font-heading font-bold text-lg text-[#1A1A1A] mb-2">{item.title}</h3>
+                <p className="text-sm text-brand-grey leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -109,21 +96,22 @@ export default function AboutPage() {
 
       {/* Stats */}
       {stats && (
-        <section className="py-16 md:py-24 bg-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="font-heading font-bold text-3xl tracking-tight text-gray-900 mb-10" data-testid="about-stats-heading">
+        <section className="py-20 md:py-32 border-t border-[#E5E5E5]">
+          <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
+            <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-brand-grey mb-3">By the Numbers</p>
+            <h2 className="font-heading font-bold text-3xl tracking-tight text-[#1A1A1A] mb-12" data-testid="about-stats-heading">
               The Community So Far
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#E5E5E5]">
               {[
-                { value: stats.total_posts, label: 'Posts Published', color: '#3B82F6' },
-                { value: stats.total_comments, label: 'Discussions', color: '#22C55E' },
-                { value: stats.contributors || 0, label: 'Contributors', color: '#A855F7' },
-                { value: stats.countries_represented, label: 'Countries', color: '#F97316' },
+                { value: stats.total_posts, label: 'Posts Published' },
+                { value: stats.total_comments, label: 'Discussions' },
+                { value: stats.contributors || 0, label: 'Contributors' },
+                { value: stats.countries_represented, label: 'Countries' },
               ].map((stat, i) => (
-                <div key={i} className="p-6 rounded-2xl border border-gray-100" data-testid={`about-stat-${i}`}>
-                  <div className="font-heading font-black text-4xl mb-1" style={{ color: stat.color }}>{stat.value}</div>
-                  <div className="text-sm text-gray-500">{stat.label}</div>
+                <div key={i} className="p-8 bg-white" data-testid={`about-stat-${i}`}>
+                  <div className="font-heading font-black text-4xl mb-1 text-[#1A1A1A]">{stat.value}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-brand-grey">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -132,26 +120,26 @@ export default function AboutPage() {
       )}
 
       {/* CTA */}
-      <section className="py-16 md:py-24 bg-gray-950 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex items-center justify-center gap-1 mb-4 text-xs text-gray-500">
-            <MapPin className="w-3.5 h-3.5" /> Based in New York City. Built for the world.
+      <section className="py-20 md:py-32 bg-[#1A1A1A] text-white">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
+          <div className="flex items-center justify-center gap-2 mb-6 text-[10px] font-bold uppercase tracking-[0.25em] text-[#666]">
+            <MapPin className="w-3.5 h-3.5" /> Based in New York City
           </div>
-          <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight mb-4" data-testid="about-cta-heading">
+          <h2 className="font-heading font-bold text-3xl md:text-4xl tracking-tight mb-6" data-testid="about-cta-heading">
             Ready to Share Your Perspective?
           </h2>
-          <p className="text-gray-400 max-w-xl mx-auto mb-8">
+          <p className="text-[#999] max-w-lg mx-auto mb-10 leading-relaxed">
             Whether you have a full case study or a quick insight — every contribution makes the global marketing community stronger.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <Link to="/write">
-              <Button className="bg-white text-black hover:bg-gray-100 rounded-full font-bold px-8 py-3 h-auto shadow-[4px_4px_0px_0px_rgba(59,130,246,0.5)] hover:translate-y-[-2px] transition-all" data-testid="about-write-btn">
-                <PenLine className="w-5 h-5 mr-2" /> Write a Post
+              <Button className="bg-white text-[#1A1A1A] hover:bg-brand-yellow rounded-none font-bold px-8 py-3 h-auto uppercase tracking-widest text-xs transition-colors" data-testid="about-write-btn">
+                <PenLine className="w-4 h-4 mr-2" /> Write a Post
               </Button>
             </Link>
             <Link to="/auth">
-              <Button variant="outline" className="border-2 border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white rounded-full font-bold px-8 py-3 h-auto transition-all" data-testid="about-join-btn">
-                Join the Community <ArrowRight className="w-4 h-4 ml-1.5" />
+              <Button variant="outline" className="border border-[#555] text-[#999] hover:bg-white hover:text-[#1A1A1A] rounded-none font-bold px-8 py-3 h-auto uppercase tracking-widest text-xs transition-colors" data-testid="about-join-btn">
+                Join the Community <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
           </div>

@@ -14,11 +14,6 @@ import {
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
 
-const CITY_IMAGES = [
-  'https://images.unsplash.com/photo-1603547142979-56242264e65c?w=600&q=75',
-  'https://images.unsplash.com/photo-1769298084996-8ed5d3a72870?w=600&q=75',
-];
-
 export default function CategoryPage() {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
@@ -56,55 +51,42 @@ export default function CategoryPage() {
       .finally(() => setLoading(false));
   }, [slug, activeSubcategory, search, API, isAll, currentPage]);
 
-  // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [slug, activeSubcategory, search]);
-
-  const catColor = category?.color || '#3B82F6';
 
   return (
     <div className="min-h-screen" data-testid="category-page">
       {/* Hero banner */}
-      <section className="relative overflow-hidden py-12 md:py-20">
-        <div className="absolute inset-0 flex">
-          {CITY_IMAGES.map((img, i) => (
-            <div key={i} className="flex-1 relative overflow-hidden">
-              <img src={img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            </div>
-          ))}
-          <div className="absolute inset-0 bg-white/90" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-900 mb-6 no-underline transition-colors" data-testid="category-back-link">
-            <ArrowLeft className="w-4 h-4" /> Back to Home
+      <section className="py-12 md:py-20 border-b border-[#E5E5E5]">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <Link to="/" className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-brand-grey hover:text-[#1A1A1A] mb-8 no-underline transition-colors" data-testid="category-back-link">
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
           </Link>
 
           <div className="flex items-start gap-4">
             {!isAll && category && (
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg flex-shrink-0" style={{ backgroundColor: catColor }}>
+              <div className="w-12 h-12 flex items-center justify-center text-white font-bold text-xl bg-[#1A1A1A] flex-shrink-0">
                 {category.name[0]}
               </div>
             )}
             <div>
-              <h1 className="font-heading font-bold text-3xl md:text-5xl tracking-tight text-gray-900 mb-2" data-testid="category-title">
+              <h1 className="font-heading font-bold text-3xl md:text-5xl tracking-tight text-[#1A1A1A] mb-2" data-testid="category-title">
                 {isAll ? 'All Posts' : (category?.name || 'Loading...')}
               </h1>
               {category && (
-                <p className="text-base md:text-lg text-gray-500 max-w-2xl">{category.description}</p>
+                <p className="text-base text-brand-grey max-w-2xl">{category.description}</p>
               )}
               <div className="flex items-center gap-2 mt-3">
-                <Badge variant="secondary" className="text-xs">{total} {total === 1 ? 'post' : 'posts'}</Badge>
+                <Badge variant="secondary" className="text-[10px] font-bold uppercase tracking-widest rounded-none">{total} {total === 1 ? 'post' : 'posts'}</Badge>
               </div>
             </div>
           </div>
 
           {/* Subcategories */}
           {category?.subcategories?.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-6" data-testid="subcategory-filters">
+            <div className="flex flex-wrap gap-2 mt-8" data-testid="subcategory-filters">
               <button
                 onClick={() => setActiveSubcategory(null)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${!activeSubcategory ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-                style={!activeSubcategory ? { backgroundColor: catColor } : {}}
+                className={`px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-colors ${!activeSubcategory ? 'bg-[#1A1A1A] text-white' : 'bg-white text-brand-grey hover:text-[#1A1A1A] border border-[#E5E5E5]'}`}
                 data-testid="subcategory-all"
               >
                 All
@@ -113,8 +95,7 @@ export default function CategoryPage() {
                 <button
                   key={sub.slug}
                   onClick={() => setActiveSubcategory(activeSubcategory === sub.slug ? null : sub.slug)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${activeSubcategory === sub.slug ? 'text-white' : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
-                  style={activeSubcategory === sub.slug ? { backgroundColor: catColor } : {}}
+                  className={`px-4 py-1.5 text-xs font-bold uppercase tracking-widest transition-colors ${activeSubcategory === sub.slug ? 'bg-[#1A1A1A] text-white' : 'bg-white text-brand-grey hover:text-[#1A1A1A] border border-[#E5E5E5]'}`}
                   data-testid={`subcategory-${sub.slug}`}
                 >
                   {sub.name}
@@ -126,30 +107,30 @@ export default function CategoryPage() {
       </section>
 
       {/* Search + filter bar */}
-      <div className="sticky top-16 z-40 bg-white border-b border-gray-100 py-3">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-3">
+      <div className="sticky top-16 z-40 bg-[#FDFCF8]/80 backdrop-blur-xl border-b border-[#E5E5E5] py-3">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex items-center gap-3">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-grey" />
             <Input
               placeholder="Search posts..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 border-gray-200 rounded-full h-10"
+              className="pl-9 border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-10 text-sm"
               data-testid="category-search-input"
             />
           </div>
           {isAll && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="rounded-full" data-testid="category-filter-btn">
-                  <Filter className="w-4 h-4 mr-1.5" /> Filter
+                <Button variant="outline" size="sm" className="rounded-none border-[#E5E5E5] text-xs font-bold uppercase tracking-widest" data-testid="category-filter-btn">
+                  <Filter className="w-3.5 h-3.5 mr-2" /> Filter
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => { /* browse all */ }} data-testid="filter-all">All Categories</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="rounded-lg border-[#E5E5E5]">
+                <DropdownMenuItem onClick={() => {}} data-testid="filter-all">All Categories</DropdownMenuItem>
                 {categories.map(cat => (
                   <DropdownMenuItem key={cat.slug} onClick={() => window.location.href = `/category/${cat.slug}`} data-testid={`filter-${cat.slug}`}>
-                    <span className="w-2 h-2 rounded-full mr-2" style={{ backgroundColor: cat.color }} />
+                    <span className="w-2 h-2 rounded-full mr-2 bg-[#1A1A1A]" />
                     {cat.name}
                   </DropdownMenuItem>
                 ))}
@@ -160,12 +141,12 @@ export default function CategoryPage() {
       </div>
 
       {/* Posts grid */}
-      <section className="py-10 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-12 md:py-20">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} className="bg-gray-100 rounded-2xl h-64 animate-pulse" />
+                <div key={i} className="bg-[#F4F4F5] h-64 animate-pulse" />
               ))}
             </div>
           ) : posts.length > 0 ? (
@@ -178,13 +159,13 @@ export default function CategoryPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-12" data-testid="pagination">
+                <div className="flex items-center justify-center gap-2 mt-16" data-testid="pagination">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="rounded-full"
+                    className="rounded-none border-[#E5E5E5]"
                     data-testid="pagination-prev"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -206,7 +187,7 @@ export default function CategoryPage() {
                         variant={currentPage === pageNum ? "default" : "outline"}
                         size="sm"
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`rounded-full min-w-[36px] ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                        className={`rounded-none min-w-[36px] ${currentPage === pageNum ? 'bg-[#1A1A1A] text-white' : 'border-[#E5E5E5]'}`}
                         data-testid={`pagination-page-${pageNum}`}
                       >
                         {pageNum}
@@ -218,7 +199,7 @@ export default function CategoryPage() {
                     size="sm"
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="rounded-full"
+                    className="rounded-none border-[#E5E5E5]"
                     data-testid="pagination-next"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -227,10 +208,10 @@ export default function CategoryPage() {
               )}
             </>
           ) : (
-            <div className="text-center py-20" data-testid="no-posts">
-              <p className="text-gray-400 text-lg mb-4">No posts found in this category yet.</p>
-              <Link to="/write" className="text-b4b-blue font-semibold hover:underline no-underline" data-testid="no-posts-write-link">
-                Be the first to write one!
+            <div className="text-center py-24" data-testid="no-posts">
+              <p className="text-brand-grey text-base mb-4">No posts found in this category yet.</p>
+              <Link to="/write" className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:text-brand-red no-underline transition-colors" data-testid="no-posts-write-link">
+                Be the first to write one
               </Link>
             </div>
           )}
