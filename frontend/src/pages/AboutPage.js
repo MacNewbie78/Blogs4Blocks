@@ -100,8 +100,8 @@ export default function AboutPage() {
               {[
                 { value: stats.total_posts, label: 'Posts Published' },
                 { value: stats.total_comments, label: 'Discussions' },
-                { value: stats.contributors || 0, label: 'Contributors' },
-                { value: stats.countries_represented, label: 'Countries' },
+                { value: stats.total_users || 0, label: 'Contributors' },
+                { value: stats.total_countries || 0, label: 'Countries' },
               ].map((stat, i) => (
                 <div key={i} className="p-8 bg-white" data-testid={`about-stat-${i}`}>
                   <div className="font-heading font-black text-4xl mb-1 text-[#1A1A1A]">{stat.value}</div>

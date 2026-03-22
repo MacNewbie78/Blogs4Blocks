@@ -112,11 +112,11 @@ export default function Footer() {
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#666]">Comments</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-heading font-black text-white">{stats.contributors || 0}</div>
+                  <div className="text-2xl font-heading font-black text-white">{stats.total_users || 0}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#666]">Contributors</div>
                 </div>
                 <div>
-                  <div className="text-2xl font-heading font-black text-white">{stats.countries_represented}</div>
+                  <div className="text-2xl font-heading font-black text-white">{stats.total_countries || 0}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#666]">Countries</div>
                 </div>
               </div>

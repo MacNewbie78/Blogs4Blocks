@@ -137,8 +137,8 @@ export default function HomePage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="flex flex-wrap gap-8 mt-16 pt-8 border-t border-[#E5E5E5]/60 justify-center lg:justify-start">
               {[
                 { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#C4942A' },
-                { icon: <Users className="w-4 h-4" />, value: stats.contributors || 0, label: 'Contributors', color: '#3D6B8E' },
-                { icon: <Globe className="w-4 h-4" />, value: stats.countries_represented, label: 'Countries', color: '#2D8B7A' },
+                { icon: <Users className="w-4 h-4" />, value: stats.total_users || 0, label: 'Contributors', color: '#3D6B8E' },
+                { icon: <Globe className="w-4 h-4" />, value: stats.total_countries || 0, label: 'Countries', color: '#2D8B7A' },
               ].map((stat, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <span style={{ color: stat.color }}>{stat.icon}</span>
@@ -305,8 +305,8 @@ export default function HomePage() {
                     {[
                       { value: stats.total_posts, label: 'Published Posts', icon: <FileText className="w-5 h-5" />, color: '#C4942A' },
                       { value: stats.total_comments, label: 'Discussions', icon: <Mail className="w-5 h-5" />, color: '#B4687A' },
-                      { value: stats.contributors || 0, label: 'Contributors', icon: <Users className="w-5 h-5" />, color: '#3D6B8E' },
-                      { value: stats.countries_represented, label: 'Countries', icon: <Globe className="w-5 h-5" />, color: '#2D8B7A' },
+                      { value: stats.total_users || 0, label: 'Contributors', icon: <Users className="w-5 h-5" />, color: '#3D6B8E' },
+                      { value: stats.total_countries || 0, label: 'Countries', icon: <Globe className="w-5 h-5" />, color: '#2D8B7A' },
                     ].map((stat, i) => (
                       <div
                         key={i}
