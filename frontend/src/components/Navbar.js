@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Menu, X, PenLine, LogIn, LogOut, User, ChevronDown, Shield } from 'lucide-react';
 import { Button } from '../components/ui/button';
+import { getCategoryColor } from '../utils/colors';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,14 +50,17 @@ export default function Navbar() {
                   Topics <ChevronDown className="w-3 h-3" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 rounded-lg border-[#E5E5E5]">
-                {categories.map(cat => (
-                  <DropdownMenuItem key={cat.slug} onClick={() => navigate(`/category/${cat.slug}`)} data-testid={`nav-cat-${cat.slug}`}>
-                    <span className="w-2 h-2 rounded-full mr-2.5 flex-shrink-0 bg-[#1A1A1A]" />
-                    <span className="font-medium text-sm">{cat.name}</span>
-                    <span className="ml-auto text-xs text-brand-grey">{cat.post_count}</span>
-                  </DropdownMenuItem>
-                ))}
+              <DropdownMenuContent align="start" className="w-64 rounded-lg bg-[#FDFCF8] border-[#E5E5E5]">
+                {categories.map(cat => {
+                  const cc = getCategoryColor(cat.slug);
+                  return (
+                    <DropdownMenuItem key={cat.slug} onClick={() => navigate(`/category/${cat.slug}`)} data-testid={`nav-cat-${cat.slug}`} className="rounded-md mx-1" style={{ borderLeft: `3px solid ${cc.base}` }}>
+                      <span className="w-2 h-2 rounded-full mr-2.5 flex-shrink-0" style={{ backgroundColor: cc.base }} />
+                      <span className="font-medium text-sm">{cat.name}</span>
+                      <span className="ml-auto text-xs text-brand-grey">{cat.post_count}</span>
+                    </DropdownMenuItem>
+                  );
+                })}
               </DropdownMenuContent>
             </DropdownMenu>
 

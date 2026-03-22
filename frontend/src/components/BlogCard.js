@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Eye, MapPin, Clock, ArrowRight, Timer } from 'lucide-react';
-import { Badge } from '../components/ui/badge';
 import { getCategoryColor } from '../utils/colors';
 
 export default function BlogCard({ post, index = 0 }) {
@@ -12,23 +11,20 @@ export default function BlogCard({ post, index = 0 }) {
   return (
     <Link
       to={`/post/${post.id}`}
-      className="group relative overflow-hidden no-underline block transition-all duration-500 hover:-translate-y-1 hover:shadow-lg"
+      className="group relative overflow-hidden no-underline block transition-all duration-500 hover:-translate-y-1 hover:shadow-lg rounded-xl"
       style={{ animationDelay: `${index * 80}ms` }}
       data-testid={`blog-card-${post.id}`}
     >
-      {/* Card body with gradient background */}
       <div
-        className="relative bg-white border border-[#E5E5E5] h-full flex flex-col"
+        className="relative h-full flex flex-col rounded-xl overflow-hidden"
         style={{
-          background: `linear-gradient(45deg, ${catColor.base}14 0%, transparent 55%), #FFFFFF`,
+          background: `linear-gradient(145deg, ${catColor.cardFrom} 0%, ${catColor.cardTo} 100%)`,
+          border: `1.5px solid ${catColor.cardFrom}`,
         }}
       >
-        {/* Colored accent bar at top */}
-        <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${catColor.base}, ${catColor.base}66)` }} />
-
-        {/* Cover image */}
+        {/* Cover image (if present) */}
         {post.cover_image && (
-          <div className="relative h-40 overflow-hidden">
+          <div className="relative h-36 overflow-hidden">
             <img
               src={`${process.env.REACT_APP_BACKEND_URL}${post.cover_image}`}
               alt=""
@@ -38,40 +34,37 @@ export default function BlogCard({ post, index = 0 }) {
         )}
 
         <div className="p-5 flex flex-col flex-1">
-          {/* Category badge */}
+          {/* Category + expiry */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span
-              className="text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5"
-              style={{ color: catColor.base, backgroundColor: catColor.light }}
+              className="text-[10px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full"
+              style={{ color: catColor.base, backgroundColor: `${catColor.base}18` }}
               data-testid={`blog-card-category-${post.id}`}
             >
               {post.category_slug.replace(/-/g, ' ')}
             </span>
             {post.is_guest && daysLeft !== null && (
-              <Badge
-                variant="outline"
-                className={`text-[10px] px-2 py-0.5 rounded-none uppercase tracking-wider font-bold ${daysLeft <= 7 ? 'border-[#C2544D] text-[#C2544D]' : 'border-brand-grey text-brand-grey'}`}
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${daysLeft <= 7 ? 'text-[#C2544D] bg-[#C2544D]/10' : 'text-brand-grey bg-white/50'}`}
                 data-testid={`blog-card-expiry-${post.id}`}
               >
                 <Timer className="w-3 h-3 mr-1 inline" />
                 {daysLeft <= 0 ? 'Expired' : `${daysLeft}d left`}
-              </Badge>
+              </span>
             )}
           </div>
 
           {/* Title */}
           <h3
-            className="font-heading font-bold text-lg text-[#1A1A1A] mb-2 leading-snug line-clamp-2 transition-colors"
-            style={{ '--hover-color': catColor.base }}
+            className="font-heading font-bold text-lg mb-2 leading-snug line-clamp-2 transition-colors"
+            style={{ color: '#1A4040' }}
             data-testid={`blog-card-title-${post.id}`}
           >
-            <span className="group-hover:text-[var(--hover-color)] transition-colors">
-              {post.title}
-            </span>
+            {post.title}
           </h3>
 
           {/* Excerpt */}
-          <p className="text-sm text-brand-grey leading-relaxed mb-4 line-clamp-2 flex-1">
+          <p className="text-sm leading-relaxed mb-4 line-clamp-2 flex-1" style={{ color: '#3A5A5A' }}>
             {post.excerpt}
           </p>
 
@@ -84,8 +77,8 @@ export default function BlogCard({ post, index = 0 }) {
               {post.author_name?.[0]?.toUpperCase() || '?'}
             </div>
             <div>
-              <p className="text-xs font-semibold text-[#1A1A1A]">{post.author_name}</p>
-              <div className="flex items-center gap-1 text-[10px] text-brand-grey">
+              <p className="text-xs font-semibold" style={{ color: '#1A4040' }}>{post.author_name}</p>
+              <div className="flex items-center gap-1 text-[10px]" style={{ color: '#5A7A7A' }}>
                 <MapPin className="w-2.5 h-2.5" />
                 <span>{post.author_city}, {post.author_country}</span>
               </div>
@@ -94,10 +87,10 @@ export default function BlogCard({ post, index = 0 }) {
 
           {/* Bottom stats bar */}
           <div
-            className="flex items-center justify-between pt-3 mt-auto border-t"
-            style={{ borderColor: `${catColor.base}20` }}
+            className="flex items-center justify-between pt-3 mt-auto"
+            style={{ borderTop: `1px solid ${catColor.base}15` }}
           >
-            <div className="flex items-center gap-3 text-[10px] text-brand-grey">
+            <div className="flex items-center gap-3 text-[10px]" style={{ color: '#5A7A7A' }}>
               <span className="flex items-center gap-1">
                 <Heart className="w-3 h-3" style={{ color: catColor.base }} />{post.likes || 0}
               </span>
@@ -113,14 +106,6 @@ export default function BlogCard({ post, index = 0 }) {
             </span>
           </div>
         </div>
-
-        {/* Bottom-left gradient glow (subtle) */}
-        <div
-          className="absolute bottom-0 left-0 w-32 h-32 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle at bottom left, ${catColor.base}18 0%, transparent 70%)`,
-          }}
-        />
       </div>
     </Link>
   );

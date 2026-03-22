@@ -168,26 +168,24 @@ export default function HomePage() {
                 <motion.div key={cat.slug} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.04 }}>
                   <Link
                     to={`/category/${cat.slug}`}
-                    className="relative block overflow-hidden no-underline group transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
+                    className="relative block overflow-hidden no-underline group transition-all duration-300 hover:-translate-y-1 hover:shadow-md rounded-xl"
                     data-testid={`category-card-${cat.slug}`}
                   >
                     <div
-                      className="relative p-5 min-h-[150px] flex flex-col justify-between border border-[#E5E5E5]"
+                      className="relative p-5 min-h-[150px] flex flex-col justify-between rounded-xl overflow-hidden"
                       style={{
-                        background: `linear-gradient(45deg, transparent 50%, ${color.base}18 100%), #FFFFFF`,
+                        background: `linear-gradient(145deg, ${color.cardFrom} 0%, ${color.cardTo} 100%)`,
+                        border: `1.5px solid ${color.cardFrom}`,
                       }}
                     >
-                      {/* Top accent line */}
-                      <div className="absolute top-0 left-0 w-full h-[3px]" style={{ background: `linear-gradient(90deg, ${color.base}, ${color.base}44)` }} />
-
                       <div>
                         <span className="mb-3 block transition-colors" style={{ color: color.base }}>
                           {CATEGORY_ICONS[cat.slug] || <BarChart3 className="w-5 h-5" />}
                         </span>
-                        <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-1 group-hover:translate-x-0.5 transition-transform">
+                        <h3 className="font-heading font-bold text-base mb-1 group-hover:translate-x-0.5 transition-transform" style={{ color: '#1A4040' }}>
                           {cat.name}
                         </h3>
-                        <p className="text-xs text-brand-grey leading-relaxed line-clamp-2">{cat.description}</p>
+                        <p className="text-xs leading-relaxed line-clamp-2" style={{ color: '#3A5A5A' }}>{cat.description}</p>
                       </div>
                       <div className="flex items-center justify-between mt-3">
                         <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: color.base }}>
@@ -195,12 +193,6 @@ export default function HomePage() {
                         </span>
                         <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" style={{ color: color.base }} />
                       </div>
-
-                      {/* Bottom-left gradient glow */}
-                      <div
-                        className="absolute bottom-0 left-0 w-24 h-24 pointer-events-none"
-                        style={{ background: `radial-gradient(circle at bottom left, ${color.base}15 0%, transparent 70%)` }}
-                      />
                     </div>
                   </Link>
                 </motion.div>
