@@ -65,7 +65,11 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 - Sage Green: #5C8A6E (Digital Marketing)
 - Steel Blue: #4A6FA5 (Marketing & AI)
 
-### Card Design
+### Hero Section
+- Custom b4b building-block logo placed to the right of the title text
+- No background images — clean warm off-white (#FDFCF8) background
+- Side-by-side layout: text left, logo right (stacks on mobile)
+- Stats strip at bottom showing Posts, Contributors, Countries
 - Colored accent bar at top
 - Gradient from bottom-left (category color, 14% opacity) to transparent upper-right
 - Category badge with matching color

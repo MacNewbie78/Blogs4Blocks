@@ -10,8 +10,6 @@ import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { getCategoryColor, TITLE_COLORS } from '../utils/colors';
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1773720182544-e955f21410b3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwzfHxueWMlMjBhcmNoaXRlY3R1cmUlMjBtb2Rlcm4lMjBtaW5pbWFsaXN0fGVufDB8fHx8MTc3NDE0NDkyOHww&ixlib=rb-4.1.0&q=85&w=1600';
-
 const CATEGORY_ICONS = {
   'social-media': <Megaphone className="w-5 h-5" />,
   'seo-sem': <BarChart3 className="w-5 h-5" />,
@@ -77,53 +75,66 @@ export default function HomePage() {
   return (
     <div className="min-h-screen" data-testid="home-page">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden" data-testid="hero-section">
-        <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
-          <div className="absolute inset-0 bg-[#FDFCF8]/88" />
-        </div>
+      <section className="relative overflow-hidden border-b border-[#E5E5E5]" data-testid="hero-section">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 py-16 md:py-28">
+          <div className="flex flex-col-reverse lg:flex-row items-center gap-10 lg:gap-16">
+            {/* Left: Text content */}
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="flex-1 text-center lg:text-left">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey mb-6" data-testid="hero-eyebrow">
+                Marketing Insights from Every Block
+              </p>
 
-        <div className="relative max-w-7xl mx-auto px-6 md:px-12 py-20 md:py-36">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-brand-grey mb-6" data-testid="hero-eyebrow">
-              Marketing Insights from Every Block
-            </p>
+              {/* Title — muted colorful letters */}
+              <h1 className="font-heading font-black text-5xl sm:text-6xl md:text-7xl lg:text-8xl tracking-tighter mb-8 leading-[0.9]" data-testid="hero-title">
+                {renderColorTitle()}
+              </h1>
 
-            {/* Title — muted colorful letters */}
-            <h1 className="font-heading font-black text-6xl md:text-8xl tracking-tighter mb-8 leading-[0.9]" data-testid="hero-title">
-              {renderColorTitle()}
-            </h1>
+              <p className="text-lg md:text-xl text-[#555] mb-10 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                A global open forum where marketing professionals share strategies, insights, and real-world experiences from every corner of the world.
+              </p>
 
-            <p className="text-lg md:text-xl text-[#555] mb-10 leading-relaxed max-w-xl">
-              A global open forum where marketing professionals share strategies, insights, and real-world experiences from every corner of the world.
-            </p>
+              {/* Search bar */}
+              <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-10 mx-auto lg:mx-0" data-testid="hero-search-form">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-grey" />
+                  <Input placeholder="Search marketing topics..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-11 bg-white border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12 text-sm" data-testid="hero-search-input" />
+                </div>
+                <Button type="submit" className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none h-12 px-6 text-xs font-bold uppercase tracking-widest transition-colors" data-testid="hero-search-btn">
+                  Search
+                </Button>
+              </form>
 
-            {/* Search bar */}
-            <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-10" data-testid="hero-search-form">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-grey" />
-                <Input placeholder="Search marketing topics..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-11 bg-white border border-[#E5E5E5] focus:border-[#1A1A1A] rounded-none h-12 text-sm" data-testid="hero-search-input" />
+              {/* CTA buttons */}
+              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
+                <Button onClick={() => navigate('/write')} className="bg-[#C2544D] text-white hover:bg-[#A8443E] rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors" data-testid="hero-write-btn">
+                  <PenLine className="w-4 h-4 mr-2" />
+                  Share Your Strategy
+                </Button>
+                <Button variant="outline" onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })} className="bg-transparent text-[#1A1A1A] border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors" data-testid="hero-explore-btn">
+                  Explore Topics
+                </Button>
               </div>
-              <Button type="submit" className="bg-[#1A1A1A] text-white hover:bg-[#333] rounded-none h-12 px-6 text-xs font-bold uppercase tracking-widest transition-colors" data-testid="hero-search-btn">
-                Search
-              </Button>
-            </form>
+            </motion.div>
 
-            {/* CTA buttons */}
-            <div className="flex flex-wrap gap-4">
-              <Button onClick={() => navigate('/write')} className="bg-[#C2544D] text-white hover:bg-[#A8443E] rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors" data-testid="hero-write-btn">
-                <PenLine className="w-4 h-4 mr-2" />
-                Share Your Strategy
-              </Button>
-              <Button variant="outline" onClick={() => document.getElementById('categories')?.scrollIntoView({ behavior: 'smooth' })} className="bg-transparent text-[#1A1A1A] border border-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white rounded-none font-bold px-8 py-3 h-auto text-xs uppercase tracking-widest transition-colors" data-testid="hero-explore-btn">
-                Explore Topics
-              </Button>
-            </div>
-          </motion.div>
+            {/* Right: Logo */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="flex-shrink-0 w-64 sm:w-80 md:w-96 lg:w-[420px]"
+            >
+              <img
+                src="/b4b-logo.png"
+                alt="Blogs 4 Blocks"
+                className="w-full h-auto drop-shadow-xl"
+                data-testid="hero-logo"
+              />
+            </motion.div>
+          </div>
 
           {/* Stats strip */}
           {stats && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="flex flex-wrap gap-8 mt-16 pt-8 border-t border-[#E5E5E5]/60">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="flex flex-wrap gap-8 mt-16 pt-8 border-t border-[#E5E5E5]/60 justify-center lg:justify-start">
               {[
                 { icon: <TrendingUp className="w-4 h-4" />, value: stats.total_posts, label: 'Posts', color: '#C4942A' },
                 { icon: <Users className="w-4 h-4" />, value: stats.contributors || 0, label: 'Contributors', color: '#3D6B8E' },

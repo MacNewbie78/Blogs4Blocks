@@ -4,20 +4,14 @@ import { useApp } from '../context/AppContext';
 import { Globe, Users, PenLine, Heart, MapPin, ArrowRight } from 'lucide-react';
 import { Button } from '../components/ui/button';
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1770914910110-03053fdd1685?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODl8MHwxfHNlYXJjaHwxfHxueWMlMjBhcmNoaXRlY3R1cmUlMjBtb2Rlcm4lMjBtaW5pbWFsaXN0fGVufDB8fHx8MTc3NDE0NDkyOHww&ixlib=rb-4.1.0&q=85&w=1600';
-
 export default function AboutPage() {
   const { stats } = useApp();
 
   return (
     <div className="min-h-screen" data-testid="about-page">
       {/* Hero */}
-      <section className="relative overflow-hidden py-20 md:py-32">
-        <div className="absolute inset-0">
-          <img src={HERO_IMAGE} alt="" className="absolute inset-0 w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-[#FDFCF8]/92" />
-        </div>
-        <div className="relative max-w-4xl mx-auto px-6 md:px-12 text-center">
+      <section className="py-20 md:py-32 border-b border-[#E5E5E5]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-grey mb-6">Our Story</p>
           <h1 className="font-heading font-light text-5xl md:text-7xl tracking-tighter mb-6 text-[#1A1A1A]" data-testid="about-title">
             About <span className="font-black">Blogs4Blocks</span>
