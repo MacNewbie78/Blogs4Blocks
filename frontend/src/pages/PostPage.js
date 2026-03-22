@@ -192,7 +192,26 @@ export default function PostPage() {
               {post.subcategory.replace(/-/g, ' ')}
             </span>
           )}
+          {post.is_sponsored && (
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full bg-[#C4942A]/15 text-[#C4942A]" data-testid="post-sponsored-badge">
+              Sponsored
+            </span>
+          )}
         </div>
+
+        {/* Sponsor branding bar */}
+        {post.is_sponsored && post.sponsor_name && (
+          <div className="flex items-center gap-3 mb-6 p-4 border border-[#C4942A]/20" style={{ background: 'linear-gradient(135deg, #FFF8E1 0%, #FDFCF8 100%)' }} data-testid="post-sponsor-bar">
+            <span className="text-xs text-brand-grey font-medium">Presented by</span>
+            {post.sponsor_url ? (
+              <a href={post.sponsor_url} target="_blank" rel="noopener noreferrer" className="font-bold text-sm text-[#C4942A] hover:underline no-underline">
+                {post.sponsor_name}
+              </a>
+            ) : (
+              <span className="font-bold text-sm text-[#C4942A]">{post.sponsor_name}</span>
+            )}
+          </div>
+        )}
 
         {/* Title */}
         <h1 className="font-heading font-bold text-3xl md:text-4xl lg:text-5xl tracking-tight text-[#1A1A1A] mb-8 leading-tight" data-testid="post-title">

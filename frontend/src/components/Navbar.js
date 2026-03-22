@@ -71,6 +71,13 @@ export default function Navbar() {
             >
               About
             </Link>
+            <Link
+              to="/advertise"
+              className={`px-3 py-2 text-xs font-bold uppercase tracking-widest no-underline transition-colors ${isActive('/advertise') ? 'text-[#C4942A]' : 'text-brand-grey hover:text-[#C4942A]'}`}
+              data-testid="nav-advertise"
+            >
+              Advertise
+            </Link>
           </div>
 
           {/* Right side */}
@@ -157,6 +164,7 @@ export default function Navbar() {
                 );
               })}
               <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-about">About</Link>
+              <Link to="/advertise" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#C4942A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-advertise">Advertise</Link>
               {user && (
                 <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-profile">My Dashboard</Link>
               )}

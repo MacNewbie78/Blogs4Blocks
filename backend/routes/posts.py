@@ -38,6 +38,19 @@ async def get_popular_posts(limit: int = 6):
     return posts
 
 
+@router.get("/posts/featured/list")
+async def get_featured_posts(limit: int = 8):
+    now_iso = datetime.now(timezone.utc).isoformat()
+    posts = await db.posts.find(
+        {
+            "is_featured": True,
+            "$or": [{"expires_at": None}, {"expires_at": {"$exists": False}}, {"expires_at": {"$gt": now_iso}}]
+        },
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    return posts
+
+
 @router.get("/posts/{post_id}")
 async def get_post(post_id: str):
     post = await db.posts.find_one({"id": post_id}, {"_id": 0})

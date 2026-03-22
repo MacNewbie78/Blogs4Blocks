@@ -16,6 +16,7 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import AdminSetupPage from './pages/AdminSetupPage';
 import HostingGuidePage from './pages/HostingGuidePage';
+import AdvertisePage from './pages/AdvertisePage';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
               <Route path="/admin-setup" element={<AdminSetupPage />} />
               <Route path="/deployment-guide" element={<HostingGuidePage />} />
               <Route path="/hosting-guide" element={<HostingGuidePage />} />
+              <Route path="/advertise" element={<AdvertisePage />} />
             </Routes>
           </main>
           <Footer />

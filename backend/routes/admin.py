@@ -171,3 +171,48 @@ async def get_email_analytics(user=Depends(require_admin)):
         "active_subscribers": total_active,
         "inactive_subscribers": total_inactive
     }
+
+
+
+@router.put("/admin/posts/{post_id}/feature")
+async def toggle_featured(post_id: str, user=Depends(require_admin)):
+    post = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    new_status = not post.get("is_featured", False)
+    await db.posts.update_one({"id": post_id}, {"$set": {"is_featured": new_status}})
+    return {"is_featured": new_status, "message": f"Post {'featured' if new_status else 'unfeatured'}"}
+
+
+@router.put("/admin/posts/{post_id}/sponsor")
+async def set_sponsor(post_id: str, sponsor: dict, user=Depends(require_admin)):
+    post = await db.posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    if sponsor.get("remove"):
+        await db.posts.update_one({"id": post_id}, {"$set": {"is_sponsored": False}, "$unset": {"sponsor_name": "", "sponsor_url": "", "sponsor_logo": ""}})
+        return {"is_sponsored": False, "message": "Sponsorship removed"}
+    await db.posts.update_one({"id": post_id}, {"$set": {
+        "is_sponsored": True,
+        "sponsor_name": sponsor.get("sponsor_name", ""),
+        "sponsor_url": sponsor.get("sponsor_url", ""),
+        "sponsor_logo": sponsor.get("sponsor_logo", ""),
+    }})
+    return {"is_sponsored": True, "message": "Sponsor info updated"}
+
+
+@router.get("/admin/ad-inquiries")
+async def get_ad_inquiries(user=Depends(require_admin)):
+    inquiries = await db.ad_inquiries.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return inquiries
+
+
+@router.put("/admin/ad-inquiries/{inquiry_id}/status")
+async def update_inquiry_status(inquiry_id: str, body: dict, user=Depends(require_admin)):
+    result = await db.ad_inquiries.update_one(
+        {"id": inquiry_id},
+        {"$set": {"status": body.get("status", "reviewed"), "reviewed_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Inquiry not found")
+    return {"message": "Inquiry status updated"}

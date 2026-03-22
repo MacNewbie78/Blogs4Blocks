@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useApp } from '../context/AppContext';
 import BlogCard from '../components/BlogCard';
+import FeaturedCarousel from '../components/FeaturedCarousel';
 import { ArrowRight, Globe, Users, PenLine, TrendingUp, Search, Flame, Mail, Check, Megaphone, BarChart3, Share2, Brain, Palette, Wrench, Monitor, Cpu, Key, Briefcase, FileText, UserPlus, Edit3, Send } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -29,6 +30,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [popularPosts, setPopularPosts] = useState([]);
+  const [featuredPosts, setFeaturedPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribing, setSubscribing] = useState(false);
@@ -37,6 +39,7 @@ export default function HomePage() {
   useEffect(() => {
     axios.get(`${API}/posts?limit=6`).then(res => setPosts(res.data.posts)).catch(() => {});
     axios.get(`${API}/posts/popular/list?limit=4`).then(res => setPopularPosts(res.data)).catch(() => {});
+    axios.get(`${API}/posts/featured/list?limit=8`).then(res => setFeaturedPosts(res.data)).catch(() => {});
   }, [API]);
 
   const handleSearch = (e) => {
@@ -150,6 +153,9 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* FEATURED CAROUSEL */}
+      {featuredPosts.length > 0 && <FeaturedCarousel posts={featuredPosts} />}
 
       {/* CATEGORIES SECTION */}
       <section id="categories" className="py-20 md:py-28" data-testid="categories-section">

@@ -6,7 +6,7 @@ import {
   Shield, Check, X, Trash2, Users, FileText, MessageCircle,
   Globe, Tag, Clock, AlertTriangle, Eye, Heart, MapPin,
   ChevronDown, ChevronUp, RefreshCw, Mail, Send, Calendar,
-  BarChart3, MousePointerClick, TrendingUp
+  BarChart3, MousePointerClick, TrendingUp, Star, Megaphone, ExternalLink
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -207,6 +207,8 @@ export default function AdminPage() {
   const [digestStatus, setDigestStatus] = useState(null);
   const [sendingDigest, setSendingDigest] = useState(false);
   const [analytics, setAnalytics] = useState(null);
+  const [allPosts, setAllPosts] = useState([]);
+  const [adInquiries, setAdInquiries] = useState([]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('b4b_token');
@@ -221,18 +223,22 @@ export default function AdminPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const [statsRes, pendingRes, usersRes, digestRes, analyticsRes] = await Promise.all([
+      const [statsRes, pendingRes, usersRes, digestRes, analyticsRes, postsRes, inquiriesRes] = await Promise.all([
         axios.get(`${API}/admin/stats`, { headers: headers() }),
         axios.get(`${API}/categories/pending/list`, { headers: headers() }),
         axios.get(`${API}/admin/users`, { headers: headers() }),
         axios.get(`${API}/admin/digest-status`, { headers: headers() }),
         axios.get(`${API}/admin/analytics`, { headers: headers() }),
+        axios.get(`${API}/posts?limit=50`, { headers: headers() }),
+        axios.get(`${API}/admin/ad-inquiries`, { headers: headers() }).catch(() => ({ data: [] })),
       ]);
       setStats(statsRes.data);
       setPendingCats(pendingRes.data);
       setUsers(usersRes.data);
       setDigestStatus(digestRes.data);
       setAnalytics(analyticsRes.data);
+      setAllPosts(postsRes.data.posts || []);
+      setAdInquiries(inquiriesRes.data);
     } catch (e) {
       if (e.response?.status === 403) {
         toast.error('Admin access required');
@@ -302,13 +308,42 @@ export default function AdminPage() {
     try {
       const res = await axios.post(`${API}/admin/send-digest`, {}, { headers: headers() });
       toast.success(res.data.message);
-      // Refresh digest status
       const digestRes = await axios.get(`${API}/admin/digest-status`, { headers: headers() });
       setDigestStatus(digestRes.data);
     } catch (e) {
       toast.error(e.response?.data?.detail || 'Failed to send digest');
     }
     setSendingDigest(false);
+  };
+
+  const handleToggleFeatured = async (postId) => {
+    try {
+      const res = await axios.put(`${API}/admin/posts/${postId}/feature`, {}, { headers: headers() });
+      toast.success(res.data.message);
+      setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, is_featured: res.data.is_featured } : p));
+    } catch (e) {
+      toast.error('Failed to toggle featured');
+    }
+  };
+
+  const handleSetSponsor = async (postId, sponsorData) => {
+    try {
+      const res = await axios.put(`${API}/admin/posts/${postId}/sponsor`, sponsorData, { headers: headers() });
+      toast.success(res.data.message);
+      setAllPosts(prev => prev.map(p => p.id === postId ? { ...p, is_sponsored: res.data.is_sponsored, ...sponsorData } : p));
+    } catch (e) {
+      toast.error('Failed to update sponsor');
+    }
+  };
+
+  const handleInquiryStatus = async (inquiryId, status) => {
+    try {
+      await axios.put(`${API}/admin/ad-inquiries/${inquiryId}/status`, { status }, { headers: headers() });
+      toast.success(`Inquiry marked as ${status}`);
+      setAdInquiries(prev => prev.map(i => i.id === inquiryId ? { ...i, status } : i));
+    } catch (e) {
+      toast.error('Failed to update status');
+    }
   };
 
   if (!user || loading) {
@@ -332,6 +367,8 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Eye className="w-4 h-4" /> },
+    { id: 'featured', label: `Featured & Sponsored`, icon: <Star className="w-4 h-4" /> },
+    { id: 'inquiries', label: `Inquiries ${adInquiries.filter(i => i.status === 'new').length > 0 ? `(${adInquiries.filter(i => i.status === 'new').length})` : ''}`, icon: <Megaphone className="w-4 h-4" /> },
     { id: 'moderation', label: `Moderation ${pendingCats.length > 0 ? `(${pendingCats.length})` : ''}`, icon: <Shield className="w-4 h-4" /> },
     { id: 'newsletter', label: 'Newsletter', icon: <Mail className="w-4 h-4" /> },
     { id: 'analytics', label: 'Analytics', icon: <BarChart3 className="w-4 h-4" /> },
@@ -394,6 +431,138 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {/* Featured & Sponsored Tab */}
+        {activeTab === 'featured' && (
+          <div className="space-y-6" data-testid="admin-featured">
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A]">Featured & Sponsored Posts</h2>
+            <p className="text-sm text-brand-grey">Featured posts appear in the homepage carousel. Sponsored posts display a sponsor badge and branding.</p>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+              <StatCard icon={<Star className="w-5 h-5" />} value={allPosts.filter(p => p.is_featured).length} label="Featured Posts" color="#C4942A" />
+              <StatCard icon={<Megaphone className="w-5 h-5" />} value={allPosts.filter(p => p.is_sponsored).length} label="Sponsored Posts" color="#C2544D" />
+              <StatCard icon={<FileText className="w-5 h-5" />} value={adInquiries.filter(i => i.status === 'new').length} label="New Inquiries" color="#3D6B8E" />
+            </div>
+
+            <div className="bg-white rounded-none border border-[#E5E5E5]">
+              <div className="p-4 border-b border-[#F4F4F5]">
+                <h3 className="font-heading font-bold text-base text-[#1A1A1A]">All Posts</h3>
+              </div>
+              <div className="max-h-[500px] overflow-y-auto">
+                {allPosts.filter(p => !p.title.startsWith('TEST')).map(post => (
+                  <div key={post.id} className="flex items-center gap-3 px-4 py-3 border-b border-[#F4F4F5] last:border-0 hover:bg-[#FDFCF8]" data-testid={`admin-feat-post-${post.id}`}>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/post/${post.id}`} className="text-sm font-medium text-[#1A1A1A] hover:underline no-underline line-clamp-1">
+                        {post.title}
+                      </Link>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                        <span>{post.author_name}</span>
+                        <Badge variant="secondary" className="text-xs py-0 h-5">{post.category_slug.replace(/-/g, ' ')}</Badge>
+                        {post.is_featured && <Badge className="text-xs bg-[#C4942A]/15 text-[#C4942A] border-0 py-0 h-5">Featured</Badge>}
+                        {post.is_sponsored && <Badge className="text-xs bg-[#C2544D]/15 text-[#C2544D] border-0 py-0 h-5">Sponsored · {post.sponsor_name}</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <Button
+                        size="sm"
+                        variant={post.is_featured ? "default" : "outline"}
+                        onClick={() => handleToggleFeatured(post.id)}
+                        className={`h-7 text-xs rounded-full ${post.is_featured ? 'bg-[#C4942A] hover:bg-[#A87E22] text-white' : 'border-[#E5E5E5]'}`}
+                        data-testid={`toggle-feat-${post.id}`}
+                      >
+                        <Star className="w-3 h-3 mr-1" /> {post.is_featured ? 'Unfeature' : 'Feature'}
+                      </Button>
+                      {!post.is_sponsored ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            const name = prompt('Sponsor company name:');
+                            if (name) {
+                              const url = prompt('Sponsor website URL (optional):');
+                              handleSetSponsor(post.id, { sponsor_name: name, sponsor_url: url || '' });
+                            }
+                          }}
+                          className="h-7 text-xs rounded-full border-[#E5E5E5]"
+                          data-testid={`set-sponsor-${post.id}`}
+                        >
+                          <Megaphone className="w-3 h-3 mr-1" /> Sponsor
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleSetSponsor(post.id, { remove: true })}
+                          className="h-7 text-xs rounded-full border-red-200 text-red-600 hover:bg-red-50"
+                          data-testid={`remove-sponsor-${post.id}`}
+                        >
+                          <X className="w-3 h-3 mr-1" /> Remove Sponsor
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Ad Inquiries Tab */}
+        {activeTab === 'inquiries' && (
+          <div className="space-y-6" data-testid="admin-inquiries">
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A]">Advertiser Inquiries</h2>
+            {adInquiries.length > 0 ? (
+              <div className="space-y-4">
+                {adInquiries.map(inq => (
+                  <div key={inq.id} className={`bg-white rounded-none border p-5 ${inq.status === 'new' ? 'border-[#C4942A]/40' : 'border-[#E5E5E5]'}`} data-testid={`inquiry-${inq.id}`}>
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          <h4 className="font-heading font-bold text-base text-[#1A1A1A]">{inq.company_name}</h4>
+                          <Badge className={`text-xs border-0 py-0 h-5 ${
+                            inq.status === 'new' ? 'bg-[#C4942A]/15 text-[#C4942A]' :
+                            inq.status === 'contacted' ? 'bg-[#3D6B8E]/15 text-[#3D6B8E]' :
+                            inq.status === 'closed' ? 'bg-[#2D8B7A]/15 text-[#2D8B7A]' :
+                            'bg-[#F4F4F5] text-brand-grey'
+                          }`}>
+                            {inq.status}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-brand-grey space-y-1 mb-3">
+                          <p><strong>Contact:</strong> {inq.contact_name} — {inq.email}</p>
+                          {inq.website && <p><strong>Website:</strong> <a href={inq.website} target="_blank" rel="noopener noreferrer" className="text-[#3D6B8E] hover:underline">{inq.website}</a></p>}
+                          {inq.budget_range && <p><strong>Budget:</strong> {inq.budget_range}</p>}
+                          {inq.preferred_categories?.length > 0 && <p><strong>Categories:</strong> {inq.preferred_categories.join(', ')}</p>}
+                          <p className="text-xs text-gray-400">{new Date(inq.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <p className="text-sm text-[#404040] leading-relaxed bg-[#FDFCF8] p-3 border border-[#E5E5E5]">{inq.message}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 flex-shrink-0">
+                        {inq.status === 'new' && (
+                          <Button size="sm" onClick={() => handleInquiryStatus(inq.id, 'contacted')} className="bg-[#3D6B8E] text-white hover:bg-[#2D5B7E] h-7 text-xs rounded-full" data-testid={`contact-inquiry-${inq.id}`}>
+                            Contacted
+                          </Button>
+                        )}
+                        {inq.status !== 'closed' && (
+                          <Button size="sm" variant="outline" onClick={() => handleInquiryStatus(inq.id, 'closed')} className="h-7 text-xs rounded-full border-[#E5E5E5]" data-testid={`close-inquiry-${inq.id}`}>
+                            Close
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-none border border-[#E5E5E5] p-10 text-center">
+                <Megaphone className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-brand-grey font-medium">No advertiser inquiries yet</p>
+                <p className="text-xs text-gray-400 mt-1">When advertisers submit inquiries through the Advertise page, they'll appear here.</p>
+              </div>
+            )}
+          </div>
+        )}
+
 
         {/* Moderation Tab */}
         {activeTab === 'moderation' && (

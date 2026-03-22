@@ -72,3 +72,17 @@ class PartnerRequest(BaseModel):
 
 class AdminSetupRequest(BaseModel):
     secret_key: str
+
+class SponsorInfo(BaseModel):
+    sponsor_name: str
+    sponsor_url: Optional[str] = None
+    sponsor_logo: Optional[str] = None
+
+class AdInquiry(BaseModel):
+    company_name: str
+    contact_name: str
+    email: str
+    website: Optional[str] = None
+    budget_range: Optional[str] = None
+    message: str
+    preferred_categories: List[str] = []

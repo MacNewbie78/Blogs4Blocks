@@ -52,6 +52,14 @@ export default function BlogCard({ post, index = 0 }) {
                 {daysLeft <= 0 ? 'Expired' : `${daysLeft}d left`}
               </span>
             )}
+            {post.is_sponsored && (
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-[#C4942A] bg-[#C4942A]/12"
+                data-testid={`blog-card-sponsored-${post.id}`}
+              >
+                Sponsored
+              </span>
+            )}
           </div>
 
           {/* Title */}
