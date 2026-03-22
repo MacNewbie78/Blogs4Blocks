@@ -1,77 +1,86 @@
-# Blogs 4 Blocks - Product Requirements Document
+# Blogs 4 Blocks — Product Requirements Document
 
 ## Original Problem Statement
-Build a blogging website based in New York City. Title: "Blogs 4 Blocks." Goal: marketing professionals share blog posts about strategies for their demographic, creating an open forum. Inviting, easy to navigate, cheerful, exciting.
+Build a blogging website based in New York City called "Blogs 4 Blocks." Marketing professionals share blog posts about strategies that work for their demographic, creating an open forum. The website needs to be inviting, easy to navigate, cheerful, and exciting — yet elevated, refined, and sophisticated enough to attract advertisers.
 
 ## Tech Stack
-- **Backend:** FastAPI (Python) — modular router architecture
-- **Frontend:** React.js
-- **Database:** MongoDB
+- **Backend:** FastAPI (Python), MongoDB
+- **Frontend:** React.js, Tailwind CSS, shadcn/ui
 - **Real-time:** WebSockets
 - **Email:** Resend API
-- **Styling:** Tailwind CSS, shadcn/ui
-- **Authentication:** JWT
-- **Deployment Model:** PWA
-- **Analytics:** Google Analytics 4 (GA4) + Custom Email Analytics
-- **Scheduler:** APScheduler (AsyncIOScheduler)
+- **Auth:** JWT
+- **Scheduled Jobs:** APScheduler
+- **Deployment:** PWA
 
-## Architecture (Refactored)
+## Architecture
 ```
-backend/
-├── server.py          # App orchestrator (~140 lines)
-├── database.py        # MongoDB connection
-├── auth.py            # JWT helpers + auth dependencies
-├── models.py          # Pydantic models
-├── email_service.py   # Resend email functions
-├── websocket_manager.py # WebSocket connection manager
-├── seed_data.py       # Seed categories + posts
-└── routes/
-    ├── auth.py        # Register, login, me
-    ├── posts.py       # CRUD, like toggle, popular, related
-    ├── categories.py  # CRUD, suggest, approve/reject
-    ├── comments.py    # CRUD + WebSocket broadcast
-    ├── admin.py       # Stats, user management, digest, analytics
-    ├── newsletter.py  # Subscribe, unsubscribe, weekly digest
-    ├── partners.py    # Search, request, accept, remove
-    ├── profile.py     # Posts, interactions, colors
-    ├── upload.py      # Image upload
-    ├── tracking.py    # Email open/click tracking
-    └── misc.py        # Seed, stats
+/app
+├── backend/
+│   ├── routes/ (admin, analytics, auth, categories, newsletter, partners, posts, users)
+│   ├── database.py, models.py, seed_data.py, server.py
+│   └── .env
+├── frontend/
+│   └── src/
+│       ├── components/ (Navbar, BlogCard, Footer, CommentSection, RichTextEditor, InstallPrompt)
+│       ├── pages/ (HomePage, PostPage, CategoryPage, WritePage, AuthPage, AboutPage, ProfilePage, AdminPage, AdminSetupPage, HostingGuidePage)
+│       ├── context/ (AppContext)
+│       ├── utils/ (colors.js — muted color palette)
+│       └── App.js
+└── DEPLOYMENT_GUIDE.md
 ```
 
-## All Implemented Features
-1. User registration + JWT auth
-2. Guest posting with 30-day expiration
-3. Rich text editor (TipTap)
-4. Real-time comments via WebSocket
-5. Email notifications (new posts, new comments) via Resend
-6. Dynamic categories with admin moderation
-7. User profile with custom color-coding
-8. Like toggle (like/unlike with persistent state)
-9. Share buttons (Twitter, LinkedIn, Facebook, Copy Link)
-10. Partners system (search, request, accept/decline, co-authoring)
-11. Popular/related posts
-12. Pagination
-13. Newsletter subscription + automated weekly digest (Monday 9AM UTC)
-14. Subscriber analytics dashboard (open/click tracking)
-15. Admin panel (7 tabs: Overview, Moderation, Newsletter, Analytics, Posts, Comments, Users)
-16. Deployment guide at /hosting-guide
-17. PWA support
-18. GA4 analytics
+## Completed Features (All Tested & Working)
+1. User registration & JWT auth
+2. Guest posting (expires in 30 days)
+3. Dynamic blog categories with admin moderation
+4. Rich text editor (TipTap)
+5. Real-time comments via WebSockets
+6. Image uploads for blog posts
+7. PWA support
+8. Admin panel (categories, newsletter, analytics)
+9. Like & share buttons
+10. Partner/co-authoring system
+11. Newsletter & weekly digest (APScheduler + Resend)
+12. Subscriber analytics (open/click tracking)
+13. Deployment guide for Hostinger VPS
+14. Email notifications for new posts/comments
+15. User profile dashboard with color-coding
 
-## Key API Endpoints
-- Auth: POST /api/auth/register, /login, GET /me
-- Posts: GET/POST /api/posts, GET/PUT/DELETE /api/posts/{id}, POST /like, GET /liked
-- Categories: GET /api/categories, /{slug}, POST /suggest
-- Comments: GET/POST /api/posts/{id}/comments
-- Partners: GET /api/users/search, POST /api/partners/request, GET/PUT/DELETE /api/partners
-- Newsletter: POST /api/newsletter/subscribe, /unsubscribe
-- Admin: GET /api/admin/stats, /digest-status, /analytics, POST /send-digest
-- Tracking: GET /api/track/open, /track/click
-- Upload: POST /api/upload
+## UI Design — "Metropolitan Editorial with Color" (Latest)
+### Design Philosophy
+- **Muted/matted color palette** — sophisticated, darker pigments (not bright rainbow, not monochrome)
+- **Category-specific gradients** flowing from bottom-left to upper-right on cards
+- **Colorful title lettering** — each letter in Blogs4Blocks has a unique muted tone
+- **Editorial layout** — clean typography (Outfit headings, DM Sans body), sharp corners (rounded-none), uppercase labels
+- **Warm off-white background** (#FDFCF8) with subtle noise texture
 
-## Credentials
-- Admin Setup Key: b4b-admin-2024 (at /admin-setup route)
+### Key Color Palette (from /utils/colors.js)
+- Slate Blue: #3D6B8E (Social Media)
+- Warm Amber: #C4942A (SEO/SEM)
+- Dusty Rose: #B4687A (Influencer Marketing)
+- Deep Teal: #2D8B7A (Integrated Marketing)
+- Plum: #7B5E8D (Consumer Behavior)
+- Coral/Terracotta: #C2544D (Branding, primary CTA color)
+- Burnt Orange: #BF6B3A (Marketing Tools)
+- Sage Green: #5C8A6E (Digital Marketing)
+- Steel Blue: #4A6FA5 (Marketing & AI)
 
-## Status: COMPLETE
-All features implemented, tested (34 backend tests + full frontend verification), and refactored into production-ready modular architecture.
+### Card Design
+- Colored accent bar at top
+- Gradient from bottom-left (category color, 14% opacity) to transparent upper-right
+- Category badge with matching color
+- Author avatar in category color
+- Stats bar at bottom showing likes, views, time
+
+### Special Sections
+- **How-to Card** — 3-step guide for non-technical users on how to post
+- **Community Stats Card** — Posts, Discussions, Contributors, Countries with individual colored stat boxes
+
+## Backlog / Future
+- No additional features requested
+- User indicated they are ready to proceed ("I'll probably take it from there")
+- **Potential:** Advertiser portal / sponsored post feature (user mentioned wanting to monetize with advertisers)
+
+## Test Reports
+- Backend: 34/34 tests passed (iteration_9-11)
+- Frontend: 24/24 tests passed (iteration_11 — latest UI redesign)
