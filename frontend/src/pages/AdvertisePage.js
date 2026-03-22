@@ -76,7 +76,7 @@ export default function AdvertisePage() {
               Reach Marketing Professionals Worldwide
             </h1>
             <p className="text-lg text-[#555] max-w-2xl mx-auto leading-relaxed mb-10">
-              Blogs 4 Blocks connects you directly with marketing decision-makers across {stats?.total_countries || '15+'} countries. Sponsored content that feels native, not intrusive.
+              Blogs 4 Blocks connects you directly with marketing decision-makers around the world. Sponsored content that feels native, not intrusive.
             </p>
             <Button
               onClick={() => document.getElementById('inquiry-form')?.scrollIntoView({ behavior: 'smooth' })}
@@ -103,7 +103,7 @@ export default function AdvertisePage() {
               {[
                 { icon: <FileText className="w-5 h-5" />, value: stats.total_posts, label: 'Published Posts', color: '#C2544D' },
                 { icon: <Users className="w-5 h-5" />, value: stats.total_users, label: 'Contributors', color: '#3D6B8E' },
-                { icon: <Globe className="w-5 h-5" />, value: stats.total_countries, label: 'Countries', color: '#2D8B7A' },
+                { icon: <Globe className="w-5 h-5" />, value: '5', label: 'Continents', color: '#2D8B7A' },
                 { icon: <BarChart3 className="w-5 h-5" />, value: stats.total_comments, label: 'Discussions', color: '#7B5E8D' },
                 { icon: <Mail className="w-5 h-5" />, value: stats.newsletter_subscribers, label: 'Newsletter Subs', color: '#C4942A' },
               ].map((stat, i) => (
