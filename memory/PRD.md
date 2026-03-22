@@ -17,15 +17,30 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 ```
 /app
 ├── backend/
-│   ├── routes/ (admin, analytics, auth, categories, comments, newsletter, partners, posts, profile, tracking, upload, misc)
+│   ├── routes/
+│   │   ├── admin.py        # Admin panel + featured/sponsor/inquiry management
+│   │   ├── advertise.py    # NEW: Advertiser inquiry form + stats
+│   │   ├── analytics.py, auth.py, categories.py, comments.py
+│   │   ├── misc.py, newsletter.py, partners.py, posts.py
+│   │   ├── profile.py, tracking.py, upload.py
+│   │   └── __init__.py
 │   ├── database.py, models.py, seed_data.py, server.py
 │   └── .env
 ├── frontend/
 │   └── src/
-│       ├── components/ (Navbar, BlogCard, Footer, CommentSection, RichTextEditor, InstallPrompt)
-│       ├── pages/ (HomePage, PostPage, CategoryPage, WritePage, AuthPage, AboutPage, ProfilePage, AdminPage, AdminSetupPage, HostingGuidePage)
+│       ├── components/
+│       │   ├── FeaturedCarousel.js  # NEW: Auto-rotating featured/sponsored posts
+│       │   ├── BlogCard.js, CommentSection.js, Footer.js, Navbar.js
+│       │   ├── RichTextEditor.js, InstallPrompt.js
+│       │   └── ui/ (shadcn)
+│       ├── pages/
+│       │   ├── AdvertisePage.js     # NEW: Advertiser inquiry page
+│       │   ├── HomePage.js, PostPage.js, CategoryPage.js, WritePage.js
+│       │   ├── AuthPage.js, AboutPage.js, ProfilePage.js
+│       │   ├── AdminPage.js, AdminSetupPage.js, HostingGuidePage.js
+│       │   └── ...
 │       ├── context/ (AppContext)
-│       ├── utils/ (colors.js — muted pastel color palette with card gradients)
+│       ├── utils/ (colors.js)
 │       └── App.js
 ├── DEPLOYMENT_GUIDE.md (Oracle Cloud — Ubuntu AMD)
 └── memory/PRD.md
@@ -39,50 +54,51 @@ Build a blogging website based in New York City called "Blogs 4 Blocks." Marketi
 5. Real-time comments via WebSockets
 6. Image uploads for blog posts
 7. PWA support
-8. Admin panel (categories, newsletter, analytics)
+8. Admin panel (categories, newsletter, analytics, featured/sponsor management, ad inquiries)
 9. Like & share buttons
 10. Partner/co-authoring system
 11. Newsletter & weekly digest (APScheduler + Resend)
 12. Subscriber analytics (open/click tracking)
 13. Email notifications for new posts/comments
 14. User profile dashboard with color-coding
-15. @username mention in comments — autocomplete popup, mention highlighting, stored mention user IDs
-16. How-to card for non-technical users
-17. Community analytics dashboard on homepage
-18. **Oracle Cloud Deployment Guide (Ubuntu AMD)** — comprehensive 7-step in-app guide + full DEPLOYMENT_GUIDE.md with performance tips, swap setup, troubleshooting, MongoDB Atlas integration
-19. **Mobile nav category colors** — colored dots matching category palette (was grey, now uses getCategoryColor)
-20. Footer deployment guide link
+15. @username mention in comments
+16. **Oracle Cloud Deployment Guide (Ubuntu AMD)**
+17. **Featured Posts Carousel** — Auto-rotating (5s) homepage carousel for featured posts with prev/next arrows, dot nav, category-themed gradients
+18. **Sponsored Posts System** — Sponsor badge, branding bar ("Presented by"), external links, shown in carousel, blog cards, and post detail pages
+19. **Advertise With Us Page** — Professional landing page with hero section, audience stats (5 metrics), advertising options (3 cards), and inquiry form
+20. **Admin: Featured & Sponsored Tab** — Toggle feature/sponsor status for any post, set sponsor name/URL, view stats
+21. **Admin: Advertiser Inquiries Tab** — View, manage (contacted/closed) ad inquiries from the Advertise page
 
 ## UI Design — "Colorful Editorial" (Current)
-### Design Philosophy
-- **Pastel gradient card fills** — each category has a soft, full-coverage gradient (cardFrom -> cardTo)
-- **Rounded corners** (rounded-xl) on cards for warmth
-- **Muted color palette** — sophisticated but fun and energetic
-- **Category-specific colors** across the entire UI (cards, badges, dropdown indicators, avatars, mobile nav dots)
-- **Custom b4b logo** in hero section (side-by-side with title)
-- **Colorful title lettering** — each letter in Blogs4Blocks has a unique muted tone
-
-### Key Color Palette (from /utils/colors.js)
-- Slate Blue: #3D6B8E / card: #B8DCF0->#E0F0FA (Social Media)
-- Warm Amber: #C4942A / card: #F5DFA0->#FFF8E1 (SEO/SEM)
-- Dusty Rose: #B4687A / card: #E8B8D0->#FBE8F0 (Influencer Marketing)
-- Deep Teal: #2D8B7A / card: #A8E6CF->#E0F5EC (Integrated Marketing)
-- Plum: #7B5E8D / card: #C8B8E0->#EDE5F5 (Consumer Behavior)
-- Coral/Terracotta: #C2544D / card: #F0B8B0->#FDE8E5 (Branding)
-- Burnt Orange: #BF6B3A / card: #F0C8A0->#FFF0E0 (Marketing Tools)
-- Sage Green: #5C8A6E / card: #B0D8C0->#E0F0E8 (Digital Marketing)
+- Pastel gradient card fills per category
+- Muted sophisticated color palette
+- Custom b4b logo in hero section
+- Category-specific colors across all UI elements
+- Sponsored posts: amber/gold accent (#C4942A) for badges and branding
 
 ## Key API Endpoints
-- `GET /api/stats` — Site-wide statistics (total_posts, total_comments, total_users, total_countries)
-- `GET /api/users/search` — User search for @mentions
-- `POST /api/posts/{id}/comments` — Creates comment with mention extraction
-- `GET /api/admin/newsletter/stats` — Newsletter analytics
-- `POST /api/admin/newsletter/trigger-digest` — Manual digest trigger
-- All CRUD endpoints for posts, categories, users, partners
+### New (This Session)
+- `GET /api/posts/featured/list` — Featured posts for carousel
+- `POST /api/advertise/inquiry` — Submit advertiser inquiry
+- `GET /api/advertise/stats` — Community stats for advertise page (includes newsletter_subscribers)
+- `PUT /api/admin/posts/{id}/feature` — Toggle featured status (admin)
+- `PUT /api/admin/posts/{id}/sponsor` — Set/remove sponsor info (admin)
+- `GET /api/admin/ad-inquiries` — List all ad inquiries (admin)
+- `PUT /api/admin/ad-inquiries/{id}/status` — Update inquiry status (admin)
 
-## Backlog / Future
-- **P1: Advertiser portal / sponsored post feature** (user mentioned wanting to monetize with advertisers)
+### Existing
+- `GET /api/stats` — Site-wide statistics
+- `GET /api/users/search` — User search for @mentions
+- Full CRUD for posts, categories, users, partners, comments, newsletter
+
+## DB Schema Additions
+- `posts` collection: Added fields `is_featured`, `is_sponsored`, `sponsor_name`, `sponsor_url`, `sponsor_logo`
+- `ad_inquiries` collection: `{id, company_name, contact_name, email, website, budget_range, message, preferred_categories, status, created_at}`
 
 ## Test Reports
-- iteration_12: 25/25 tests passed (previous session — @mentions, pastel cards, dropdown colors)
-- iteration_13: 22/23 tests passed (this session — deployment guide, stats, mobile nav colors, footer link). Minor: /api/health not implemented (non-issue)
+- iteration_12: 25/25 passed (@mentions, pastel cards, dropdown colors)
+- iteration_13: 22/23 passed (deployment guide, stats, mobile nav colors)
+- iteration_14: 18/18 backend + all frontend passed (featured carousel, sponsored posts, advertise page, admin extensions)
+
+## Backlog / Future
+- No pending tasks. All user-requested features implemented.
