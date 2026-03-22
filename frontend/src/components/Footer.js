@@ -72,6 +72,7 @@ export default function Footer() {
               <Link to="/write" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-write">Write a Post</Link>
               <Link to="/about" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-about">About</Link>
               <Link to="/auth" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-auth">Sign In / Register</Link>
+              <Link to="/deployment-guide" className="text-sm text-[#999] hover:text-white transition-colors no-underline" data-testid="footer-deploy">Deployment Guide</Link>
             </div>
           </div>
 

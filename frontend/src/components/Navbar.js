@@ -147,12 +147,15 @@ export default function Navbar() {
             <div className="flex flex-col gap-1">
               <Link to="/" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-home">Home</Link>
               <div className="px-3 py-2 text-[10px] font-bold text-brand-grey uppercase tracking-[0.2em]">Topics</div>
-              {categories.map(cat => (
-                <Link key={cat.slug} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)} className="flex items-center px-3 py-2 text-sm text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid={`nav-mobile-cat-${cat.slug}`}>
-                  <span className="w-1.5 h-1.5 rounded-full mr-2.5 bg-brand-grey" />
-                  {cat.name}
-                </Link>
-              ))}
+              {categories.map(cat => {
+                const mc = getCategoryColor(cat.slug);
+                return (
+                  <Link key={cat.slug} to={`/category/${cat.slug}`} onClick={() => setMobileOpen(false)} className="flex items-center px-3 py-2 text-sm text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid={`nav-mobile-cat-${cat.slug}`}>
+                    <span className="w-1.5 h-1.5 rounded-full mr-2.5 flex-shrink-0" style={{ backgroundColor: mc.base }} />
+                    {cat.name}
+                  </Link>
+                );
+              })}
               <Link to="/about" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-about">About</Link>
               {user && (
                 <Link to="/profile" onClick={() => setMobileOpen(false)} className="px-3 py-2.5 text-xs font-bold uppercase tracking-widest text-[#1A1A1A] hover:bg-[#F4F4F5] no-underline" data-testid="nav-mobile-profile">My Dashboard</Link>

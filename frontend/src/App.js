@@ -34,6 +34,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/admin-setup" element={<AdminSetupPage />} />
+              <Route path="/deployment-guide" element={<HostingGuidePage />} />
               <Route path="/hosting-guide" element={<HostingGuidePage />} />
             </Routes>
           </main>
