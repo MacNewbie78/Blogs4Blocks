@@ -25,6 +25,7 @@ from routes.upload import router as upload_router
 from routes.tracking import router as tracking_router
 from routes.misc import router as misc_router
 from routes.advertise import router as advertise_router
+from routes.payments import router as payments_router
 
 ROOT_DIR = Path(__file__).parent
 logging.basicConfig(level=logging.INFO)
@@ -58,6 +59,7 @@ api_router.include_router(upload_router)
 api_router.include_router(tracking_router)
 api_router.include_router(misc_router)
 api_router.include_router(advertise_router)
+api_router.include_router(payments_router)
 
 app.include_router(api_router, prefix="/api")
 
