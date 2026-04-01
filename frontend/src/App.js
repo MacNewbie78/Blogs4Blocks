@@ -6,6 +6,7 @@ import { Toaster } from './components/ui/sonner';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import InstallPrompt from './components/InstallPrompt';
+import CityBackground from './components/CityBackground';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import PostPage from './pages/PostPage';
@@ -24,6 +25,7 @@ function App() {
     <BrowserRouter>
       <AppProvider>
         <div className="flex flex-col min-h-screen font-body noise-overlay">
+          <CityBackground />
           <Navbar />
           <main className="flex-1">
             <Routes>
