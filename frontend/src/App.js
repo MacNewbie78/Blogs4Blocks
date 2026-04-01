@@ -17,6 +17,7 @@ import AdminPage from './pages/AdminPage';
 import AdminSetupPage from './pages/AdminSetupPage';
 import HostingGuidePage from './pages/HostingGuidePage';
 import AdvertisePage from './pages/AdvertisePage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
               <Route path="/deployment-guide" element={<HostingGuidePage />} />
               <Route path="/hosting-guide" element={<HostingGuidePage />} />
               <Route path="/advertise" element={<AdvertisePage />} />
+              <Route path="/payment-success" element={<PaymentSuccessPage />} />
             </Routes>
           </main>
           <Footer />
