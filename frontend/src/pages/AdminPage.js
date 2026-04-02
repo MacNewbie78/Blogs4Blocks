@@ -6,7 +6,7 @@ import {
   Shield, Check, X, Trash2, Users, FileText, MessageCircle,
   Globe, Tag, Clock, AlertTriangle, Eye, Heart, MapPin,
   ChevronDown, ChevronUp, RefreshCw, Mail, Send, Calendar,
-  BarChart3, MousePointerClick, TrendingUp, Star, Megaphone, ExternalLink
+  BarChart3, MousePointerClick, TrendingUp, Star, Megaphone, ExternalLink, DollarSign
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -209,6 +209,7 @@ export default function AdminPage() {
   const [analytics, setAnalytics] = useState(null);
   const [allPosts, setAllPosts] = useState([]);
   const [adInquiries, setAdInquiries] = useState([]);
+  const [campaigns, setCampaigns] = useState(null);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('b4b_token');
@@ -223,7 +224,7 @@ export default function AdminPage() {
     if (!token) return;
     setLoading(true);
     try {
-      const [statsRes, pendingRes, usersRes, digestRes, analyticsRes, postsRes, inquiriesRes] = await Promise.all([
+      const [statsRes, pendingRes, usersRes, digestRes, analyticsRes, postsRes, inquiriesRes, campaignsRes] = await Promise.all([
         axios.get(`${API}/admin/stats`, { headers: headers() }),
         axios.get(`${API}/categories/pending/list`, { headers: headers() }),
         axios.get(`${API}/admin/users`, { headers: headers() }),
@@ -231,6 +232,7 @@ export default function AdminPage() {
         axios.get(`${API}/admin/analytics`, { headers: headers() }),
         axios.get(`${API}/posts?limit=50`, { headers: headers() }),
         axios.get(`${API}/admin/ad-inquiries`, { headers: headers() }).catch(() => ({ data: [] })),
+        axios.get(`${API}/admin/campaigns`, { headers: headers() }).catch(() => ({ data: null })),
       ]);
       setStats(statsRes.data);
       setPendingCats(pendingRes.data);
@@ -239,6 +241,7 @@ export default function AdminPage() {
       setAnalytics(analyticsRes.data);
       setAllPosts(postsRes.data.posts || []);
       setAdInquiries(inquiriesRes.data);
+      setCampaigns(campaignsRes.data);
     } catch (e) {
       if (e.response?.status === 403) {
         toast.error('Admin access required');
@@ -367,6 +370,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: <Eye className="w-4 h-4" /> },
+    { id: 'campaigns', label: 'Campaigns', icon: <DollarSign className="w-4 h-4" /> },
     { id: 'featured', label: `Featured & Sponsored`, icon: <Star className="w-4 h-4" /> },
     { id: 'inquiries', label: `Inquiries ${adInquiries.filter(i => i.status === 'new').length > 0 ? `(${adInquiries.filter(i => i.status === 'new').length})` : ''}`, icon: <Megaphone className="w-4 h-4" /> },
     { id: 'moderation', label: `Moderation ${pendingCats.length > 0 ? `(${pendingCats.length})` : ''}`, icon: <Shield className="w-4 h-4" /> },
@@ -431,6 +435,138 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+
+        {/* Campaigns Tab */}
+        {activeTab === 'campaigns' && campaigns && (
+          <div className="space-y-6" data-testid="admin-campaigns">
+            <h2 className="font-heading font-bold text-lg text-[#1A1A1A]">Ad Campaign Analytics</h2>
+            <p className="text-sm text-brand-grey">Revenue, post performance, and advertiser pipeline at a glance.</p>
+
+            {/* Revenue + Pipeline Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StatCard icon={<DollarSign className="w-5 h-5" />} value={`$${campaigns.revenue.total.toLocaleString()}`} label="Total Revenue" color="#2D8B7A" />
+              <StatCard icon={<Check className="w-5 h-5" />} value={campaigns.revenue.paid_count} label="Paid Bookings" color="#3D6B8E" />
+              <StatCard icon={<Clock className="w-5 h-5" />} value={campaigns.revenue.pending_count} label="Pending Payments" color="#C4942A" />
+              <StatCard icon={<Megaphone className="w-5 h-5" />} value={campaigns.inquiry_pipeline.new + campaigns.inquiry_pipeline.contacted + campaigns.inquiry_pipeline.closed} label="Total Inquiries" color="#7B5E8D" />
+            </div>
+
+            {/* Inquiry Pipeline */}
+            <div className="bg-white border border-[#E5E5E5] p-5">
+              <h3 className="font-heading font-bold text-base text-[#1A1A1A] mb-4">Inquiry Pipeline</h3>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'New', count: campaigns.inquiry_pipeline.new, color: '#C4942A', bg: '#FFF8E1' },
+                  { label: 'Contacted', count: campaigns.inquiry_pipeline.contacted, color: '#3D6B8E', bg: '#E0F0FA' },
+                  { label: 'Closed', count: campaigns.inquiry_pipeline.closed, color: '#2D8B7A', bg: '#E0F5EC' },
+                ].map(stage => (
+                  <div key={stage.label} className="text-center p-4 border" style={{ borderColor: `${stage.color}30`, background: stage.bg }} data-testid={`pipeline-${stage.label.toLowerCase()}`}>
+                    <div className="font-heading font-black text-2xl" style={{ color: stage.color }}>{stage.count}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-brand-grey mt-1">{stage.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Featured Post Performance */}
+            <div className="bg-white border border-[#E5E5E5]">
+              <div className="p-4 border-b border-[#F4F4F5] flex items-center justify-between">
+                <h3 className="font-heading font-bold text-base text-[#1A1A1A]">Featured Post Performance</h3>
+                <div className="flex items-center gap-4 text-xs text-brand-grey">
+                  <span className="flex items-center gap-1"><Eye className="w-3 h-3" /> {campaigns.featured.total_views} views</span>
+                  <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> {campaigns.featured.total_likes} likes</span>
+                  <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {campaigns.featured.total_comments} comments</span>
+                </div>
+              </div>
+              <div className="max-h-[400px] overflow-y-auto">
+                {campaigns.featured.posts.length > 0 ? campaigns.featured.posts.map(post => (
+                  <div key={post.id} className="flex items-center gap-3 px-4 py-3 border-b border-[#F4F4F5] last:border-0 hover:bg-[#FDFCF8]" data-testid={`campaign-post-${post.id}`}>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/post/${post.id}`} className="text-sm font-medium text-[#1A1A1A] hover:underline no-underline line-clamp-1">
+                        {post.title}
+                      </Link>
+                      <div className="flex items-center gap-2 mt-0.5 text-xs text-gray-400">
+                        <span>{post.author}</span>
+                        <Badge variant="secondary" className="text-xs py-0 h-5">{post.category.replace(/-/g, ' ')}</Badge>
+                        {post.is_sponsored && <Badge className="text-xs bg-[#C4942A]/15 text-[#C4942A] border-0 py-0 h-5">Sponsored · {post.sponsor_name}</Badge>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-xs text-brand-grey flex-shrink-0">
+                      <span className="flex items-center gap-1 font-medium"><Eye className="w-3 h-3 text-[#3D6B8E]" /> {post.views}</span>
+                      <span className="flex items-center gap-1 font-medium"><Heart className="w-3 h-3 text-[#C2544D]" /> {post.likes}</span>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="p-8 text-center text-sm text-brand-grey">No featured posts yet. Feature posts from the "Featured & Sponsored" tab.</div>
+                )}
+              </div>
+            </div>
+
+            {/* Recent Transactions */}
+            <div className="bg-white border border-[#E5E5E5]">
+              <div className="p-4 border-b border-[#F4F4F5]">
+                <h3 className="font-heading font-bold text-base text-[#1A1A1A]">Recent Transactions</h3>
+              </div>
+              {campaigns.recent_transactions.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-[#F4F4F5] text-left">
+                        <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-grey">Booking</th>
+                        <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-grey">Advertiser</th>
+                        <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-grey">Package</th>
+                        <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-grey">Amount</th>
+                        <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-grey">Status</th>
+                        <th className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-brand-grey">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {campaigns.recent_transactions.map(tx => (
+                        <tr key={tx.id} className="border-b border-[#F4F4F5] last:border-0" data-testid={`tx-${tx.booking_id}`}>
+                          <td className="px-4 py-2.5 font-mono text-xs font-bold">{tx.booking_id}</td>
+                          <td className="px-4 py-2.5">{tx.advertiser}</td>
+                          <td className="px-4 py-2.5 text-xs text-brand-grey capitalize">{tx.ad_size} · {tx.frequency.replace('-', ' ')} · {tx.placement}</td>
+                          <td className="px-4 py-2.5 font-bold">${tx.total_price.toLocaleString()}</td>
+                          <td className="px-4 py-2.5">
+                            <Badge className={`text-xs border-0 py-0 h-5 ${
+                              tx.payment_status === 'paid' ? 'bg-[#2D8B7A]/15 text-[#2D8B7A]' :
+                              tx.payment_status === 'pending' ? 'bg-[#C4942A]/15 text-[#C4942A]' :
+                              'bg-gray-100 text-gray-500'
+                            }`}>
+                              {tx.payment_status}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-2.5 text-xs text-gray-400">{tx.created_at ? new Date(tx.created_at).toLocaleDateString() : '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="p-8 text-center text-sm text-brand-grey">No transactions yet. Advertisers can book through the Advertise page.</div>
+              )}
+            </div>
+
+            {/* GA4 Link */}
+            <div className="border border-[#3D6B8E]/20 p-4 flex items-center justify-between" style={{ background: 'linear-gradient(135deg, #E0F0FA 0%, #FDFCF8 100%)' }}>
+              <div>
+                <p className="text-sm font-medium text-[#1A1A1A] flex items-center gap-2"><BarChart3 className="w-4 h-4 text-[#3D6B8E]" /> Google Analytics (GA4)</p>
+                <p className="text-xs text-brand-grey mt-0.5">View detailed traffic, page views, and user behavior in your GA4 dashboard.</p>
+              </div>
+              <a
+                href="https://analytics.google.com/analytics/web/#/p/G-TQ6RDMFSPJ"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="no-underline"
+              >
+                <Button variant="outline" size="sm" className="rounded-full text-xs h-8" data-testid="ga4-link">
+                  <ExternalLink className="w-3 h-3 mr-1.5" /> Open GA4
+                </Button>
+              </a>
+            </div>
+          </div>
+        )}
+
 
         {/* Featured & Sponsored Tab */}
         {activeTab === 'featured' && (

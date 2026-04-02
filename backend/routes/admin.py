@@ -174,6 +174,86 @@ async def get_email_analytics(user=Depends(require_admin)):
 
 
 
+@router.get("/admin/campaigns")
+async def get_campaign_analytics(user=Depends(require_admin)):
+    """Ad campaign analytics — featured/sponsored post performance + revenue."""
+    # Get all bookings and transactions
+    bookings = await db.ad_bookings.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    transactions = await db.payment_transactions.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+
+    # Revenue stats
+    paid_txns = [t for t in transactions if t.get("payment_status") == "paid"]
+    total_revenue = sum(t.get("total_price", 0) for t in paid_txns)
+    pending_txns = [t for t in transactions if t.get("payment_status") == "pending"]
+
+    # Featured/sponsored post performance
+    featured_posts = await db.posts.find({"is_featured": True}, {"_id": 0}).to_list(100)
+    sponsored_posts = await db.posts.find({"is_sponsored": True}, {"_id": 0}).to_list(100)
+
+    featured_views = sum(p.get("views", 0) for p in featured_posts)
+    featured_likes = sum(p.get("likes", 0) for p in featured_posts)
+    sponsored_views = sum(p.get("views", 0) for p in sponsored_posts)
+    sponsored_likes = sum(p.get("likes", 0) for p in sponsored_posts)
+
+    # Get comment counts for featured/sponsored posts
+    featured_ids = [p["id"] for p in featured_posts]
+    sponsored_ids = [p["id"] for p in sponsored_posts]
+    featured_comments = await db.comments.count_documents({"post_id": {"$in": featured_ids}}) if featured_ids else 0
+    sponsored_comments = await db.comments.count_documents({"post_id": {"$in": sponsored_ids}}) if sponsored_ids else 0
+
+    # Inquiries pipeline
+    inquiries = await db.ad_inquiries.find({}, {"_id": 0}).to_list(100)
+    inquiry_pipeline = {
+        "new": len([i for i in inquiries if i.get("status") == "new"]),
+        "contacted": len([i for i in inquiries if i.get("status") == "contacted"]),
+        "closed": len([i for i in inquiries if i.get("status") == "closed"]),
+    }
+
+    return {
+        "revenue": {
+            "total": total_revenue,
+            "paid_count": len(paid_txns),
+            "pending_count": len(pending_txns),
+        },
+        "featured": {
+            "count": len(featured_posts),
+            "total_views": featured_views,
+            "total_likes": featured_likes,
+            "total_comments": featured_comments,
+            "posts": [{
+                "id": p["id"],
+                "title": p["title"],
+                "category": p.get("category_slug", ""),
+                "views": p.get("views", 0),
+                "likes": p.get("likes", 0),
+                "author": p.get("author_name", ""),
+                "is_sponsored": p.get("is_sponsored", False),
+                "sponsor_name": p.get("sponsor_name", ""),
+            } for p in featured_posts],
+        },
+        "sponsored": {
+            "count": len(sponsored_posts),
+            "total_views": sponsored_views,
+            "total_likes": sponsored_likes,
+            "total_comments": sponsored_comments,
+        },
+        "inquiry_pipeline": inquiry_pipeline,
+        "recent_bookings": bookings[:10],
+        "recent_transactions": [{
+            "id": t["id"],
+            "booking_id": t.get("booking_id", ""),
+            "advertiser": t.get("advertiser", ""),
+            "ad_size": t.get("ad_size", ""),
+            "frequency": t.get("frequency", ""),
+            "placement": t.get("placement", ""),
+            "total_price": t.get("total_price", 0),
+            "payment_status": t.get("payment_status", ""),
+            "created_at": t.get("created_at", ""),
+        } for t in transactions[:20]],
+    }
+
+
+
 @router.put("/admin/posts/{post_id}/feature")
 async def toggle_featured(post_id: str, user=Depends(require_admin)):
     post = await db.posts.find_one({"id": post_id}, {"_id": 0})
